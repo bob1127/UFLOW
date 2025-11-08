@@ -72,7 +72,7 @@ const TextParallaxContentExample = () => {
           <div className="right"> </div>
         </section>
         <div className="portrait-container relative overflow-hidden">
-          <div className="txt absolute right-[8%] top-[40%] -translate-x-1/2 z-40">
+          <div className="txt absolute right-[8%] top-[10%] -translate-x-1/2 z-40">
             <h2 className="text-5xl font-bold">對美味的講究</h2>
             <p className="leading-relaxed tracking-wider max-w-[550px]">
               作為美味基礎的重要原材料是「大豆」。
@@ -297,12 +297,9 @@ const TextParallaxContentExample = () => {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white/70" />
           </div>
         </section>
-        <TextParallaxContent
-          subheading="Collaborate"
-          heading="Built for all of us."
-        >
+        <TextParallaxContent subheading="對天然成分的堅持" heading="UFLOW">
           <div className="space-y-32 min-h-[180vh] px-8 pt-[8vh] pb-32">
-            <h1 className="text-white text-4xl">HELLO</h1>
+            <h1 className="text-white text-4xl"></h1>
             <ExampleContent />
           </div>
         </TextParallaxContent>
@@ -471,7 +468,7 @@ const ExampleContent = () => {
             </div>
           </div>
         </div>
-        <div className="card-wrap absolute z-20 bottom-[0%] right-0 h-1/3 border border-red-600 flex flex-row">
+        <div className="card-wrap absolute z-20 bottom-[-20%] right-0 h-1/3 border border-red-600 flex flex-row">
           {/* ✨ Smooth 淡入淡出 + Y 位移 */}
 
           <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[550px] max-h-[500px]">

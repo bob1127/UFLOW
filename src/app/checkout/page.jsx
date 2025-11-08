@@ -208,7 +208,7 @@ function CartReviewStep({ items, onNext }) {
 function ShippingStep({ onPrev, onNext }) {
   const [shippingMethod, setShippingMethod] = useState("delivery");
   return (
-    <div className="w-full max-w-lg mx-auto bg-white p-8 border-2 border-blue-500 rounded-lg shadow-md">
+    <div className="w-full max-w-lg mx-auto bg-white p-8 border-2  rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
       <div className="grid grid-cols-2 gap-4 mb-6">
         {/* ... Delivery / Pickup buttons ... */}
@@ -216,7 +216,7 @@ function ShippingStep({ onPrev, onNext }) {
           onClick={() => setShippingMethod("delivery")}
           className={`flex items-center justify-center gap-2 py-3 border rounded-lg transition-colors ${
             shippingMethod === "delivery"
-              ? "bg-blue-50 text-blue-600 border-blue-500"
+              ? "bg-blue-50 text-blue-600 "
               : "text-gray-700 hover:bg-gray-50"
           }`}
         >
@@ -227,7 +227,7 @@ function ShippingStep({ onPrev, onNext }) {
           onClick={() => setShippingMethod("pickup")}
           className={`flex items-center justify-center gap-2 py-3 border rounded-lg transition-colors ${
             shippingMethod === "pickup"
-              ? "bg-blue-50 text-blue-600 border-blue-500"
+              ? "bg-blue-50 text-blue-600 "
               : "text-gray-700 hover:bg-gray-50"
           }`}
         >
@@ -432,7 +432,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+    <div className="bg-gray-50 min-h-screen pt-[140px] pb-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
       <div className="max-w-4xl mx-auto">
         <CheckoutStepper currentStep={step} />
         <div className="relative h-[650px]">

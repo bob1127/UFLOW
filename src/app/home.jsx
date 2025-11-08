@@ -381,14 +381,15 @@ export default function Home() {
         </section>
         <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="grid grid-cols-2">
-            <div className="aspect-[1/1] relative overflow-hidden m-5">
-              <div className="description border w-[70%] absolute z-40 h-[90%] left-5 top-1/2 -translate-y-1/2">
+            <div className="aspect-[1/1] group relative overflow-hidden m-5">
+              <div className="description  border border-white scale-125 group-hover:scale-100  duration-400 transition-all w-[90%] absolute z-50 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"></div>
+              <div className="description  p-10 duration-400 transition-all w-[90%] absolute z-40 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
-                  <div>
+                  <div className="">
                     <h2 className="text-7xl font-bold text-white">THE</h2>
                     <h2 className="text-7xl font-bold text-white">MUG GARUD</h2>
                   </div>
-                  <div>
+                  <div className="w-1/2">
                     <p className="text-[14px] text-white tracking-widest">
                       歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。{" "}
                     </p>
@@ -399,19 +400,20 @@ export default function Home() {
                 src="/images/bb0f2e5e891b08011fdcc7fe37d22363.jpg"
                 alt="img"
                 placeholder="empty"
-                className="object-cover"
+                className="object-cover scale-100 group-hover:scale-110 duration-500"
                 loading="lazy"
                 fill
               />
             </div>
-            <div className="aspect-[1/1] relative overflow-hidden m-5">
-              <div className="description border w-[70%] absolute z-40  left-5 top-1/2 -translate-y-1/2">
+            <div className="aspect-[1/1]  group relative overflow-hidden m-5">
+              <div className="description  border border-white scale-125 group-hover:scale-100  duration-400 transition-all w-[90%] absolute z-50 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"></div>
+              <div className="description  p-10 duration-400 transition-all w-[90%] absolute z-40 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
-                  <div>
+                  <div className="">
                     <h2 className="text-7xl font-bold text-white">THE</h2>
                     <h2 className="text-7xl font-bold text-white">MUG GARUD</h2>
                   </div>
-                  <div>
+                  <div className="w-1/2">
                     <p className="text-[14px] text-white tracking-widest">
                       歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。{" "}
                     </p>
@@ -422,7 +424,7 @@ export default function Home() {
                 src="/images/78cfb4ed2959fd2d7884c0f3846e59df.jpg"
                 alt="img"
                 placeholder="empty"
-                className="object-cover"
+                className="object-cover scale-100 group-hover:scale-110 duration-500"
                 loading="lazy"
                 fill
               />
