@@ -1,8 +1,11 @@
+// src/app/register/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+
+export const dynamic = "force-dynamic";
 
 function getCallbackUrl(nextPath: string) {
   const path = nextPath || "/account";
@@ -12,7 +15,7 @@ function getCallbackUrl(nextPath: string) {
     : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export default function RegisterClient() {
+export default function RegisterPage() {
   const router = useRouter();
   const search = useSearchParams();
   const next = search.get("next") || "/account";
@@ -23,10 +26,11 @@ export default function RegisterClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [fbLoading, setFbLoading] = useState(false);
 
   async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (loading || googleLoading) return;
+    if (loading || googleLoading || fbLoading) return;
     setError("");
     setLoading(true);
 
@@ -50,13 +54,24 @@ export default function RegisterClient() {
   }
 
   async function handleGoogle() {
-    if (loading || googleLoading) return;
+    if (loading || googleLoading || fbLoading) return;
     setError("");
     setGoogleLoading(true);
     try {
       await signIn("google", { callbackUrl: getCallbackUrl(next) });
     } finally {
-      setTimeout(() => setGoogleLoading(false), 2000);
+      setTimeout(() => setGoogleLoading(false), 1200);
+    }
+  }
+
+  async function handleFacebook() {
+    if (loading || googleLoading || fbLoading) return;
+    setError("");
+    setFbLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: getCallbackUrl(next) });
+    } finally {
+      setTimeout(() => setFbLoading(false), 1200);
     }
   }
 
@@ -65,18 +80,39 @@ export default function RegisterClient() {
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4">
         <h2 className="text-2xl font-semibold text-center">會員註冊</h2>
 
-        {error && <p className="text-rose-600 text-sm text-center">{error}</p>}
+        {error && (
+          <p className="text-rose-600 text-sm text-center bg-rose-50 border border-rose-200 rounded-md py-2">
+            {error}
+          </p>
+        )}
 
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={googleLoading || loading}
-          className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
-            googleLoading || loading ? "opacity-60 cursor-not-allowed" : ""
-          }`}
-        >
-          {googleLoading ? "Google 連線中…" : "使用 Google 一鍵註冊 / 登入"}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading || loading || fbLoading}
+            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
+              googleLoading || loading || fbLoading
+                ? "opacity-60 cursor-not-allowed"
+                : ""
+            }`}
+          >
+            {googleLoading ? "Google 連線中…" : "使用 Google 一鍵註冊 / 登入"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFacebook}
+            disabled={fbLoading || loading || googleLoading}
+            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
+              fbLoading || loading || googleLoading
+                ? "opacity-60 cursor-not-allowed"
+                : ""
+            }`}
+          >
+            {fbLoading ? "Facebook 連線中…" : "使用 Facebook 一鍵註冊 / 登入"}
+          </button>
+        </div>
 
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
@@ -94,7 +130,7 @@ export default function RegisterClient() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-full border p-2 rounded-md"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             required
           />
           <input
@@ -103,7 +139,7 @@ export default function RegisterClient() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full border p-2 rounded-md"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             required
           />
           <input
@@ -112,14 +148,16 @@ export default function RegisterClient() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border p-2 rounded-md"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             required
           />
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             className={`w-full bg-slate-800 text-white p-2 rounded-md hover:bg-slate-700 transition ${
-              loading || googleLoading ? "opacity-60 cursor-not-allowed" : ""
+              loading || googleLoading || fbLoading
+                ? "opacity-60 cursor-not-allowed"
+                : ""
             }`}
           >
             {loading ? "註冊中…" : "註冊"}

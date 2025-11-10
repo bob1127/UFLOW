@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer1";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-
+import CartDrawer from "@/components/cart/CartDrawer";
 // 引入 AOS
 import AOS from "aos";
 import "aos/dist/aos.css"; // 引入 AOS 的 CSS
@@ -96,7 +96,7 @@ export default function RootLayout({
 
           {/* 頁面內容，預留 Navbar 高度（若你的 Navbar 高度不是 64px，請改） */}
           <main className="min-h-screen pt-[64px]">{children}</main>
-
+          <CartDrawer />
           <Footer />
         </body>
       </html>

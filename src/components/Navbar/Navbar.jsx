@@ -79,7 +79,7 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
 function CartButton({ count = 0, onClick }) {
   return (
     <Link
-      href="/checkout"
+      href="/cart"
       type="button"
       onClick={onClick}
       aria-label={`購物車，內有 ${count} 件商品`}

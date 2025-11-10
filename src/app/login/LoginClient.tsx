@@ -1,8 +1,12 @@
+// src/app/login/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+
+/** 避免 Next 產生靜態化：使用動態頁面 */
+export const dynamic = "force-dynamic";
 
 function getCallbackUrl(nextPath: string) {
   const path = nextPath || "/account";
@@ -12,13 +16,14 @@ function getCallbackUrl(nextPath: string) {
     : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export default function LoginClient() {
+export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [fbLoading, setFbLoading] = useState(false);
 
   const router = useRouter();
   const search = useSearchParams();
@@ -43,7 +48,7 @@ export default function LoginClient() {
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (loading || googleLoading) return;
+    if (loading || googleLoading || fbLoading) return;
     setError("");
     setSuccess("");
     setLoading(true);
@@ -71,13 +76,24 @@ export default function LoginClient() {
   }
 
   async function handleGoogle() {
-    if (loading || googleLoading) return;
+    if (loading || googleLoading || fbLoading) return;
     setError("");
     setGoogleLoading(true);
     try {
       await signIn("google", { callbackUrl: getCallbackUrl(next) });
     } finally {
-      setTimeout(() => setGoogleLoading(false), 2000);
+      setTimeout(() => setGoogleLoading(false), 1200);
+    }
+  }
+
+  async function handleFacebook() {
+    if (loading || googleLoading || fbLoading) return;
+    setError("");
+    setFbLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: getCallbackUrl(next) });
+    } finally {
+      setTimeout(() => setFbLoading(false), 1200);
     }
   }
 
@@ -97,16 +113,33 @@ export default function LoginClient() {
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={googleLoading || loading}
-          className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
-            googleLoading || loading ? "opacity-60 cursor-not-allowed" : ""
-          }`}
-        >
-          {googleLoading ? "Google 連線中…" : "使用 Google 快速登入"}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading || loading || fbLoading}
+            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
+              googleLoading || loading || fbLoading
+                ? "opacity-60 cursor-not-allowed"
+                : ""
+            }`}
+          >
+            {googleLoading ? "Google 連線中…" : "使用 Google 快速登入"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFacebook}
+            disabled={fbLoading || loading || googleLoading}
+            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
+              fbLoading || loading || googleLoading
+                ? "opacity-60 cursor-not-allowed"
+                : ""
+            }`}
+          >
+            {fbLoading ? "Facebook 連線中…" : "使用 Facebook 快速登入"}
+          </button>
+        </div>
 
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
@@ -125,7 +158,7 @@ export default function LoginClient() {
             onChange={(e) => setUsername(e.target.value)}
             className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-300"
             autoComplete="username"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             required
           />
           <input
@@ -135,14 +168,14 @@ export default function LoginClient() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-300"
             autoComplete="current-password"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             required
           />
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || fbLoading}
             className={`w-full p-2 rounded-md text-white transition ${
-              loading || googleLoading
+              loading || googleLoading || fbLoading
                 ? "bg-slate-400 cursor-not-allowed"
                 : "bg-slate-800 hover:bg-slate-700"
             }`}

@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -10,42 +9,22 @@ import "swiper/css/navigation";
 import "swiper/css/thumbs";
 import { useCartStore } from "@/lib/cartStore";
 
-export default function ProductPage() {
-  // ✅ 修正：不要在 JS/JSX 中使用 TS 泛型
+export default function ProductClient({ product }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  // ✅ 修正：正確的 tab 狀態
-  const [tab, setTab] = useState("desc"); // "desc" | "notice"
-
-  // 選項狀態
+  const [tab, setTab] = useState("desc");
   const [flavor, setFlavor] = useState("ミルクティー（奶茶）");
   const [pkg, setPkg] = useState("8 份");
 
-  // Cart actions
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
-
-  const product = {
-    id: "shake-pack",
-    name: "SHAKE PACK",
-    subname: "產品名稱",
-    price: 4210,
-    desc: "健康蛋白質 15g / 50次分次包裝",
-    images: [
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-3.jpg",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-2.jpg",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-4.jpg",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-5.jpg",
-      "https://ec-force.s3.amazonaws.com/koredakecojp/uploads/images/pages/products/shakepack_8-milktea.jpg?20250401",
-    ],
-  };
 
   function handleBuyNow() {
     addItem({
       id: product.id,
-      name: `${product.name}｜${product.subname}`,
+      name: `${product.name}｜${product.subname || ""}`,
       price: product.price,
-      image: product.images[0],
+      image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: 1,
     });
@@ -73,12 +52,12 @@ export default function ProductPage() {
               className="h-[700px] overflow-hidden rounded-xl bg-white"
               onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
             >
-              {product.images.map((src, i) => (
+              {(product.images || []).map((src, i) => (
                 <SwiperSlide key={i}>
                   <Image
                     src={src}
-                    width={800}
-                    height={800}
+                    width={1200}
+                    height={1200}
                     alt={`product-${i}`}
                     className="object-cover w-full h-full"
                     priority={i === 0}
@@ -116,7 +95,6 @@ export default function ProductPage() {
                 />
               </svg>
             </button>
-
             <button
               aria-label="Next"
               className="image-swiper-button-next group absolute top-1/2 right-4 z-10 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full text-gray-700 backdrop-blur bg-white/70 shadow hover:bg-black hover:text-white transition"
@@ -157,7 +135,7 @@ export default function ProductPage() {
             modules={[FreeMode, Navigation, Thumbs]}
             className="mt-3"
           >
-            {product.images.map((src, i) => (
+            {(product.images || []).map((src, i) => (
               <SwiperSlide key={i}>
                 <Image
                   src={src}
@@ -177,9 +155,13 @@ export default function ProductPage() {
         <div className="w-full lg:w-1/2 flex flex-col justify-center">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">{product.name}</h1>
-            <span className="text-lg text-gray-600">{product.subname}</span>
+            {product.subname ? (
+              <span className="text-lg text-gray-600">{product.subname}</span>
+            ) : null}
           </div>
-          <p className="text-gray-500 mt-2">{product.desc}</p>
+          {product.desc ? (
+            <p className="text-gray-500 mt-2">{product.desc}</p>
+          ) : null}
 
           <div className="flex flex-wrap gap-2 mt-4">
             {["全面營養", "大豆蛋白", "100%植物性", "碳水化合物3.5%"].map(
@@ -201,7 +183,7 @@ export default function ProductPage() {
             </div>
 
             <div className="text-3xl font-bold mt-2">
-              ¥{product.price.toLocaleString()}
+              ¥{Number(product.price || 0).toLocaleString()}
             </div>
             <p className="text-sm text-gray-500">（含稅）初回限定價格</p>
 
@@ -296,8 +278,6 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
-
-      {/* 下方行銷段落保留或自行延伸 */}
     </main>
   );
 }
