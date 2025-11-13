@@ -135,7 +135,7 @@ export default function SwiperCardAbout({
         centeredSlides={centeredSlides}
         slidesPerView={slidesPerView}
         pagination={{ clickable: true }}
-        className=" border h-[90vh] overflow-hidden"
+        className=" border  relative aspect-[4/3] md:aspect-[16/9] xl:aspect-[16/7] overflow-hidden"
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">

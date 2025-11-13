@@ -3,6 +3,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   useCartStore,
   selectOpen,
@@ -21,12 +22,42 @@ export default function CartSheet() {
   const open = useCartStore(selectOpen);
   const close = useCartStore((s) => s.closeCart);
   const items = useCartStore(selectItems);
-  const subtotal = useCartStore(selectSubtotal); // ← 直接選取小計，會自動更新
+  const subtotal = useCartStore(selectSubtotal);
 
   const inc = useCartStore((s) => s.inc);
   const dec = useCartStore((s) => s.dec);
   const remove = useCartStore((s) => s.removeItem);
   const clear = useCartStore((s) => s.clear);
+
+  const router = useRouter();
+
+  // 點擊「前往結帳」
+  const goCheckout = () => {
+    if (!items.length) return;
+
+    const mapped = items.map((it) => ({
+      id: it.id,
+      title: it.name,
+      // 直接從 options 組一個 variant 字串
+      variant: it.options
+        ? Object.values(it.options).filter(Boolean).join(" / ")
+        : "",
+      img: it.image,
+      price: it.price,
+      list: it.price, // 先用售價當原價
+      compareAt: it.price, // 先用售價當比較價
+      qty: it.qty,
+    }));
+
+    try {
+      sessionStorage.setItem("cart_items", JSON.stringify(mapped));
+    } catch (err) {
+      console.error("寫入 cart_items 失敗：", err);
+    }
+
+    close();
+    router.push("/cart");
+  };
 
   return (
     <AnimatePresence>
@@ -40,7 +71,7 @@ export default function CartSheet() {
             onClick={close}
           />
           <motion.aside
-            className="fixed right-0 top-0 z-[9999999999999999999] h-full w-[92%] max-w-[420px] bg-white shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-[1001] w-full max-w-md bg-white shadow-xl flex flex-col"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -132,6 +163,7 @@ export default function CartSheet() {
               </div>
               <button
                 disabled={items.length === 0}
+                onClick={goCheckout}
                 className={`w-full h-12 rounded-full text-white font-semibold transition
                 ${
                   items.length === 0

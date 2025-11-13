@@ -78,8 +78,8 @@ function SummaryPanel({
   onApplyCode,
 }) {
   return (
-    <aside className="w-full lg:w-[40%] xl:w-[38%]">
-      <div className="lg:sticky lg:top-24 bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
+    <aside className=" sm:w-[80%] w-full mx-auto lg:w-1/2 bg-slate-50 pl-10">
+      <div className="lg:sticky max-w-xl  lg:top-24  rounded-xl p-5 lg:p-6 shadow-sm">
         {/* 商品清單 */}
         <div className="space-y-4">
           {items.map((it) => (
@@ -222,70 +222,88 @@ function CartStep({ items, setItems, onNext }) {
   const remove = (id) => setItems((arr) => arr.filter((x) => x.id !== id));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-10 pb-12">
-      <h1 className="text-3xl font-bold text-center mb-10">購物車</h1>
-
-      <div className="hidden md:grid grid-cols-12 text-sm text-gray-500 px-4">
-        <div className="col-span-6">產品</div>
-        <div className="col-span-2">價格</div>
-        <div className="col-span-2">數量</div>
-        <div className="col-span-2 text-right">總金額</div>
+    <div className="max-w-6xl mx-auto px-4 pt-10 pb-16">
+      {/* 上方標題列：左 title，右「繼續購物」 */}
+      <div className="flex items-baseline justify-between mb-8">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+          Your cart
+        </h1>
+        <button
+          type="button"
+          className="text-sm text-gray-600 hover:text-gray-900 underline-offset-4 hover:underline"
+        >
+          繼續購物
+        </button>
       </div>
 
-      <div className="mt-2 grid lg:grid-cols-12 gap-8">
+      {/* 欄位標題（桌機版） */}
+      <div className="hidden md:grid grid-cols-12 text-xs tracking-wide text-gray-500 px-4 mb-2">
+        <div className="col-span-6">PRODUCT</div>
+        <div className="col-span-2">PRICE</div>
+        <div className="col-span-2">QUANTITY</div>
+        <div className="col-span-2 text-right">TOTAL</div>
+      </div>
+
+      <div className="grid lg:grid-cols-12 gap-10">
+        {/* 左：商品列表 */}
         <section className="lg:col-span-8">
-          <div className="divide-y border rounded-xl bg-white">
+          <div className="divide-y border-t border-b rounded-none md:rounded-xl bg-white">
             {items.map((it) => {
               const rowTotal = it.price * it.qty;
               return (
-                <div key={it.id} className="grid grid-cols-12 p-4 gap-4">
-                  {/* 產品 */}
+                <div key={it.id} className="grid grid-cols-12 gap-4 p-4">
+                  {/* 產品資訊 */}
                   <div className="col-span-12 md:col-span-6 flex gap-4">
                     <img
                       src={it.img}
                       alt={it.title}
-                      className="w-28 h-28 rounded-md object-cover"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-md object-cover border"
                     />
-                    <div className="flex-1">
-                      <div className="font-medium">{it.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        尺寸：{it.variant}
+                    <div className="flex-1 text-sm">
+                      <div className="font-medium text-gray-900">
+                        {it.title}
                       </div>
+                      {it.variant && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          Color / Size：{it.variant}
+                        </div>
+                      )}
                       <button
                         onClick={() => remove(it.id)}
-                        className="mt-3 inline-flex items-center px-3 py-1 text-xs rounded-full border hover:bg-gray-50"
+                        className="mt-3 inline-flex items-center text-xs text-gray-500 hover:text-gray-900"
                       >
                         移除
                       </button>
-                      <div className="mt-2 text-xs text-rose-600">
-                        雙11活動，專區任選 2 件 8 折（示意）
-                      </div>
                     </div>
                   </div>
 
                   {/* 單價 */}
-                  <div className="col-span-6 md:col-span-2 flex md:block items-center gap-2">
+                  <div className="col-span-6 md:col-span-2 flex md:block items-center gap-2 text-sm">
                     {it.list && (
-                      <span className="text-gray-400 line-through mr-2">
+                      <span className="text-gray-400 line-through mr-1">
                         {currency(it.list)}
                       </span>
                     )}
-                    <span className="font-semibold">{currency(it.price)}</span>
+                    <span className="font-semibold text-gray-900">
+                      {currency(it.price)}
+                    </span>
                   </div>
 
                   {/* 數量 */}
-                  <div className="col-span-6 md:col-span-2">
-                    <div className="inline-flex items-center border rounded-lg">
+                  <div className="col-span-6 md:col-span-2 flex md:block items-center">
+                    <div className="inline-flex items-center border rounded-full text-sm">
                       <button
-                        className="px-3 py-2"
+                        className="px-3 py-1.5"
                         aria-label="decrease"
-                        onClick={() => setQty(it.id, it.qty - 1)}
+                        onClick={() => setQty(it.id, Math.max(1, it.qty - 1))}
                       >
                         –
                       </button>
-                      <div className="px-4 py-2 border-x">{it.qty}</div>
+                      <div className="px-4 py-1.5 border-x min-w-[2.5rem] text-center">
+                        {it.qty}
+                      </div>
                       <button
-                        className="px-3 py-2"
+                        className="px-3 py-1.5"
                         aria-label="increase"
                         onClick={() => setQty(it.id, it.qty + 1)}
                       >
@@ -295,63 +313,51 @@ function CartStep({ items, setItems, onNext }) {
                   </div>
 
                   {/* 小計 */}
-                  <div className="col-span-12 md:col-span-2 md:text-right font-semibold">
-                    {currency(rowTotal)}
+                  <div className="col-span-12 md:col-span-2 md:text-right flex md:block items-center justify-between md:justify-end text-sm font-semibold">
+                    <span className="md:hidden text-gray-500">小計</span>
+                    <span>{currency(rowTotal)}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="text-xs text-rose-600 mt-4">
-            會員折扣與活動優惠僅能擇一使用
-          </div>
+          {/* 可有可無的小提醒，依需求保留或移除 */}
+          <p className="mt-3 text-xs text-gray-500">
+            稅金與運費將於結帳時計算。
+          </p>
         </section>
 
-        {/* 右：備註 + 小計 */}
-        <aside className="lg:col-span-4">
-          <div className="lg:sticky lg:top-24 bg-white border rounded-xl overflow-hidden">
-            <div className="p-4">
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="備註（選填）"
-                className="w-full min-h-[96px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-200"
-              />
-            </div>
-            <div className="p-4 border-t text-sm space-y-2">
+        {/* 右：結帳總覽 */}
+        <aside className="lg:col-span-4 lg:pl-4">
+          <div className="lg:sticky lg:top-24 space-y-4">
+            {/* 小計區塊 */}
+            <div className="bg-white border rounded-xl p-4 sm:p-5 text-sm space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">小計</span>
+                <span className="text-gray-600">Subtotal</span>
                 <span>{currency(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">運送</span>
-                <span>
-                  {shippingFee === 0 ? (
-                    <>
-                      <span className="line-through mr-1 text-gray-400">
-                        {currency(80)}
-                      </span>
-                      免費
-                    </>
-                  ) : (
-                    currency(shippingFee)
-                  )}
-                </span>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Shipping</span>
+                <span>計算於結帳頁面</span>
               </div>
-              <div className="flex justify-between pt-2 mt-2 border-t text-base font-bold">
-                <span>總計</span>
+              <div className="flex justify-between pt-3 mt-1 border-t text-base font-semibold">
+                <span>Total</span>
                 <span>{currency(total)}</span>
               </div>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Taxes and shipping will be calculated at checkout.
+              </p>
             </div>
-          </div>
 
-          <button
-            onClick={onNext}
-            className="mt-6 w-full bg-black text-white font-semibold py-3 rounded-lg hover:opacity-90"
-          >
-            前往填寫資料
-          </button>
+            {/* 結帳按鈕們：主按鈕 + 其他支付 */}
+            <button
+              onClick={onNext}
+              className="w-full h-11 sm:h-12 bg-black text-white font-semibold rounded-md hover:opacity-90 text-sm"
+            >
+              Check out
+            </button>
+          </div>
         </aside>
       </div>
     </div>
@@ -450,281 +456,293 @@ function CheckoutStep({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-8 pb-12">
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* 左側：表單（照你原設計） */}
-        <section className="w-full lg:w-[60%] xl:w-[62%] space-y-8">
-          {/* 聯絡方式 */}
-          <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">聯絡方式</h2>
-            <div className="mt-4 grid gap-4">
-              <Field label="電子郵件" required error={errors.email}>
-                <input
-                  type="email"
-                  value={contact.email}
-                  onChange={(e) =>
-                    setContact((s) => ({ ...s, email: e.target.value }))
-                  }
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                    errors.email ? "border-red-500" : ""
-                  }`}
-                  placeholder="you@example.com"
-                />
-              </Field>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={contact.newsletter}
-                  onChange={(e) =>
-                    setContact((s) => ({ ...s, newsletter: e.target.checked }))
-                  }
-                />
-                以電子郵件傳送最新消息和優惠活動給我
-              </label>
-            </div>
-          </div>
-
-          {/* 配送地址 */}
-          <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">配送</h2>
-            <div className="mt-4 grid gap-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="國家/地區">
-                  <select
-                    value={addr.country}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, country: e.target.value }))
-                    }
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
-                  >
-                    <option>台灣</option>
-                    <option>香港</option>
-                    <option>日本</option>
-                  </select>
-                </Field>
-                <Field label="名字" required error={errors.firstName}>
-                  <input
-                    value={addr.firstName}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, firstName: e.target.value }))
-                    }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                      errors.firstName ? "border-red-500" : ""
-                    }`}
-                    placeholder="名字"
-                  />
-                </Field>
-                <Field label="姓氏" required error={errors.lastName}>
-                  <input
-                    value={addr.lastName}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, lastName: e.target.value }))
-                    }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                      errors.lastName ? "border-red-500" : ""
-                    }`}
-                    placeholder="姓氏"
-                  />
-                </Field>
-              </div>
-
-              <Field label="地址（區域＋路名）" required error={errors.line1}>
-                <input
-                  value={addr.line1}
-                  onChange={(e) =>
-                    setAddr((s) => ({ ...s, line1: e.target.value }))
-                  }
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                    errors.line1 ? "border-red-500" : ""
-                  }`}
-                  placeholder="例：板橋區重慶路 〇號"
-                />
-              </Field>
-              <Field label="地址 2（選填）">
-                <input
-                  value={addr.line2}
-                  onChange={(e) =>
-                    setAddr((s) => ({ ...s, line2: e.target.value }))
-                  }
-                  className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
-                  placeholder="樓層、公司…"
-                />
-              </Field>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field
-                  label="城市（必填）"
-                  required
-                  error={errors.city}
-                  help="例：台北市、新竹縣…"
-                >
-                  <input
-                    value={addr.city}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, city: e.target.value }))
-                    }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                      errors.city ? "border-red-500" : ""
-                    }`}
-                  />
-                </Field>
-                <Field label="郵遞區號（選填）">
-                  <input
-                    value={addr.zip}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, zip: e.target.value }))
-                    }
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
-                  />
-                </Field>
-                <Field label="電話" required error={errors.phone}>
-                  <input
-                    value={addr.phone}
-                    onChange={(e) =>
-                      setAddr((s) => ({ ...s, phone: e.target.value }))
-                    }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
-                      errors.phone ? "border-red-500" : ""
-                    }`}
-                    placeholder="09xxxxxxxx"
-                  />
-                </Field>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={addr.saveInfo || false}
-                  onChange={(e) =>
-                    setAddr((s) => ({ ...s, saveInfo: e.target.checked }))
-                  }
-                />
-                儲存此資訊供下次使用
-              </label>
-            </div>
-          </div>
-
-          {/* 運送方式 */}
-          <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">運送方式</h2>
-            <div className="mt-4 grid gap-3">
-              <RadioRow
-                checked={shipMethod === "000"}
-                onChange={() => setShipMethod("000")}
-                label="000「宅配速送」新竹物流"
-                right={
-                  pricing.shipping === 0 ? (
-                    <div className="flex items-center gap-2">
-                      <span className="line-through text-gray-400">
-                        {currency(80)}
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs">
-                        免費
-                      </span>
-                    </div>
-                  ) : (
-                    <span>{currency(80)}</span>
-                  )
-                }
-              >
-                運送至：{addr.city || "—"}
-              </RadioRow>
-            </div>
-          </div>
-
-          {/* 付款 */}
-          <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">付款</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              所有交易都受安全加密保護。{" "}
-              <span className="inline-block ml-1">🔒</span>
-            </p>
-
-            <div className="mt-4 grid gap-3">
-              <RadioRow
-                checked={payMethod === "card"}
-                onChange={() => setPayMethod("card")}
-                label="信用卡支付"
-                right={
-                  <div className="flex items-center gap-1 opacity-70">
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
-                      alt="VISA"
-                      className="h-4 w-auto"
-                    />
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-                      alt="Mastercard"
-                      className="h-4 w-auto"
-                    />
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg"
-                      alt="AMEX"
-                      className="h-4 w-auto"
-                    />
-                  </div>
-                }
-              >
-                {/* 這裡接 Stripe/藍新；先放示意欄位 */}
-                <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                  <input
-                    className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="卡號 •••• •••• •••• ••••"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
+    <div className="w-full flex justify-center">
+      {" "}
+      <div className=" px-4 pt-8 pb-12 w-full">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* 左側：表單（照你原設計） */}
+          <section className=" w-full sm:w-[80%] mx-auto lg:w-1/2 flex justify-center lg:justify-end pr-0 lg:pr-10 space-y-8">
+            <div className="max-w-2xl">
+              {/* 聯絡方式 */}
+              <div className="bg-white border rounded-xl my-5 p-5 lg:p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">聯絡方式</h2>
+                <div className="mt-4 grid gap-4">
+                  <Field label="電子郵件" required error={errors.email}>
                     <input
-                      className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                      placeholder="MM/YY"
+                      type="email"
+                      value={contact.email}
+                      onChange={(e) =>
+                        setContact((s) => ({ ...s, email: e.target.value }))
+                      }
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                        errors.email ? "border-red-500" : ""
+                      }`}
+                      placeholder="you@example.com"
                     />
+                  </Field>
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input
-                      className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                      placeholder="CVC"
+                      type="checkbox"
+                      checked={contact.newsletter}
+                      onChange={(e) =>
+                        setContact((s) => ({
+                          ...s,
+                          newsletter: e.target.checked,
+                        }))
+                      }
                     />
-                  </div>
+                    以電子郵件傳送最新消息和優惠活動給我
+                  </label>
                 </div>
-              </RadioRow>
+              </div>
 
-              <RadioRow
-                checked={payMethod === "linepay"}
-                onChange={() => setPayMethod("linepay")}
-                label="LINE Pay"
-                right={
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
-                    alt="LINE"
-                    className="h-4 w-auto"
+              {/* 配送地址 */}
+              <div className="bg-white my-5 border rounded-xl p-5 lg:p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">配送</h2>
+                <div className="mt-4 grid gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field label="國家/地區">
+                      <select
+                        value={addr.country}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, country: e.target.value }))
+                        }
+                        className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                      >
+                        <option>台灣</option>
+                        <option>香港</option>
+                        <option>日本</option>
+                      </select>
+                    </Field>
+                    <Field label="名字" required error={errors.firstName}>
+                      <input
+                        value={addr.firstName}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, firstName: e.target.value }))
+                        }
+                        className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                          errors.firstName ? "border-red-500" : ""
+                        }`}
+                        placeholder="名字"
+                      />
+                    </Field>
+                    <Field label="姓氏" required error={errors.lastName}>
+                      <input
+                        value={addr.lastName}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, lastName: e.target.value }))
+                        }
+                        className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                          errors.lastName ? "border-red-500" : ""
+                        }`}
+                        placeholder="姓氏"
+                      />
+                    </Field>
+                  </div>
+
+                  <Field
+                    label="地址（區域＋路名）"
+                    required
+                    error={errors.line1}
+                  >
+                    <input
+                      value={addr.line1}
+                      onChange={(e) =>
+                        setAddr((s) => ({ ...s, line1: e.target.value }))
+                      }
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                        errors.line1 ? "border-red-500" : ""
+                      }`}
+                      placeholder="例：板橋區重慶路 〇號"
+                    />
+                  </Field>
+                  <Field label="地址 2（選填）">
+                    <input
+                      value={addr.line2}
+                      onChange={(e) =>
+                        setAddr((s) => ({ ...s, line2: e.target.value }))
+                      }
+                      className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                      placeholder="樓層、公司…"
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field
+                      label="城市（必填）"
+                      required
+                      error={errors.city}
+                      help="例：台北市、新竹縣…"
+                    >
+                      <input
+                        value={addr.city}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, city: e.target.value }))
+                        }
+                        className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                          errors.city ? "border-red-500" : ""
+                        }`}
+                      />
+                    </Field>
+                    <Field label="郵遞區號（選填）">
+                      <input
+                        value={addr.zip}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, zip: e.target.value }))
+                        }
+                        className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                      />
+                    </Field>
+                    <Field label="電話" required error={errors.phone}>
+                      <input
+                        value={addr.phone}
+                        onChange={(e) =>
+                          setAddr((s) => ({ ...s, phone: e.target.value }))
+                        }
+                        className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                          errors.phone ? "border-red-500" : ""
+                        }`}
+                        placeholder="09xxxxxxxx"
+                      />
+                    </Field>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={addr.saveInfo || false}
+                      onChange={(e) =>
+                        setAddr((s) => ({ ...s, saveInfo: e.target.checked }))
+                      }
+                    />
+                    儲存此資訊供下次使用
+                  </label>
+                </div>
+              </div>
+
+              {/* 運送方式 */}
+              <div className="bg-white border my-5 rounded-xl p-5 lg:p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">運送方式</h2>
+                <div className="mt-4 grid gap-3">
+                  <RadioRow
+                    checked={shipMethod === "000"}
+                    onChange={() => setShipMethod("000")}
+                    label="000「宅配速送」新竹物流"
+                    right={
+                      pricing.shipping === 0 ? (
+                        <div className="flex items-center gap-2">
+                          <span className="line-through text-gray-400">
+                            {currency(80)}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs">
+                            免費
+                          </span>
+                        </div>
+                      ) : (
+                        <span>{currency(80)}</span>
+                      )
+                    }
+                  >
+                    運送至：{addr.city || "—"}
+                  </RadioRow>
+                </div>
+              </div>
+
+              {/* 付款 */}
+              <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">付款</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  所有交易都受安全加密保護。{" "}
+                  <span className="inline-block ml-1">🔒</span>
+                </p>
+
+                <div className="mt-4 grid gap-3">
+                  <RadioRow
+                    checked={payMethod === "card"}
+                    onChange={() => setPayMethod("card")}
+                    label="信用卡支付"
+                    right={
+                      <div className="flex items-center gap-1 opacity-70">
+                        <img
+                          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+                          alt="VISA"
+                          className="h-4 w-auto"
+                        />
+                        <img
+                          src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                          alt="Mastercard"
+                          className="h-4 w-auto"
+                        />
+                        <img
+                          src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg"
+                          alt="AMEX"
+                          className="h-4 w-auto"
+                        />
+                      </div>
+                    }
+                  >
+                    {/* 這裡接 Stripe/藍新；先放示意欄位 */}
+                    <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                      <input
+                        className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
+                        placeholder="卡號 •••• •••• •••• ••••"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
+                          placeholder="MM/YY"
+                        />
+                        <input
+                          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
+                          placeholder="CVC"
+                        />
+                      </div>
+                    </div>
+                  </RadioRow>
+
+                  <RadioRow
+                    checked={payMethod === "linepay"}
+                    onChange={() => setPayMethod("linepay")}
+                    label="LINE Pay"
+                    right={
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
+                        alt="LINE"
+                        className="h-4 w-auto"
+                      />
+                    }
                   />
-                }
-              />
+                </div>
+              </div>
+
+              {/* 送出 */}
+              <div className="flex my-5 items-center justify-between">
+                <button
+                  onClick={onPrev}
+                  className="text-sm text-gray-600 hover:underline"
+                >
+                  ← 返回購物車
+                </button>
+                <button
+                  onClick={submit}
+                  className="px-6 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900"
+                >
+                  立即付款
+                </button>
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* 送出 */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onPrev}
-              className="text-sm text-gray-600 hover:underline"
-            >
-              ← 返回購物車
-            </button>
-            <button
-              onClick={submit}
-              className="px-6 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900"
-            >
-              立即付款
-            </button>
-          </div>
-        </section>
-
-        {/* 右側：摘要 */}
-        <SummaryPanel
-          items={items}
-          pricing={pricing}
-          code={code}
-          codeMsg={codeMsg}
-          onCodeChange={setCode}
-          onApplyCode={onApplyCode}
-        />
+          {/* 右側：摘要 */}
+          <SummaryPanel
+            items={items}
+            pricing={pricing}
+            code={code}
+            codeMsg={codeMsg}
+            onCodeChange={setCode}
+            onApplyCode={onApplyCode}
+          />
+        </div>
       </div>
     </div>
   );
@@ -748,62 +766,64 @@ function ThankYouStep({ order, onBackToShop }) {
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 pt-8 pb-16 grid lg:grid-cols-12 gap-8">
+    <main className="w-full max-w-[1500px] mx-auto px-4 pt-8 pb-16 grid lg:grid-cols-12 gap-8">
       {/* 左：資訊 */}
       <section className="lg:col-span-8 space-y-6">
-        <div className="bg-white border rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full border grid place-items-center">
-              ✓
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">確認 #{order.id}</div>
-              <h1 className="text-xl font-semibold">已送出，感謝您！</h1>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-lg overflow-hidden border">
-            <img
-              src="https://maps.googleapis.com/maps/api/staticmap?center=Taichung&zoom=12&size=800x300&scale=2&maptype=roadmap&markers=color:red%7CTaichung"
-              alt="選送地址地圖（示意）"
-              className="w-full h-auto"
-            />
-          </div>
-
-          <p className="mt-4 text-sm text-gray-700">
-            您很快就會收到確認電子郵件。
-          </p>
-        </div>
-
-        <div className="bg-white border rounded-xl p-5 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">訂單詳細資訊</h2>
-          <div className="grid sm:grid-cols-2 gap-6 text-sm">
-            <div>
-              <div className="text-gray-500 mb-1">聯絡資訊</div>
-              <div>{order.contact?.email || "—"}</div>
-            </div>
-            <div>
-              <div className="text-gray-500 mb-1">付款方式</div>
+        <div className="max-w-3xl mx-auto">
+          {" "}
+          <div className="bg-white border rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full border grid place-items-center">
+                ✓
+              </div>
               <div>
-                {order.payMethod === "card" ? "信用卡" : "LINE Pay"} —{" "}
-                <span className="font-medium">
-                  {currency(order.pricing.total)}
-                </span>
+                <div className="text-sm text-gray-500">確認 #{order.id}</div>
+                <h1 className="text-xl font-semibold">已送出，感謝您！</h1>
               </div>
             </div>
-            <div>
-              <div className="text-gray-500 mb-1">運送地址</div>
-              <div className="whitespace-pre-line">
-                {order.addr?.zip ? `${order.addr.zip}\n` : ""}
-                {order.addr?.country} {order.addr?.city}
-                {order.addr?.line1 ? `\n${order.addr.line1}` : ""}
-                {order.addr?.line2 ? `\n${order.addr.line2}` : ""}
-                {order.addr?.phone ? `\n${order.addr.phone}` : ""}
-              </div>
+
+            <div className="mt-4 rounded-lg overflow-hidden border">
+              <img
+                src="https://maps.googleapis.com/maps/api/staticmap?center=Taichung&zoom=12&size=800x300&scale=2&maptype=roadmap&markers=color:red%7CTaichung"
+                alt="選送地址地圖（示意）"
+                className="w-full h-auto"
+              />
             </div>
-            <div>
-              <div className="text-gray-500 mb-1">運送方式</div>
-              <div>000「宅配速送」新竹物流</div>
+
+            <p className="mt-4 text-sm text-gray-700">
+              您很快就會收到確認電子郵件。
+            </p>
+          </div>
+          <div className="bg-white border rounded-xl mt-8 p-5 shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">訂單詳細資訊</h2>
+            <div className="grid sm:grid-cols-2 gap-6 text-sm">
+              <div>
+                <div className="text-gray-500 mb-1">聯絡資訊</div>
+                <div>{order.contact?.email || "—"}</div>
+              </div>
+              <div>
+                <div className="text-gray-500 mb-1">付款方式</div>
+                <div>
+                  {order.payMethod === "card" ? "信用卡" : "LINE Pay"} —{" "}
+                  <span className="font-medium">
+                    {currency(order.pricing.total)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-500 mb-1">運送地址</div>
+                <div className="whitespace-pre-line">
+                  {order.addr?.zip ? `${order.addr.zip}\n` : ""}
+                  {order.addr?.country} {order.addr?.city}
+                  {order.addr?.line1 ? `\n${order.addr.line1}` : ""}
+                  {order.addr?.line2 ? `\n${order.addr.line2}` : ""}
+                  {order.addr?.phone ? `\n${order.addr.phone}` : ""}
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-500 mb-1">運送方式</div>
+                <div>000「宅配速送」新竹物流</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1032,7 +1052,7 @@ export default function CartIntegratedPage() {
   };
 
   return (
-    <div className="h-auto bg-gray-50 pb-10">
+    <div className="h-auto bg-white pb-10">
       {/* 頂部品牌列 */}
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
@@ -1044,7 +1064,7 @@ export default function CartIntegratedPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 pt-8">
+      <main className="w-full mx-auto px-4 pt-8">
         <Stepper step={step} />
 
         {/* 高度修正：不使用 absolute；外層提供最小高度並隱藏溢出，讓切換時不抖 */}

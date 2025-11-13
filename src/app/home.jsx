@@ -175,38 +175,41 @@ export default function Home() {
         <div className="pt-6">
           <Slider ratio="16/9" autoplayDelay={4500} speed={1400} />
         </div>
-
         <section className="section-main-products xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
-          <div className="flex">
-            <div className="text w-[30%] p-10">
-              <h1 className="text-6xl font-bold">UFLOW</h1>
-              <h2 className="text-2xl">
+          <div className="flex flex-col lg:flex-row">
+            {/* 左側文字區 */}
+            <div className="text w-full lg:w-[30%] p-6 lg:p-10 flex flex-col justify-center">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold">
+                UFLOW
+              </h1>
+              <h2 className="text-xl sm:text-2xl mt-4">
                 UFLOW是一家以提供高品質健康產品為核心的品牌
               </h2>
-              <div className="mt-4 ">
-                <p className="tracking-wider">
+              <div className="mt-4">
+                <p className="tracking-wider leading-relaxed">
                   研發的精神在以科學方法應用於天然原料科技養護身心。。
                 </p>
-                <p className="tracking-wider">
+                <p className="tracking-wider leading-relaxed mt-2">
                   我們相信，健康是一種生活方式，也是一種簡單、自然且富有活力的人生。
                 </p>
-                <button class="group mt-5 relative inline-flex h-[calc(48px+8px)] items-center justify-center rounded-full bg-neutral-950 py-1 pl-6 pr-14 font-medium text-neutral-50">
-                  <span class="z-10 pr-2">更多產品</span>
-                  <div class="absolute right-1 inline-flex h-12 w-12 items-center justify-end rounded-full bg-neutral-700 transition-[width] group-hover:w-[calc(100%-8px)]">
-                    <div class="mr-3.5 flex items-center justify-center">
+
+                <button className="group mt-5 relative inline-flex h-[calc(48px+8px)] items-center justify-center rounded-full bg-neutral-950 py-1 pl-6 pr-14 font-medium text-neutral-50">
+                  <span className="z-10 pr-2">更多產品</span>
+                  <div className="absolute right-1 inline-flex h-12 w-12 items-center justify-end rounded-full bg-neutral-700 transition-[width] group-hover:w-[calc(100%-8px)]">
+                    <div className="mr-3.5 flex items-center justify-center">
                       <svg
                         width="15"
                         height="15"
                         viewBox="0 0 15 15"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5 text-neutral-50"
+                        className="h-5 w-5 text-neutral-50"
                       >
                         <path
                           d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z"
                           fill="currentColor"
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
+                          fillRule="evenodd"
+                          clipRule="evenodd"
                         ></path>
                       </svg>
                     </div>
@@ -214,14 +217,14 @@ export default function Home() {
                 </button>
               </div>
             </div>
-            <div className="product flex w-[70%]">
-              <div className="grid grid-cols-3 w-full">
-                <div className="group p-8">
+
+            {/* 右側產品區 */}
+            <div className="product w-full lg:w-[70%] mt-10 lg:mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
+                {/* Card 1 */}
+                <div className="group p-6 lg:p-8">
                   <Link href="/product">
-                    <div
-                      href=""
-                      className="relative  aspect-[4/3] w-full overflow-hidden "
-                    >
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
                         alt="img"
@@ -244,7 +247,7 @@ export default function Home() {
                           fill="none"
                           stroke="black"
                           strokeWidth="1"
-                          strokeDasharray="6 2" // ← 改這裡：更長的虛線點
+                          strokeDasharray="6 2"
                           vectorEffect="non-scaling-stroke"
                           className="animate-ants"
                         />
@@ -252,29 +255,31 @@ export default function Home() {
                     </div>
                   </Link>
 
-                  <div className="info  mt-3 p-4">
-                    <div className="flex justify-between">
-                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500  px-4 w-auto text-[13px] py-1">
+                  <div className="info mt-3 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500 px-4 w-auto text-[13px] py-1 whitespace-nowrap">
                         熱銷產品
                       </span>
-                      <div className="flex text-[15px] justify-center">
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
                         NT,400$
                       </div>
                     </div>
 
-                    <br></br>
-                    <b className="text-xl tracking-widest">穀胱甘肽</b>
-                    <p className="text-[14px] tracking-wider">
+                    <br />
+                    <b className="text-lg sm:text-xl tracking-widest">
+                      穀胱甘肽
+                    </b>
+                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
                       防禦紫外線傷害、抑制黑色素生成，並有助於淡
                       化色斑、提亮膚色。
                     </p>
                   </div>
                 </div>
 
-                <div className="group p-8">
+                {/* Card 2 */}
+                <div className="group p-6 lg:p-8">
                   <Link href="/product">
-                    {" "}
-                    <div className="relative  aspect-[4/3] w-full overflow-hidden ">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
                         alt="img"
@@ -297,7 +302,7 @@ export default function Home() {
                           fill="none"
                           stroke="black"
                           strokeWidth="1"
-                          strokeDasharray="6 2" // ← 改這裡：更長的虛線點
+                          strokeDasharray="6 2"
                           vectorEffect="non-scaling-stroke"
                           className="animate-ants"
                         />
@@ -305,28 +310,31 @@ export default function Home() {
                     </div>
                   </Link>
 
-                  <div className="info  mt-3 p-4">
-                    <div className="flex justify-between">
-                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500  px-4 w-auto text-[13px] py-1">
+                  <div className="info mt-3 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500 px-4 w-auto text-[13px] py-1 whitespace-nowrap">
                         熱銷產品
                       </span>
-                      <div className="flex text-[15px] justify-center">
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
                         NT,400$
                       </div>
                     </div>
 
-                    <br></br>
-                    <b className="text-xl tracking-widest">穀胱甘肽</b>
-                    <p className="text-[14px] tracking-wider">
+                    <br />
+                    <b className="text-lg sm:text-xl tracking-widest">
+                      穀胱甘肽
+                    </b>
+                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
                       防禦紫外線傷害、抑制黑色素生成，並有助於淡
                       化色斑、提亮膚色。
                     </p>
                   </div>
                 </div>
-                <div className="group p-8">
+
+                {/* Card 3 */}
+                <div className="group p-6 lg:p-8">
                   <Link href="/product">
-                    {" "}
-                    <div className="relative  aspect-[4/3] w-full overflow-hidden ">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
                         alt="img"
@@ -349,7 +357,7 @@ export default function Home() {
                           fill="none"
                           stroke="black"
                           strokeWidth="1"
-                          strokeDasharray="6 2" // ← 改這裡：更長的虛線點
+                          strokeDasharray="6 2"
                           vectorEffect="non-scaling-stroke"
                           className="animate-ants"
                         />
@@ -357,19 +365,21 @@ export default function Home() {
                     </div>
                   </Link>
 
-                  <div className="info  mt-3 p-4">
-                    <div className="flex justify-between">
-                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500  px-4 w-auto text-[13px] py-1">
+                  <div className="info mt-3 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500 px-4 w-auto text-[13px] py-1 whitespace-nowrap">
                         熱銷產品
                       </span>
-                      <div className="flex text-[15px] justify-center">
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
                         NT,400$
                       </div>
                     </div>
 
-                    <br></br>
-                    <b className="text-xl tracking-widest">穀胱甘肽</b>
-                    <p className="text-[14px] tracking-wider">
+                    <br />
+                    <b className="text-lg sm:text-xl tracking-widest">
+                      穀胱甘肽
+                    </b>
+                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
                       防禦紫外線傷害、抑制黑色素生成，並有助於淡
                       化色斑、提亮膚色。
                     </p>
@@ -379,25 +389,34 @@ export default function Home() {
             </div>
           </div>
         </section>
+
         <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
-          <div className="grid grid-cols-2">
-            <div className="aspect-[1/1] group relative overflow-hidden m-5">
-              <div className="description  border border-white scale-125 group-hover:scale-100  duration-400 transition-all w-[90%] absolute z-50 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"></div>
-              <div className="description  p-10 duration-400 transition-all w-[90%] absolute z-40 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Card 2 */}
+            <div className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5">
+              {/* 白色邊框框 */}
+              <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
+              {/* 文字區塊 */}
+              <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
-                  <div className="">
-                    <h2 className="text-7xl font-bold text-white">THE</h2>
-                    <h2 className="text-7xl font-bold text-white">MUG GARUD</h2>
+                  <div>
+                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
+                      THE
+                    </h2>
+                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
+                      MUG GARUD
+                    </h2>
                   </div>
-                  <div className="w-1/2">
-                    <p className="text-[14px] text-white tracking-widest">
-                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。{" "}
+                  <div className="w-full lg:w-1/2 mt-4 md:mt-0">
+                    <p className="text-white tracking-widest leading-relaxed text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px]">
+                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。
                     </p>
                   </div>
                 </div>
               </div>
+              {/* 背景圖片 */}
               <Image
-                src="/images/bb0f2e5e891b08011fdcc7fe37d22363.jpg"
+                src="/images/78cfb4ed2959fd2d7884c0f3846e59df.jpg"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -405,21 +424,30 @@ export default function Home() {
                 fill
               />
             </div>
-            <div className="aspect-[1/1]  group relative overflow-hidden m-5">
-              <div className="description  border border-white scale-125 group-hover:scale-100  duration-400 transition-all w-[90%] absolute z-50 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"></div>
-              <div className="description  p-10 duration-400 transition-all w-[90%] absolute z-40 h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+
+            {/* Card 2 */}
+            <div className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5">
+              {/* 白色邊框框 */}
+              <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
+              {/* 文字區塊 */}
+              <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
-                  <div className="">
-                    <h2 className="text-7xl font-bold text-white">THE</h2>
-                    <h2 className="text-7xl font-bold text-white">MUG GARUD</h2>
+                  <div>
+                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
+                      THE
+                    </h2>
+                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
+                      MUG GARUD
+                    </h2>
                   </div>
-                  <div className="w-1/2">
-                    <p className="text-[14px] text-white tracking-widest">
-                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。{" "}
+                  <div className="w-full lg:w-1/2 mt-4 md:mt-0">
+                    <p className="text-white tracking-widest leading-relaxed text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px]">
+                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。
                     </p>
                   </div>
                 </div>
               </div>
+              {/* 背景圖片 */}
               <Image
                 src="/images/78cfb4ed2959fd2d7884c0f3846e59df.jpg"
                 alt="img"
@@ -431,49 +459,71 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section className="section_features  xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
-          <div className="flex  flex-col justify-center items-center ">
-            <div className="text  py-10">
-              <div className="px-10 ">
-                <h1 className="text-6xl font-bold">value</h1>
-                <h2 className="text-3xl font-bold">我們的價值觀</h2>
+        <section className="section_features w-full pt-16 sm:pt-20">
+          {/* 上半：價值觀區塊 */}
+          <div className="flex flex-col items-center justify-center mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="w-full py-8 sm:py-10">
+              {/* 標題 */}
+              <div className="px-2 sm:px-6 lg:px-10 text-center sm:text-left">
+                <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
+                  value
+                </h1>
+                <h2 className="mt-2 font-bold text-2xl sm:text-3xl lg:text-4xl leading-snug">
+                  我們的價值觀
+                </h2>
               </div>
-              <div className="w-full grid grid-cols-2 py-6 ">
-                <div className="px-10 py-5 ">
-                  <h2 className="text-3xl font-bold">植粹與天然</h2>
-                  <p className="max-w-[500px]">
-                    我們的每一 款產品都選用最純粹、最 自然的成分，確保每一位
-                    顧客都能享受天然的健康 益處。
+
+              {/* 四個 value 區塊 */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-y-10 py-6 sm:py-8">
+                <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                    植粹與天然
+                  </h2>
+                  <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
+                    我們的每一款產品都選用最純粹、最自然的成分，確保每一位
+                    顧客都能享受天然的健康益處。
                   </p>
                 </div>
-                <div className="px-10 py-5">
-                  <h2 className="text-3xl font-bold">創新與科學</h2>
-                  <p className="max-w-[500px]">
-                    我們致力於將 創新的科技與天然成分相結
-                    合，通過科學研究為顧客提 供更加有效的健康解決方 案。
+
+                <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                    創新與科學
+                  </h2>
+                  <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
+                    我們致力於將創新的科技與天然成分相結合，
+                    通過科學研究為顧客提供更加有效的健康解決方案。
                   </p>
                 </div>
-                <div className="px-10 py-5 ">
-                  <h2 className="text-3xl font-bold">透明與信任</h2>
-                  <p className="max-w-[500px]">
-                    我們相信誠 實與透明是建立品牌信任 的基礎，我們會讓每一位
-                    顧客了解我們的產品來 源、成分及使用方式。
+
+                <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                    透明與信任
+                  </h2>
+                  <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
+                    我們相信誠實與透明是建立品牌信任的基礎，
+                    會讓每一位顧客了解產品來源、成分及使用方式。
                   </p>
                 </div>
-                <div className="px-10 py-5">
-                  <h2 className="text-3xl font-bold">關懷與共鳴</h2>
-                  <p className="max-w-[500px]">
-                    我們關注每一 位顧客的健康與生活需求， 用心傾聽，提供貼心的服
-                    務，並建立與顧客之間的長 久連結與信任。
+
+                <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                    關懷與共鳴
+                  </h2>
+                  <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
+                    我們關注每一位顧客的健康與生活需求，用心傾聽，
+                    提供貼心服務，並建立長久連結與信任。
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex max-w-[1920px] mx-auto  md:flex-row flex-col w-[90%] ">
+
+          {/* 下半：圖片＋說明區塊 */}
+          <div className="flex flex-col md:flex-row w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+            {/* 左側圖片區 */}
             <div className="flex flex-col w-full">
-              <div className="img w-[100%] mx-auto sm:mx-3 h-auto md:h-[80vh] xl:h-[90vh] overflow-hidden">
-                {/* ✅ 外層 overflow-hidden，內層再包一層做縮放 */}
+              <div className="img w-full mx-auto sm:mx-3 h-auto md:h-[70vh] xl:h-[80vh] overflow-hidden">
+                {/* ✅ 保留動畫 class，不動效果 */}
                 <div className="animate-image-wrapper relative w-full aspect-[4/5] md:h-full overflow-hidden">
                   <div className="overlay absolute inset-0 bg-black z-10" />
                   <div className="image-container relative w-full h-full overflow-hidden">
@@ -483,38 +533,44 @@ export default function Home() {
                         alt="About Image 1"
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 90vw, (max-width: 1024px) 550px, 85vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 60vw, 50vw"
                         priority={false}
                       />
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <div className="w-1/2">
-                  <div className="flex flex-col pl-3 py-10">
-                    <p className="text-[1.3rem] font-light ">
+
+              {/* 文字 + 按鈕區 */}
+              <div className="flex flex-col md:flex-row justify-between gap-6 sm:gap-4 mt-4 sm:mt-6">
+                {/* 左文案 */}
+                <div className="w-full md:w-1/2">
+                  <div className="flex flex-col pl-1 sm:pl-3 py-6 sm:py-10">
+                    <p className="text-base sm:text-lg lg:text-[1.3rem] font-light leading-relaxed">
                       建築と環境の「間」を考える
                     </p>
-                    <span className="mt-5 leading-snug text-gray-500 font-light w-[70%] text-[.9rem]">
+                    <span className="mt-4 sm:mt-5 leading-relaxed text-gray-500 font-light text-sm sm:text-[0.95rem] max-w-md">
                       Having the architecture as black and the environment as
                       white, we consider that human being’s comfort zone lies
                       within the ranges of gray.
                     </span>
                   </div>
                 </div>
-                <div className="w-1/2 ">
-                  <div className="flex items-end justify-end  flex-col">
-                    <span className="mt-5 text-right leading-snug text-gray-500  font-light w-[70%] text-[.9rem]">
-                      Please find our concept, <br></br>philosophy, and
-                      information here.
+
+                {/* 右文案 + 按鈕 */}
+                <div className="w-full md:w-1/2">
+                  <div className="flex items-end md:items-end justify-end flex-col text-right">
+                    <span className="mt-2 sm:mt-5 leading-relaxed text-gray-500 font-light text-sm sm:text-[0.95rem] max-w-md">
+                      Please find our concept, <br />
+                      philosophy, and information here.
                     </span>
-                    <button class="group mt-10 relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full  px-4 text-neutral-950">
-                      <span class="relative inline-flex overflow-hidden">
-                        <div class="absolute origin-bottom transition duration-500 [transform:translateX(-150%)_skewX(33deg)] group-hover:[transform:translateX(0)_skewX(0deg)]">
+
+                    <button className="group mt-6 sm:mt-10 relative inline-flex h-10 sm:h-12 items-center justify-center overflow-hidden rounded-full px-5 sm:px-6 text-sm sm:text-base text-neutral-950">
+                      <span className="relative inline-flex overflow-hidden">
+                        <div className="absolute origin-bottom transition duration-500 [transform:translateX(-150%)_skewX(33deg)] group-hover:[transform:translateX(0)_skewX(0deg)]">
                           Go PROJECTS →
                         </div>
-                        <div class="transition duration-500 [transform:translateX(0%)_skewX(0deg)] group-hover:[transform:translateX(150%)_skewX(33deg)]">
+                        <div className="transition duration-500 [transform:translateX(0%)_skewX(0deg)] group-hover:[transform:translateX(150%)_skewX(33deg)]">
                           Go PROJECTS →
                         </div>
                       </span>
@@ -523,57 +579,61 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            {/* <div className="text w-[95%] lg:w-1/2 p-8 flex flex-col justify-center items-center">
-            <TextGenerateEffect words="宜居" />
-            <p>不與人同的作為</p>
-          </div> */}
           </div>
         </section>
-        <section className="section-main-products xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
-          <div className="flex justify-between">
-            <div className="text max-w-[500px] p-10 flex flex-col justify-end">
-              <h1 className="text-6xl font-bold">Mission</h1>
-              <h2 className="text-2xl font-bold">我們的使命</h2>
-              <div className="mt-4 ">
-                <p className="tracking-wider text-[14px] font-normal ">
+        <section className="section-main-products w-full pt-16 sm:pt-20">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+            {/* 文字區 */}
+            <div className="text max-w-xl md:max-w-[500px] pt-4 md:pt-0 pb-4 md:pb-0 md:pr-6">
+              <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
+                Mission
+              </h1>
+              <h2 className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold">
+                我們的使命
+              </h2>
+              <div className="mt-4 space-y-2">
+                <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
                   打造每個人在繁忙生活中的健康節奏。
                 </p>
-                <p className="tracking-wider text-[14px] font-normal ">
+                <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
                   我們選擇與全球領先的科學研究機構合作，
                   確保每一款產品都符合最嚴格的品質標準， 並能有效促進身心健康。
                 </p>
               </div>
             </div>
-            <div className="flex items-end">
-              <button class="group mt-5 relative inline-flex h-[calc(48px+8px)] items-center justify-center rounded-full bg-neutral-950 py-1 pl-6 pr-14 font-medium text-neutral-50">
-                <span class="z-10 pr-2">文章詳情</span>
-                <div class="absolute right-1 inline-flex h-12 w-12 items-center justify-end rounded-full bg-neutral-700 transition-[width] group-hover:w-[calc(100%-8px)]">
-                  <div class="mr-3.5 flex items-center justify-center">
+
+            {/* 按鈕區 */}
+            <div className="flex w-full md:w-auto justify-start md:justify-end md:items-end pb-2 md:pb-0">
+              <button className="group mt-4 md:mt-5 relative inline-flex h-11 sm:h-[calc(48px+8px)] items-center justify-center rounded-full bg-neutral-950 py-1 pl-6 pr-14 font-medium text-xs sm:text-sm md:text-base text-neutral-50">
+                <span className="z-10 pr-2">文章詳情</span>
+                <div className="absolute right-1 inline-flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-end rounded-full bg-neutral-700 transition-[width] group-hover:w-[calc(100%-8px)]">
+                  <div className="mr-3.5 flex items-center justify-center">
                     <svg
                       width="15"
                       height="15"
                       viewBox="0 0 15 15"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5 text-neutral-50"
+                      className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-50"
                     >
                       <path
                         d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z"
                         fill="currentColor"
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                      ></path>
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
               </button>
             </div>
           </div>
+
+          {/* 下方輪播 */}
+          <div className="w-full overflow-hidden mt-4 sm:mt-6">
+            <FeatureCarousel />
+          </div>
         </section>
-        <div className="w-full overflow-hidden">
-          <FeatureCarousel />
-        </div>
       </div>
     </ReactLenis>
   );

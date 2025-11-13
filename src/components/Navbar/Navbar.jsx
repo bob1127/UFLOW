@@ -179,7 +179,7 @@ function MobileDrawer({
                   alt="LOGO"
                   className="h-7 w-auto"
                 />
-                <span className="text-sm text-slate-500">保健食品｜太保健</span>
+                <span className="text-sm text-slate-500">保健食品｜UFLOW</span>
               </div>
               <MenuToggleButton open onClick={onClose} className="h-9 w-9" />
             </div>
@@ -413,7 +413,7 @@ export default function App() {
       <div className="top-navbar py-1 bg-slate-50 ">
         <div className=" w-[87%] mx-auto grid grid-cols-2">
           <div className="text-[13px] text-slate-500 font-light tracking-widest">
-            保健食品｜太保健
+            保健食品｜UFLOW
           </div>
         </div>
       </div>

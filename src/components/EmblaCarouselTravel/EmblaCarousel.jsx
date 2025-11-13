@@ -8,6 +8,7 @@ import {
 import { DotButton, useDotButton } from "./EmblaCarosuelDotButton";
 import { gsap } from "gsap";
 import Image from "next/image";
+
 const EmblaCarousel = (props) => {
   const { slides, options } = props;
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
@@ -47,42 +48,51 @@ const EmblaCarousel = (props) => {
 
   return (
     <div
-      className="w-full py-8 mx-auto"
+      className="relative w-full py-6 sm:py-8 mx-auto max-w-6xl px-3 sm:px-4 lg:px-6"
       style={{
+        // default slide config
         "--slide-height": "19rem",
         "--slide-spacing": "1rem",
-        "--slide-size": "26%", // Default value for larger screens
+        "--slide-size": "26%",
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* 針對 slide-size 的 RWD 微調，保留你原本的設計邏輯 */}
       <style>
         {`
-         @media (max-width: 1700px) {
-        .embla__viewport {
-          --slide-size: 32%;
-        }
-      }
+          @media (max-width: 1700px) {
+            .embla__viewport {
+              --slide-size: 32%;
+            }
+          }
           @media (max-width: 1000px) {
-        .embla__viewport {
-          --slide-size: 36%;
-        }
-      }
-      @media (max-width: 550px) {
-        .embla__viewport {
-          --slide-size: 80%;
-        }
-      }
-    `}
+            .embla__viewport {
+              --slide-size: 40%;
+            }
+          }
+          @media (max-width: 768px) {
+            .embla__viewport {
+              --slide-size: 70%;
+            }
+          }
+          @media (max-width: 550px) {
+            .embla__viewport {
+              --slide-size: 80%;
+            }
+          }
+        `}
       </style>
-      <div className="embla__viewport " ref={emblaRef}>
+
+      {/* Embla viewport */}
+      <div className="embla__viewport w-full" ref={emblaRef}>
         <div
           className="embla__container flex touch-pan-y touch-pinch-zoom h-auto"
           style={{ marginLeft: "calc(var(--slide-spacing) * -1)" }}
         >
           {slides.map((slide, index) => (
             <div
-              className="embla__slide relative  transform flex-none h-full min-w-0"
+              className="embla__slide relative transform flex-none h-full min-w-0"
               key={index}
               style={{
                 transform: "translate3d(0, 0, 0)",
@@ -90,46 +100,54 @@ const EmblaCarousel = (props) => {
                 paddingLeft: "var(--slide-spacing)",
               }}
             >
-              <div className="bottom-btn absolute z-30 bottom-[-20px] left-1/2 -translate-x-1/2">
-                <div className="bg-[#333] w-[50px] rounded-full flex justify-center items-center h-[50px] text-white">
+              {/* 下方 ▼ 圓形按鈕：保留設計，尺寸做 RWD */}
+              <div className="bottom-btn absolute z-30 -bottom-6 sm:bottom-[-20px] left-1/2 -translate-x-1/2">
+                <div className="bg-[#333] w-10 h-10 sm:w-[50px] sm:h-[50px] rounded-full flex justify-center items-center text-white text-xs sm:text-sm">
                   ▼
                 </div>
               </div>
+
+              {/* 卡片本體 */}
               <div
-                className="embla__slide__number    bg-[#ffffff] pt-0 pb-[35px] flex flex-col items-center justify-center "
+                className="embla__slide__number bg-white pt-4 sm:pt-0 pb-10 flex flex-col items-center justify-center"
                 style={{
                   boxShadow: "inset 0 0 0 0.2rem var(--detail-medium-contrast)",
-
-                  fontSize: "4rem",
                   height: "100%",
                   userSelect: "none",
                 }}
               >
-                <a href="/" className="">
-                  <div className="flex  flex-col justify-center items-center">
-                    <div>
-                      <span className="card-title text-[1.2rem]">
+                <a href="/" className="block w-full h-full">
+                  <div className="flex flex-col justify-center items-center px-4 py-3 sm:px-6 sm:py-4">
+                    {/* 卡片標題上方小文字 */}
+                    <div className="mb-2 sm:mb-3">
+                      <span className="card-title text-[0.95rem] sm:text-[1.05rem] lg:text-[1.2rem]">
                         Product-Name
                       </span>
                     </div>
+
+                    {/* 圖片 / 自訂內容 */}
                     {slide.content ? (
                       slide.content
                     ) : (
-                      <div className="">
+                      <div className="w-full flex justify-center">
                         <Image
                           width={1800}
+                          height={800}
                           placeholder="empty"
                           loading="lazy"
-                          height={800}
                           src={slide.image}
-                          className=" w-[80%] mx-auto"
+                          className="w-[70%] sm:w-[75%] max-w-[230px] mx-auto"
                           alt={`Slide ${index + 1}`}
                         />
                       </div>
                     )}
-                    <div className="txt mt-5 flex-col flex justify-center items-center w-4/5 mx-auto">
-                      <b className="text-[16px] text-center">{slide.title}</b>
-                      <p className="text-[14px] font-normal text-center">
+
+                    {/* 文字說明 */}
+                    <div className="txt mt-4 sm:mt-5 flex flex-col justify-center items-center w-4/5 mx-auto">
+                      <b className="text-base sm:text-[1.05rem] text-center leading-snug">
+                        {slide.title}
+                      </b>
+                      <p className="mt-2 text-xs sm:text-sm font-normal text-center leading-relaxed text-gray-700">
                         {slide.description}
                       </p>
                     </div>
@@ -141,13 +159,14 @@ const EmblaCarousel = (props) => {
         </div>
       </div>
 
-      <div className="embla__controls absolute bottom-0 left-6 grid grid-cols-[auto_1fr] justify-between flex inline-block border border-black gap-3 mt-7">
-        <div className="embla__buttons absolute left-[-50%] bottom-[10%] flex justify-center">
+      {/* 控制區：左右箭頭 + dots */}
+      <div className="embla__controls mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* <div className="embla__buttons flex justify-center sm:justify-start gap-3">
           <PrevButton onClick={onPrevButtonClick} disabled={prevBtnDisabled} />
           <NextButton onClick={onNextButtonClick} disabled={nextBtnDisabled} />
-        </div>
+        </div> */}
 
-        <div className="embla__dots">
+        <div className="embla__dots flex flex-wrap justify-center sm:justify-end gap-2">
           {scrollSnaps.map((_, index) => (
             <DotButton
               key={index}
@@ -157,23 +176,6 @@ const EmblaCarousel = (props) => {
               )}
             />
           ))}
-        </div>
-      </div>
-
-      <div
-        ref={dragIndicatorRef}
-        className="drag-indicator absolute top-[-5%] left-[-5%] transform  rounded-full text-white text-center text-[10px] bg-black flex items-center justify-center"
-        style={{
-          opacity: 0,
-          scale: 0.5,
-          width: "100px",
-          height: "100px",
-          fontSize: "20px",
-        }}
-      >
-        <div className="flex flex-col justify-center items-center">
-          <p className="text-white text-center text-[14px]">100%</p>{" "}
-          <p className="text-center text-white text-[10px]">Made In Taiwan</p>
         </div>
       </div>
     </div>

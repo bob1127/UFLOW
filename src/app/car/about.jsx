@@ -27,7 +27,7 @@ export default function About() {
         {/* <Preloader /> */}
         {/* <Indicator /> */}
 
-        <section className="section-use ">
+        {/* <section className="section-use ">
           <div className="h-[450px] bg-[url('https://go.goinc.jp/_nuxt/img/how_to_use_bg.1019c97.jpg')] bg-cover bg-no-repeat bg-center relative">
             <div className="title absolute right-[20%] bottom-14">
               <div className="flex flex-col">
@@ -41,7 +41,7 @@ export default function About() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <div className="relative py-[220px]">
           <TextParallaxContentExample02 />

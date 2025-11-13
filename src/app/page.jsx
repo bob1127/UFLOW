@@ -1,45 +1,45 @@
 import Client from "./home";
 
 export const metadata = {
-  title:
-    "寬越設計｜小宅美學與風格空間提案｜50萬輕裝潢提案・小資族與新婚家庭的理想選擇",
+  title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
   description:
-    "專為小資家庭與小坪數空間量身打造的室內設計，寬越設計提供輕裝潢、預算客製化與風格提案，打造實用與美感兼具的理想居所。",
+    "UFLOW 專注於功能性保健食品與日常營養補給：益生菌、魚油、葉黃素、維生素 D3/K2、關節與睡眠配方等。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
   keywords: [
-    "50萬裝潢",
-    "小資族設計",
-    "新婚家庭裝潢",
-    "小坪數室內設計",
-    "輕裝潢方案",
-    "寬越設計",
-    "老屋翻新",
-    "預算裝潢推薦",
-    "室內設計提案",
-    "空間風格規劃",
+    "保健食品",
+    "營養補充品",
+    "益生菌",
+    "魚油",
+    "葉黃素",
+    "維生素D3",
+    "維生素K2",
+    "關節保健",
+    "睡眠保健",
+    "機能飲品",
+    "第三方檢驗",
+    "UFLOW",
   ],
   icons: {
-    icon: "/images/logo/company-logo.ico",
+    icon: "/images/logo/uflow.ico",
   },
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: "https://www.kuankoshi.com",
-    siteName: "寬越設計 Kuankoshi Design",
-    title:
-      "寬越設計｜小宅美學與風格空間提案｜50萬輕裝潢提案・小資族與新婚家庭的理想選擇",
+    url: "https://www.uflow.com",
+    siteName: "UFLOW",
+    title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
     description:
-      "從初步規劃到完工交付，寬越設計結合生活機能與風格美學，為您打造舒適、實用又有品味的居家空間。",
+      "嚴選原料、無多餘添加，並通過第三方檢驗的功能性保健食品。從視力、腸道、關節到睡眠，UFLOW 讓日常補給更有效率。",
     images: [
       {
-        url: "https://www.kuankoshi.com/images/舊屋翻新/004-AB3C5203321B.jpg",
+        url: "https://www.uflow.com/images/og/uflow-og.jpg",
         width: 1200,
         height: 630,
-        alt: "寬越設計室內空間封面",
+        alt: "UFLOW 功能性保健食品品牌形象",
       },
     ],
   },
   alternates: {
-    canonical: "https://www.kuankoshi.com",
+    canonical: "https://www.uflow.com",
   },
 };
 

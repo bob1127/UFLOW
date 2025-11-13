@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
 import "swiper/css";
@@ -16,10 +18,22 @@ export default function ProductClient({ product }) {
   const [flavor, setFlavor] = useState("ミルクティー（奶茶）");
   const [pkg, setPkg] = useState("8 份");
 
+  const [showAdded, setShowAdded] = useState(false); // ✅ 顯示「已加入購物車」提示
+  const router = useRouter();
+
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
 
+  // ✅ 提示 2.5 秒後自動消失
+  useEffect(() => {
+    if (!showAdded) return;
+    const t = setTimeout(() => setShowAdded(false), 2500);
+    return () => clearTimeout(t);
+  }, [showAdded]);
+
   function handleBuyNow() {
+    // 1) 先把商品丟進 Zustand 的 cartStore（給側邊購物車用）
+    const optionVariant = `${flavor} / ${pkg}`;
     addItem({
       id: product.id,
       name: `${product.name}｜${product.subname || ""}`,
@@ -27,8 +41,50 @@ export default function ProductClient({ product }) {
       image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: 1,
+      variant: optionVariant, // 方便之後在全站都用同一個欄位名稱
     });
+
+    // 2) 同步寫入 sessionStorage 的 cart_items（給 /cart 頁面用）
+    //    CartIntegratedPage 期待的 shape：{ id, title, variant, img, price, list, compareAt, qty }
+    const cartItem = {
+      id: product.id,
+      title: `${product.name}｜${product.subname || ""}`,
+      variant: optionVariant,
+      img: product.images?.[0],
+      price: product.price,
+      // 這兩個看你 product 裡有沒有原價／比較價，沒有就先用同一個
+      list: product.listPrice || product.price,
+      compareAt: product.compareAtPrice || product.price,
+      qty: 1,
+    };
+
+    try {
+      let current = [];
+      const raw = sessionStorage.getItem("cart_items");
+      if (raw) {
+        current = JSON.parse(raw) || [];
+      }
+
+      // 同商品 + 同規格就疊加數量
+      const idx = current.findIndex(
+        (it) => it.id === cartItem.id && it.variant === cartItem.variant
+      );
+      if (idx >= 0) {
+        current[idx].qty += 1;
+      } else {
+        current.push(cartItem);
+      }
+
+      sessionStorage.setItem("cart_items", JSON.stringify(current));
+    } catch (err) {
+      console.error("寫入 cart_items 失敗：", err);
+    }
+
+    // 3) 開啟側邊購物車（你原來的行為）
     openCart();
+
+    // 4) 顯示「已加入購物車」提示
+    setShowAdded(true);
   }
 
   return (
@@ -278,6 +334,24 @@ export default function ProductClient({ product }) {
           </div>
         </div>
       </div>
+
+      {/* ✅ 已加入購物車提示 / Toast */}
+      {showAdded && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-black text-white px-4 py-3 rounded-full shadow-lg text-sm flex items-center gap-3">
+            <span className="inline-flex h-6 w-6 rounded-full bg-white/10 items-center justify-center text-xs">
+              ✓
+            </span>
+            <span>已將此商品加入購物車</span>
+            <button
+              onClick={() => router.push("/cart")}
+              className="underline underline-offset-4 text-xs"
+            >
+              查看購物車
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

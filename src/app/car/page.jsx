@@ -4,41 +4,42 @@ import Client from "./about";
 // /app/news/metadata.js
 // /app/about/metadata.js
 export const metadata = {
-  title: "關於寬越設計｜空間規劃、品牌合作與設計理念介紹",
+  title: "關於 UFLOW｜科學實證保健食品品牌｜研發理念、第三方檢驗與永續承諾",
   description:
-    "寬越設計專注於小坪數住宅、商業空間與跨界合作，打造兼具機能與美感的生活場域。了解我們的設計理念與合作模式。",
+    "UFLOW 專注於以科學為本的保健食品與日常營養補給。從原料溯源、配方研發到第三方檢驗與永續包裝，我們以更透明的方式，陪伴每一次有效的日常補給。",
   keywords: [
-    "關於寬越設計",
-    "品牌設計理念",
-    "商業空間設計",
-    "跨界合作",
-    "室內設計公司介紹",
-    "空間規劃服務",
-    "設計團隊",
-    "室內設計理念",
+    "關於 UFLOW",
+    "保健食品品牌",
+    "營養補充品",
+    "第三方檢驗",
+    "原料溯源",
+    "功能性營養",
+    "研發理念",
+    "永續包裝",
+    "UFLOW",
   ],
   icons: {
-    icon: "/images/logo/company-logo.ico",
+    icon: "/images/logo/uflow.ico",
   },
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: "https://www.kuankoshi.com/about",
-    siteName: "寬越設計 Kuankoshi Design",
-    title: "關於寬越設計｜空間規劃、品牌合作與設計理念介紹",
+    url: "https://www.uflow.com/about",
+    siteName: "UFLOW 功能性保健食品",
+    title: "關於 UFLOW｜科學實證保健食品品牌｜研發理念、第三方檢驗與永續承諾",
     description:
-      "從設計初衷到空間實踐，寬越設計致力於打造每一個貼近生活的理想空間，歡迎了解我們的設計風格與合作模式。",
+      "我們相信每一份補給都應該有根據、能感受、且對地球友善。了解 UFLOW 的品牌故事、研發流程與品質保證。",
     images: [
       {
-        url: "https://www.kuankoshi.com/images/og/about-cover.jpg",
+        url: "https://www.uflow.com/images/og/about-og.jpg",
         width: 1200,
         height: 630,
-        alt: "寬越設計品牌介紹封面",
+        alt: "UFLOW 品牌形象與研發理念封面",
       },
     ],
   },
   alternates: {
-    canonical: "https://www.kuankoshi.com/about",
+    canonical: "https://www.uflow.com/about",
   },
 };
 
