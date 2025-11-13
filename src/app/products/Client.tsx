@@ -30,7 +30,7 @@ export default function Client({ items }: { items: Product[] }) {
     <div className="bg-slate-50">
       {/* HERO 橫幅 */}
       <div
-        className="w-full aspect-[1920/700] bg-center bg-cover bg-no-repeat"
+        className="w-full md:aspect-[1080/576] aspect-square xl:aspect-[1920/700] bg-center bg-cover bg-no-repeat"
         style={{
           backgroundImage:
             "url('/images/hero-banner/72de3bfc-c053-4ae8-87bd-89ad2257ded3.png')",
@@ -40,7 +40,7 @@ export default function Client({ items }: { items: Product[] }) {
       <main className="mx-auto max-w-6xl px-4 py-16">
         {/* 標題 + 說明 */}
         <h1
-          className="text-5xl font-semibold tracking-wide text-[#111]"
+          className=" text-3xl  xl:text-5xl font-semibold tracking-wide text-[#111]"
           style={{ letterSpacing: ".02em" }}
         >
           熱銷產品

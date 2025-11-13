@@ -89,7 +89,7 @@ export default function ProductClient({ product }) {
 
   return (
     <main className="bg-[#faf9f8] py-20 text-[#2b2b2b]">
-      <div className="w-[95%] mx-auto flex flex-col lg:flex-row gap-8 px-4 lg:px-16 py-16">
+      <div className="w-[95%] mx-auto flex flex-col lg:flex-row gap-8 px-4 lg:px-16 py-3 md:py-16">
         {/* 左：主圖 + 縮圖 */}
         <div className="w-full lg:w-1/2">
           <div className="relative">
@@ -105,7 +105,7 @@ export default function ProductClient({ product }) {
                   thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
               }}
               modules={[FreeMode, Navigation, Thumbs]}
-              className="h-[700px] overflow-hidden rounded-xl bg-white"
+              className=" aspect-square overflow-hidden rounded-xl bg-white"
               onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
             >
               {(product.images || []).map((src, i) => (

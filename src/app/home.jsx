@@ -223,7 +223,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
                 {/* Card 1 */}
                 <div className="group p-6 lg:p-8">
-                  <Link href="/product">
+                  <Link href="/products/14">
                     <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
@@ -278,7 +278,7 @@ export default function Home() {
 
                 {/* Card 2 */}
                 <div className="group p-6 lg:p-8">
-                  <Link href="/product">
+                  <Link href="/products/14">
                     <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
@@ -333,7 +333,7 @@ export default function Home() {
 
                 {/* Card 3 */}
                 <div className="group p-6 lg:p-8">
-                  <Link href="/product">
+                  <Link href="/products/14">
                     <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
