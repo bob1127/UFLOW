@@ -461,7 +461,7 @@ export default function Home() {
         </section>
         <section className="section_features w-full pt-16 sm:pt-20">
           {/* 上半：價值觀區塊 */}
-          <div className="flex flex-col items-center justify-center mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-8">
             <div className="w-full py-8 sm:py-10">
               {/* 標題 */}
               <div className="px-2 sm:px-6 lg:px-10 text-center sm:text-left">
@@ -519,7 +519,7 @@ export default function Home() {
           </div>
 
           {/* 下半：圖片＋說明區塊 */}
-          <div className="flex flex-col md:flex-row w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             {/* 左側圖片區 */}
             <div className="flex flex-col w-full">
               <div className="img w-full mx-auto sm:mx-3 h-auto md:h-[70vh] xl:h-[80vh] overflow-hidden">

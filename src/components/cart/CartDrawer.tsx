@@ -71,7 +71,7 @@ export default function CartSheet() {
             onClick={close}
           />
           <motion.aside
-            className="fixed right-0 top-0 bottom-0 z-[1001] w-full max-w-md bg-white shadow-xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-[9999999999999] w-full max-w-md bg-white shadow-xl flex flex-col"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -89,7 +89,7 @@ export default function CartSheet() {
             </div>
 
             {/* Items */}
-            <div className="flex-1 overflow-auto p-4 space-y-4">
+            <div className="flex-1  overflow-auto p-4 space-y-4">
               {items.length === 0 && (
                 <p className="text-slate-500 text-sm">目前尚無商品</p>
               )}

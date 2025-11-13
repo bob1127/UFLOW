@@ -88,7 +88,7 @@ export default function ProductClient({ product }) {
   }
 
   return (
-    <main className="bg-[#faf9f8] text-[#2b2b2b]">
+    <main className="bg-[#faf9f8] py-20 text-[#2b2b2b]">
       <div className="w-[95%] mx-auto flex flex-col lg:flex-row gap-8 px-4 lg:px-16 py-16">
         {/* 左：主圖 + 縮圖 */}
         <div className="w-full lg:w-1/2">

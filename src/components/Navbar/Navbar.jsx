@@ -378,18 +378,18 @@ export default function App() {
   const hotItems = [
     {
       title: "UP100 極致靜音空氣清淨機",
-      href: "/product",
-      imageUrl: "images/2491274-cover-Photoroom.png",
+      href: "/products/14",
+      imageUrl: "/images/2491274-cover-Photoroom.png",
     },
     {
       title: "UP200 全域淨化旗艦款",
-      href: "/product",
-      imageUrl: "images/2491274-cover-Photoroom.png",
+      href: "/products/14",
+      imageUrl: "/images/2491274-cover-Photoroom.png",
     },
     {
       title: "UP-Mini 行動清淨",
-      href: "/product",
-      imageUrl: "images/2491274-cover-Photoroom.png",
+      href: "/products/14",
+      imageUrl: "/images/2491274-cover-Photoroom.png",
     },
   ];
 
@@ -398,6 +398,7 @@ export default function App() {
     { label: "關於我們", href: "/car" },
     { label: "聯絡我們", href: "/contact" },
     { label: "Blog", href: "/blog" },
+    { label: "我們的產品", href: "/blog" },
     { label: "熱銷產品", href: "/products/hot" },
   ];
 
@@ -453,6 +454,12 @@ export default function App() {
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
               Blog
+            </Link>
+            <Link
+              href="/products"
+              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+            >
+              我們的產品
             </Link>
           </div>
 
