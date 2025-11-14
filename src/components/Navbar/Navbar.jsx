@@ -395,7 +395,7 @@ export default function App() {
 
   const navLinks = [
     { label: "首頁", href: "/" },
-    { label: "關於我們", href: "/car" },
+    { label: "品牌資訊", href: "/car" },
     { label: "聯絡我們", href: "/contact" },
     { label: "Blog", href: "/blog" },
     { label: "我們的產品", href: "/blog" },
@@ -441,25 +441,25 @@ export default function App() {
               href="/car"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              關於我們
+              品牌資訊
             </Link>
             <Link
               href="/contact"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              聯絡我們
+              醫護推薦
             </Link>
             <Link
               href="/blog"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              Blog
+              限時優惠
             </Link>
             <Link
               href="/products"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              我們的產品
+              商品介紹
             </Link>
           </div>
 
@@ -601,9 +601,10 @@ export default function App() {
   );
 }
 
-/** 會員按鈕：桌面版（未登入顯示登入；已登入顯示頭像/縮寫 + 下拉選單） */
+/** 會員按鈕：桌面版（不論登入與否都可展開下拉選單） */
 function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
   const [open, setOpen] = useState(false);
+
   const initials =
     user?.name
       ?.trim()
@@ -614,39 +615,24 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
       ?.toUpperCase() || "U";
 
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (!isLoggedIn) {
-    return (
-      <button
-        type="button"
-        onClick={onLogin}
-        className="inline-flex items-center gap-2 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          className="text-slate-800"
-        >
-          <path
-            d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 9a7 7 0 0 0-14 0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-          />
-        </svg>
-        會員登入
-      </button>
-    );
-  }
+  const handleRegister = () => {
+    // 依你的實際註冊網址調整
+    window.location.href = "/register";
+  };
 
   return (
     <div className="relative">
+      {/* 主按鈕：文字改成「會員」，不再區分登入/未登入 */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -654,10 +640,10 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
         aria-expanded={open}
         className="inline-flex h-10 items-center gap-2 bg-white px-2.5 pl-2 pr-3 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200"
       >
-        {user?.avatarUrl ? (
+        {isLoggedIn && user?.avatarUrl ? (
           <img
             src={user.avatarUrl}
-            alt={user.name || "使用者"}
+            alt={user.name || "會員"}
             className="h-7 w-7 rounded-full object-cover"
           />
         ) : (
@@ -665,9 +651,9 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
             {initials}
           </span>
         )}
-        <span className="hidden text-sm text-slate-700 sm:inline">
-          {user?.name || "會員"}
-        </span>
+
+        <span className="hidden text-sm text-slate-700 sm:inline">會員</span>
+
         <svg
           width="16"
           height="16"
@@ -687,6 +673,7 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
         </svg>
       </button>
 
+      {/* 下拉選單 */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -695,20 +682,47 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
             animate={{ opacity: 1, y: 4, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute right-0 z-[1600] mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+            className="absolute right-0 z-[1600] mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
             onMouseLeave={() => setOpen(false)}
           >
+            {/* 頂部狀態 */}
             <div className="px-4 py-3">
-              <p className="text-[13px] text-slate-500">已登入</p>
+              <p className="text-[13px] text-slate-500">
+                {isLoggedIn ? "已登入會員" : "尚未登入"}
+              </p>
               <p className="truncate text-sm font-medium text-slate-800">
-                {user?.email || "member@example.com"}
+                {isLoggedIn
+                  ? user?.email || "member@example.com"
+                  : "登入即可享有會員權益"}
               </p>
             </div>
+
             <div className="border-t border-slate-200" />
+
+            {/* 共用：會員相關連結 */}
             <nav className="p-1">
               <Link
-                href="/account"
+                href="/benefits" // 會員福利頁（依你實際路由調整）
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setOpen(false)}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path
+                    d="M12 3l2.09 4.24L19 8l-3.5 3.4L16.18 17 12 14.8 7.82 17 9 11.4 5 8l4.91-.76L12 3z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                會員福利
+              </Link>
+
+              <Link
+                href="/account" // 會員資訊 / 帳戶中心
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                onClick={() => setOpen(false)}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path
@@ -719,44 +733,86 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
                     strokeLinecap="round"
                   />
                 </svg>
-                帳戶中心
+                會員資訊
               </Link>
-              <Link
-                href="/orders"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path
-                    d="M4 7h16M4 12h16M4 17h16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                我的訂單
-              </Link>
-              <button
-                onClick={onLogout}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  className="text-rose-600"
+
+              <div className="my-1 border-t border-slate-200" />
+
+              {/* 未登入狀態：顯示 登入 / 註冊 */}
+              {!isLoggedIn && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      onLogin();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path
+                        d="M10 7v-2a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2M14 12H3m0 0 3-3m-3 3 3 3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    登入
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      handleRegister();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-indigo-600 hover:bg-indigo-50"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    註冊
+                  </button>
+                </>
+              )}
+
+              {/* 已登入狀態：顯示登出 */}
+              {isLoggedIn && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onLogout();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
                 >
-                  <path
-                    d="M10 7v-2a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2M14 12H3m0 0 3-3m-3 3 3 3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                登出
-              </button>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    className="text-rose-600"
+                  >
+                    <path
+                      d="M10 7v-2a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2M14 12H3m0 0 3-3m-3 3 3 3"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  登出
+                </button>
+              )}
             </nav>
           </motion.div>
         )}

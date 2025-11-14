@@ -121,14 +121,14 @@ export default function AccountPage() {
         </div>
 
         <div className="mt-8 border-t pt-6">
-          <h2 className="text-lg font-medium">安全性</h2>
+          {/* <h2 className="text-lg font-medium">安全性</h2>
           <p className="mt-2 text-sm text-slate-500">
             之後可在此提供修改「信箱」與「密碼」表單，呼叫
             <code className="mx-1 rounded bg-slate-100 px-1 py-0.5">
               /api/account/update
             </code>
             完成更新。
-          </p>
+          </p> */}
           <div className="mt-4">
             <button
               onClick={loadProfile}

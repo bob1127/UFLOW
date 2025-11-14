@@ -107,7 +107,7 @@ export default function CartSheet() {
                         alt={it.name}
                         width={72}
                         height={72}
-                        className="rounded-md object-cover"
+                        className="rounded-lg rounded-xl max-w-[120px]  object-cover"
                       />
                     )}
                     <div className="flex-1 min-w-0">
