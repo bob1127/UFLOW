@@ -1,4 +1,3 @@
-// src/app/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -23,10 +22,14 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fbLoading, setFbLoading] = useState(false);
+
+  // ✅ 註冊完成後，改顯示「請去信箱驗證」的成功畫面
+  const [registered, setRegistered] = useState(false);
 
   async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,7 +45,9 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        router.push(`/login?next=${encodeURIComponent(next)}`);
+        // ⛔ 不再直接跳登入頁
+        // ✅ 改成顯示成功頁面，提示「請去信箱完成驗證」
+        setRegistered(true);
       } else {
         setError(data?.message || "註冊失敗");
       }
@@ -75,6 +80,46 @@ export default function RegisterPage() {
     }
   }
 
+  // ========================
+  // ✅ 註冊成功後的提示畫面
+  // ========================
+  if (registered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md text-center space-y-6">
+          <h2 className="text-2xl font-semibold text-emerald-700">
+            🎉 註冊成功！
+          </h2>
+          <p className="text-slate-600 leading-relaxed text-sm">
+            我們已寄出一封
+            <span className="font-semibold"> 信箱驗證信 </span>
+            到：
+            <br />
+            <span className="font-medium">{email}</span>
+            <br />
+            請到信箱收信並點擊驗證連結，完成驗證後即可使用帳號密碼登入。
+          </p>
+
+          <button
+            onClick={() =>
+              router.push(`/login?next=${encodeURIComponent(next)}`)
+            }
+            className="w-full bg-slate-800 text-white p-2 rounded-md hover:bg-slate-700 transition"
+          >
+            前往登入
+          </button>
+
+          <p className="text-xs text-slate-500">
+            沒收到信件？請稍待 1–2 分鐘，或檢查垃圾信件匣。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ========================
+  // 🧾 一般註冊表單（含 Google / FB 快速註冊）
+  // ========================
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4">
@@ -86,6 +131,7 @@ export default function RegisterPage() {
           </p>
         )}
 
+        {/* ✅ 保留：Google / Facebook 快速註冊 */}
         <div className="space-y-2">
           <button
             type="button"
@@ -123,6 +169,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
+        {/* ✅ 自行填寫帳密註冊 */}
         <form onSubmit={handleRegister} className="space-y-3">
           <input
             type="text"

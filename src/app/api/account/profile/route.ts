@@ -1,7 +1,7 @@
-// app/api/account/profile/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { cookies } from "next/headers";   // 引入 cookies 函式
 
 export const runtime = "nodejs";
 
@@ -100,7 +100,20 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    // ⭐ 先從 NextAuth session 讀 email
+    let email = session?.user?.email || "";
+
+    // ⭐ 如果沒有 NextAuth session，再從 cookie 裡讀取 email（做 fallback）
+    if (!email) {
+      const cookieStore = cookies();
+      const emailCookie = cookieStore.get("user_email");
+      if (emailCookie?.value) {
+        email = emailCookie.value;
+      }
+    }
+
+    // ⭐ 如果都沒辦法拿到 email，則視為未登入
+    if (!email) {
       return NextResponse.json(
         {
           loggedIn: false,
@@ -111,11 +124,15 @@ export async function GET() {
       );
     }
 
-    const email = session.user.email;
     const auth = basicAuth();
     if (!auth) {
       return NextResponse.json(
-        { loggedIn: true, customer: null, membership: null, message: "WooCommerce API 尚未設定" },
+        {
+          loggedIn: true,
+          customer: null,
+          membership: null,
+          message: "WooCommerce API 尚未設定",
+        },
         { headers: noCache, status: 500 }
       );
     }

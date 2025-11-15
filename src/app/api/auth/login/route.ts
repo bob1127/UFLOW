@@ -1,18 +1,16 @@
 // app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
 
-const BASE = process.env.WC_API_BASE; // 例: https://inf.fjg.mybluehost.me/website_xxx
+const BASE = process.env.WC_API_BASE;
+const CK = process.env.WC_CONSUMER_KEY;
+const CS = process.env.WC_CONSUMER_SECRET;
+
 const isProd = process.env.NODE_ENV === "production";
-
-// 若需跨子網域共用 cookie（api.example.com 與 shop.example.com），設成 .example.com；否則留空即可
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
-
-// 設定 JWT 存活秒數（不設則為 session cookie）
 const JWT_MAX_AGE_SECONDS = process.env.JWT_MAX_AGE_SECONDS
   ? Number(process.env.JWT_MAX_AGE_SECONDS)
-  : 7 * 24 * 60 * 60; // 預設 7 天
+  : 7 * 24 * 60 * 60;
 
-// 登入/登出「必須同一份」cookie 屬性
 function cookieOpts(
   extra?: Partial<Parameters<NextResponse["cookies"]["set"]>[1]>
 ) {
@@ -23,8 +21,13 @@ function cookieOpts(
     path: "/",
     domain: COOKIE_DOMAIN,
     ...(JWT_MAX_AGE_SECONDS ? { maxAge: JWT_MAX_AGE_SECONDS } : {}),
-   
+ 
   };
+}
+
+function basicAuth() {
+  if (!CK || !CS) return undefined;
+  return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
 
 export async function POST(req: Request) {
@@ -47,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 打 WordPress JWT 端點
+    // 1) 先打 WordPress JWT 端點驗證帳密
     const wpRes = await fetch(`${BASE}/wp-json/jwt-auth/v1/token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -73,6 +76,51 @@ export async function POST(req: Request) {
       );
     }
 
+    const email = data.user_email || "";
+
+    // 2) 檢查 Woo customer 是否已完成 email 驗證
+    let verified = true;
+    const authHeader = basicAuth();
+
+    if (authHeader && email) {
+      try {
+        const custRes = await fetch(
+          `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
+          {
+            headers: { Authorization: authHeader },
+            cache: "no-store",
+          }
+        );
+
+        if (custRes.ok) {
+          const arr = (await custRes.json().catch(() => [])) as any[];
+          const customer = Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
+
+          if (customer?.meta_data) {
+            const hasVerified = customer.meta_data.some(
+              (m: any) =>
+                m?.key === "email_verified" &&
+                String(m?.value) === "1"
+            );
+            if (!hasVerified) verified = false;
+          }
+        }
+      } catch (e) {
+        console.error("check email_verified error:", e);
+      }
+    }
+
+    if (!verified) {
+      return NextResponse.json(
+        {
+          message: "此帳號尚未完成信箱驗證，請先至信箱點擊驗證連結。",
+          code: "email_not_verified",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3) 通過驗證 → 設 cookie
     const res = NextResponse.json(
       {
         ok: true,
@@ -88,7 +136,6 @@ export async function POST(req: Request) {
       { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
     );
 
-    // 寫 cookie（名稱需和登出時一致）
     res.cookies.set("jwt", String(data.token), cookieOpts());
     if (data.user_email) {
       res.cookies.set("user_email", String(data.user_email), cookieOpts());
@@ -103,6 +150,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (err: any) {
+    console.error("login error:", err);
     return NextResponse.json(
       { message: err?.message || "登入例外錯誤" },
       { status: 500 }
