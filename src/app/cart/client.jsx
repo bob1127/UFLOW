@@ -42,7 +42,9 @@ function Field({ label, required, error, help, children }) {
       </label>
       {children}
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
-      {!error && help && <p className="text-xs text-gray-500 mt-1">{help}</p>}
+      {!error && help && help.length > 0 && (
+        <p className="text-xs text-gray-500 mt-1">{help}</p>
+      )}
     </div>
   );
 }
@@ -313,7 +315,7 @@ function CartStep({ items, setItems, onNext }) {
                   </div>
 
                   {/* 小計 */}
-                  <div className="col-span-12 md:col-span-2 md:text-right flex md:block items-center justify-between md:justify-end text-sm font-semibold">
+                  <div className="col-span-12 md:col-span-2 md:text-right flex md:block items中心 justify-between md:justify-end text-sm font-semibold">
                     <span className="md:hidden text-gray-500">小計</span>
                     <span>{currency(rowTotal)}</span>
                   </div>
@@ -437,45 +439,90 @@ function CheckoutStep({
     return Object.keys(e).length === 0;
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!validate()) return;
-    const order = {
-      id: `VNM${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-      items,
-      pricing,
-      contact,
-      addr,
-      shipMethod,
-      payMethod,
-      createdAt: Date.now(),
-    };
+
     try {
-      sessionStorage.setItem("last_order", JSON.stringify(order));
-    } catch {}
-    onSubmitOk(order);
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((it) => ({
+            wcProductId: it.wcProductId, // ⚠ 要帶 WooCommerce product_id
+            qty: it.qty,
+            price: it.price,
+            title: it.title,
+            img: it.img,
+            variant: it.variant,
+          })),
+          contact,
+          addr,
+          shipMethod,
+          payMethod,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        console.log("checkout error:", res.status, data);
+        alert(data.message || "建立 WooCommerce 訂單失敗");
+        return;
+      }
+
+      const mergedOrder = {
+        id: data.order.id,
+        number: data.order.number,
+        items,
+        pricing,
+        contact,
+        addr,
+        shipMethod,
+        payMethod,
+        createdAt: Date.now(),
+      };
+
+      onSubmitOk(mergedOrder);
+    } catch (err) {
+      console.error(err);
+      alert("系統錯誤，請稍後再試。");
+    }
   };
 
   return (
     <div className="w-full flex justify-center">
-      {" "}
       <div className=" px-4 pt-8 pb-12 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* 左側：表單（照你原設計） */}
+          {/* 左側：表單 */}
           <section className=" w-full sm:w-[80%] mx-auto lg:w-1/2 flex justify-center lg:justify-end pr-0 lg:pr-10 space-y-8">
             <div className="max-w-2xl">
               {/* 聯絡方式 */}
               <div className="bg-white border rounded-xl my-5 p-5 lg:p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">聯絡方式</h2>
                 <div className="mt-4 grid gap-4">
-                  <Field label="電子郵件" required error={errors.email}>
+                  <Field
+                    label="電子郵件"
+                    required
+                    error={errors.email}
+                    help={
+                      contact.lockedEmail
+                        ? "已從會員帳號帶入，若要修改請到「會員中心→我的帳戶」變更 Email。"
+                        : ""
+                    }
+                  >
                     <input
                       type="email"
                       value={contact.email}
                       onChange={(e) =>
                         setContact((s) => ({ ...s, email: e.target.value }))
                       }
+                      disabled={contact.lockedEmail}
                       className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
                         errors.email ? "border-red-500" : ""
+                      } ${
+                        contact.lockedEmail
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : ""
                       }`}
                       placeholder="you@example.com"
                     />
@@ -621,7 +668,7 @@ function CheckoutStep({
               </div>
 
               {/* 運送方式 */}
-              <div className="bg-white border my-5 rounded-xl p-5 lg:p-6 shadow-sm">
+              <div className="bg白 my-5 border rounded-xl p-5 lg:p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">運送方式</h2>
                 <div className="mt-4 grid gap-3">
                   <RadioRow
@@ -770,7 +817,6 @@ function ThankYouStep({ order, onBackToShop }) {
       {/* 左：資訊 */}
       <section className="lg:col-span-8 space-y-6">
         <div className="max-w-3xl mx-auto">
-          {" "}
           <div className="bg-white border rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full border grid place-items-center">
@@ -943,7 +989,7 @@ function Stepper({ step }) {
   );
 }
 
-/* ================== 主頁面（單頁三步驟，修正高度＋動態載入） ================== */
+/* ================== 主頁面 ================== */
 export default function CartIntegratedPage() {
   // Step：1 購物車 / 2 結帳 / 3 感謝頁
   const [step, setStep] = useState(1);
@@ -964,8 +1010,12 @@ export default function CartIntegratedPage() {
   const [code, setCode] = useState("");
   const [codeMsg, setCodeMsg] = useState("");
 
-  // 聯絡/地址
-  const [contact, setContact] = useState({ email: "", newsletter: true });
+  // 聯絡/地址（多一個 lockedEmail flag）
+  const [contact, setContact] = useState({
+    email: "",
+    newsletter: true,
+    lockedEmail: false,
+  });
   const [addr, setAddr] = useState({
     country: "台灣",
     firstName: "",
@@ -988,7 +1038,7 @@ export default function CartIntegratedPage() {
   /* ---------- 動態載入 items ---------- */
   useEffect(() => {
     async function loadCartItems() {
-      // (A) 先嘗試 sessionStorage（你在商品頁加入購物車時可寫入 "cart_items"）
+      // (A) 先嘗試 sessionStorage
       try {
         const fromSS = sessionStorage.getItem("cart_items");
         if (fromSS) {
@@ -1001,7 +1051,7 @@ export default function CartIntegratedPage() {
         }
       } catch {}
 
-      // (B) 再嘗試 GET /api/cart（若你已建立 API）
+      // (B) 再嘗試 GET /api/cart（若你有做）
       try {
         const res = await fetch("/api/cart", { method: "GET" });
         if (res.ok) {
@@ -1013,7 +1063,7 @@ export default function CartIntegratedPage() {
           }
         }
       } catch {
-        // 靜默失敗，往下走
+        // 靜默失敗
       }
 
       // (C) 最後退回預設
@@ -1022,6 +1072,27 @@ export default function CartIntegratedPage() {
     }
 
     loadCartItems();
+  }, []);
+
+  /* ---------- 載入登入會員的 email（如果有登入） ---------- */
+  useEffect(() => {
+    async function loadSessionEmail() {
+      try {
+        const res = await fetch("/api/auth/session");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.user?.email) {
+          setContact((prev) => ({
+            ...prev,
+            email: data.user.email,
+            lockedEmail: true,
+          }));
+        }
+      } catch (err) {
+        console.error("載入登入會員 email 失敗", err);
+      }
+    }
+    loadSessionEmail();
   }, []);
 
   // items 變動即重算（並清空折扣提示）
@@ -1044,7 +1115,7 @@ export default function CartIntegratedPage() {
     setStep((s) => Math.max(1, s - 1));
   };
 
-  // 丝滑動畫（高度自然撐開）
+  // 動畫
   const variants = {
     enter: (d) => ({ x: d > 0 ? 40 : -40, opacity: 0 }),
     center: { x: 0, opacity: 1 },
@@ -1067,18 +1138,18 @@ export default function CartIntegratedPage() {
       <main className="w-full mx-auto px-4 pt-8">
         <Stepper step={step} />
 
-        {/* 高度修正：不使用 absolute；外層提供最小高度並隱藏溢出，讓切換時不抖 */}
+        {/* 高度修正 */}
         <div className="relative min-h-[60vh] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.section
-              key={itemsLoaded ? step : "loading"} // 等資料來了再進入步驟
+              key={itemsLoaded ? step : "loading"}
               custom={direction}
               variants={variants}
               initial="enter"
               animate="center"
               exit="exit"
               transition={{ type: "tween", ease: "easeInOut", duration: 0.32 }}
-              layout // 讓高度跟著內容自然過渡
+              layout
             >
               {!itemsLoaded && (
                 <div className="py-20 text-center text-gray-500">載入中…</div>
@@ -1117,7 +1188,7 @@ export default function CartIntegratedPage() {
                 <ThankYouStep
                   order={order}
                   onBackToShop={() => {
-                    setStep(1); // 或 window.location.href = "/";
+                    setStep(1);
                   }}
                 />
               )}

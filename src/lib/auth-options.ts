@@ -53,7 +53,7 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET!,
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/login", // 維持你自訂的登入頁 UI
+    signIn: "/login", // 使用你自訂的登入頁
   },
   providers: [
     GoogleProvider({
@@ -63,21 +63,25 @@ export const authOptions: AuthOptions = {
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      // 預設 scope 已含 email, public_profile；若要額外欄位可加：
-      // authorization: { params: { scope: "email,public_profile" } },
     }),
   ],
   callbacks: {
-    /** OAuth 成功回來後：確保 Woo 端有對應客戶 */
+    /** OAuth 成功回來後：嘗試同步 Woo 客戶，但「不阻擋登入」 */
     async signIn({ user }) {
-      if (!user?.email) return false;
+      if (!user?.email) {
+        // 沒 Email 就先讓他登入，但 log 一下
+        console.warn("OAuth user has no email, skip Woo upsert");
+        return true;
+      }
+
       try {
         await upsertWooCustomer(user.email, user.name || undefined);
-        return true;
       } catch (e) {
-        console.error("upsertWooCustomer error:", e);
-        return false;
+        console.error("upsertWooCustomer error (login not blocked):", e);
+        // ⚠ 這裡只記 log，不要 return false
       }
+
+      return true; // 一律允許登入，避免 Access Denied
     },
 
     /** 把 email/name 與 Woo customerId 帶到 JWT */
@@ -97,8 +101,8 @@ export const authOptions: AuthOptions = {
           const arr = (await q.json().catch(() => [])) || [];
           const customer = Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
           if (customer?.id) token.customerId = Number(customer.id);
-        } catch {
-          /* ignore */
+        } catch (e) {
+          console.error("jwt callback: fetch Woo customer failed", e);
         }
       }
       return token;

@@ -35,24 +35,25 @@ export default function ProductClient({ product }) {
     // 1) 先把商品丟進 Zustand 的 cartStore（給側邊購物車用）
     const optionVariant = `${flavor} / ${pkg}`;
     addItem({
-      id: product.id,
+      id: product.id, // cartStore 自己的 key
+      wcProductId: product.id, // 👈 可選：存進 store，之後 CartSheet 能直接用
       name: `${product.name}｜${product.subname || ""}`,
       price: product.price,
       image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: 1,
-      variant: optionVariant, // 方便之後在全站都用同一個欄位名稱
+      variant: optionVariant,
     });
 
     // 2) 同步寫入 sessionStorage 的 cart_items（給 /cart 頁面用）
     //    CartIntegratedPage 期待的 shape：{ id, title, variant, img, price, list, compareAt, qty }
     const cartItem = {
       id: product.id,
+      wcProductId: product.id, // 👈 給 WooCommerce 用的 product_id
       title: `${product.name}｜${product.subname || ""}`,
       variant: optionVariant,
       img: product.images?.[0],
       price: product.price,
-      // 這兩個看你 product 裡有沒有原價／比較價，沒有就先用同一個
       list: product.listPrice || product.price,
       compareAt: product.compareAtPrice || product.price,
       qty: 1,
@@ -91,7 +92,7 @@ export default function ProductClient({ product }) {
     <main className="bg-[#faf9f8] py-20 text-[#2b2b2b]">
       <div className="w-[95%] mx-auto flex flex-col lg:flex-row gap-8 px-4 lg:px-16 py-3 md:py-16">
         {/* 左：主圖 + 縮圖 */}
-        <div className="w-full lg:w-1/2">
+        <div className="w-full lg:w-1/2 sm:p-8 p-4 xl:p-10">
           <div className="relative">
             <Swiper
               loop
@@ -105,7 +106,7 @@ export default function ProductClient({ product }) {
                   thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
               }}
               modules={[FreeMode, Navigation, Thumbs]}
-              className=" aspect-square overflow-hidden rounded-xl bg-white"
+              className=" aspect-square overflow-hidden w-full xl:w-[90%] mx-auto rounded-xl bg-white"
               onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
             >
               {(product.images || []).map((src, i) => (

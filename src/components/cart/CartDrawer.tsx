@@ -37,6 +37,7 @@ export default function CartSheet() {
 
     const mapped = items.map((it) => ({
       id: it.id,
+      wcProductId: (it as any).wcProductId ?? it.id, // 👈 給 /api/checkout 用的 Woo product_id
       title: it.name,
       // 直接從 options 組一個 variant 字串
       variant: it.options
@@ -89,7 +90,7 @@ export default function CartSheet() {
             </div>
 
             {/* Items */}
-            <div className="flex-1  overflow-auto p-4 space-y-4">
+            <div className="flex-1 overflow-auto p-4 space-y-4">
               {items.length === 0 && (
                 <p className="text-slate-500 text-sm">目前尚無商品</p>
               )}
@@ -107,7 +108,7 @@ export default function CartSheet() {
                         alt={it.name}
                         width={72}
                         height={72}
-                        className="rounded-lg rounded-xl max-w-[120px]  object-cover"
+                        className="rounded-lg rounded-xl max-w-[120px] object-cover"
                       />
                     )}
                     <div className="flex-1 min-w-0">

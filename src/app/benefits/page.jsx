@@ -5,7 +5,7 @@ import Link from "next/link";
 const TIERS = [
   {
     id: "bronze",
-    name: "U 銅貴賓",
+    name: "銅貴賓",
     upgradeCondition: "註冊即成為銅貴賓",
     upgradeGift: "$50 購物金",
     duration: "永久",
@@ -17,7 +17,7 @@ const TIERS = [
   },
   {
     id: "silver",
-    name: "U 銀貴賓",
+    name: "銀貴賓",
     upgradeCondition: "12 個月內消費滿 $2,000 即升等銀貴賓",
     upgradeGift: "$100 購物金",
     duration: "12 個月",
@@ -29,7 +29,7 @@ const TIERS = [
   },
   {
     id: "gold",
-    name: "U 金貴賓",
+    name: "金貴賓",
     upgradeCondition: "12 個月內消費滿 $6,000 即升等金貴賓",
     upgradeGift: "$300 購物金",
     duration: "12 個月",
@@ -41,7 +41,7 @@ const TIERS = [
   },
   {
     id: "uvip",
-    name: "UVIP 貴賓",
+    name: "VIP 貴賓",
     upgradeCondition: "12 個月內消費滿 $10,000 即升等 UVIP 貴賓",
     upgradeGift: "$500 購物金",
     duration: "12 個月",
@@ -53,7 +53,7 @@ const TIERS = [
   },
   {
     id: "uvvip",
-    name: "UVVIP 貴賓",
+    name: "VVIP 貴賓",
     upgradeCondition: "12 個月內消費滿 $35,000 即升等 UVVIP 貴賓",
     upgradeGift: "$1,000 購物金",
     duration: "12 個月",

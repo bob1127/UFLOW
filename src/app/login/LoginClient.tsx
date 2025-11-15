@@ -131,7 +131,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleFacebook}
             disabled={fbLoading || loading || googleLoading}
-            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg-white hover:bg-slate-50 transition ${
+            className={`w-full rounded-md border px-4 py-2 text-slate-800 bg白 hover:bg-slate-50 transition ${
               fbLoading || loading || googleLoading
                 ? "opacity-60 cursor-not-allowed"
                 : ""
@@ -183,6 +183,19 @@ export default function LoginPage() {
             {loading ? "登入中…" : "登入"}
           </button>
         </form>
+
+        {/* 忘記密碼連結 */}
+        <p className="text-center text-sm text-slate-500">
+          <button
+            type="button"
+            onClick={() =>
+              router.push(`/forgot-password?next=${encodeURIComponent(next)}`)
+            }
+            className="text-slate-700 underline"
+          >
+            忘記密碼？
+          </button>
+        </p>
 
         <p className="text-center text-sm text-slate-500">
           還沒有帳號？{" "}
