@@ -1,4 +1,3 @@
-// app/api/account/orders/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
@@ -22,17 +21,23 @@ export async function GET() {
   try {
     const auth = basicAuth();
     if (!auth) {
-      return NextResponse.json({ orders: [] }, { headers: noCache });
+      return NextResponse.json({ ok: true, orders: [] }, { headers: noCache });
     }
 
-    /* ===== 1) 先看 NextAuth Session ===== */
     const session = await getServerSession(authOptions);
-    let email: string | null = session?.user?.email || null;
+    const cookieStore = cookies();
 
-    /* ===== 2) 如果沒有 Session，再看 JWT ===== */
-    if (!email) {
-      const jwt = cookies().get("jwt")?.value;
-      if (jwt) {
+    let email: string | null = session?.user?.email || null;
+    let wpUserId: number | null = null;
+
+    const emailCookie = cookieStore.get("user_email");
+    if (!email && emailCookie?.value) {
+      email = emailCookie.value;
+    }
+
+    const jwt = cookieStore.get("jwt")?.value;
+    if (jwt) {
+      try {
         const meRes = await fetch(`${BASE}/wp-json/wp/v2/users/me`, {
           headers: {
             Authorization: `Bearer ${jwt}`,
@@ -42,45 +47,129 @@ export async function GET() {
         });
         if (meRes.ok) {
           const me = await meRes.json();
-          email = me?.email || null;
+          wpUserId = typeof me?.id === "number" ? me.id : null;
+          if (!email && me?.email) email = me.email;
         }
+      } catch (e) {
+        console.error("orders users/me error:", e);
       }
     }
 
-    if (!email) {
-      return NextResponse.json({ orders: [] }, { headers: noCache });
+    if (!email && !wpUserId) {
+      return NextResponse.json({ ok: true, orders: [] }, { headers: noCache });
     }
 
-    // 用 email 找 WooCommerce customerId
-    const cRes = await fetch(
-      `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
-      {
-        headers: { Authorization: auth },
-        cache: "no-store",
+    const normalizedEmail = email ? email.trim().toLowerCase() : null;
+
+    // 1) 優先用 WP user id 找 Woo customer（不保證一定對應，但先試）
+    let customerId: number | null = null;
+
+    if (wpUserId) {
+      try {
+        const byIdRes = await fetch(
+          `${BASE}/wp-json/wc/v3/customers/${wpUserId}`,
+          {
+            headers: { Authorization: auth },
+            cache: "no-store",
+          }
+        );
+        if (byIdRes.ok) {
+          const c = await byIdRes.json();
+          if (c && c.id) customerId = c.id;
+        }
+      } catch (e) {
+        console.error("orders fetch customer by id error:", e);
       }
-    );
-    const customers = (await cRes.json().catch(() => [])) as any[];
-    const customerId = customers?.[0]?.id;
-    if (!customerId) {
-      return NextResponse.json({ orders: [] }, { headers: noCache });
     }
 
-    // 撈最近 10 筆訂單
-    const oRes = await fetch(
-      `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=10&orderby=date&order=desc`,
-      {
-        headers: { Authorization: auth },
-        cache: "no-store",
+    // 2) 若還是沒有，再用 email 查一次客戶
+    if (!customerId && normalizedEmail) {
+      try {
+        const cRes = await fetch(
+          `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(
+            normalizedEmail
+          )}`,
+          {
+            headers: { Authorization: auth },
+            cache: "no-store",
+          }
+        );
+
+        if (cRes.ok) {
+          const customers = (await cRes.json().catch(() => [])) as any[];
+          if (Array.isArray(customers) && customers.length > 0) {
+            customerId = customers[0].id;
+          }
+        } else {
+          const txt = await cRes.text();
+          console.error(
+            "orders fetch customer by email error:",
+            cRes.status,
+            txt
+          );
+        }
+      } catch (e) {
+        console.error("orders fetch customer by email catch error:", e);
       }
-    );
-
-    if (!oRes.ok) {
-      return NextResponse.json({ orders: [] }, { headers: noCache });
     }
 
-    const ordersRaw = (await oRes.json()) as any[];
+    let ordersRaw: any[] = [];
 
-    const orders = ordersRaw.map((o: any) => ({
+    // 3a) 先用 customerId 撈最近 10 筆訂單
+    if (customerId) {
+      try {
+        const oRes = await fetch(
+          `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=10&orderby=date&order=desc`,
+          {
+            headers: { Authorization: auth },
+            cache: "no-store",
+          }
+        );
+
+        if (oRes.ok) {
+          ordersRaw = (await oRes.json()) as any[];
+        } else {
+          const txt = await oRes.text();
+          console.error("orders fetch by customer error:", oRes.status, txt);
+        }
+      } catch (e) {
+        console.error("orders fetch by customer catch error:", e);
+      }
+    }
+
+    // 3b) 如果用 customerId 撈不到訂單，或者根本沒有 customerId，就用 billing.email fallback
+    if ((!ordersRaw || ordersRaw.length === 0) && normalizedEmail) {
+      try {
+        const oRes = await fetch(
+          `${BASE}/wp-json/wc/v3/orders?per_page=20&orderby=date&order=desc&search=${encodeURIComponent(
+            normalizedEmail
+          )}`,
+          {
+            headers: { Authorization: auth },
+            cache: "no-store",
+          }
+        );
+
+        if (oRes.ok) {
+          const all = (await oRes.json()) as any[];
+          ordersRaw = Array.isArray(all)
+            ? all.filter((o) => {
+                const emailInOrder = o?.billing?.email
+                  ? String(o.billing.email).trim().toLowerCase()
+                  : "";
+                return emailInOrder === normalizedEmail;
+              })
+            : [];
+        } else {
+          const txt = await oRes.text();
+          console.error("orders fallback search error:", oRes.status, txt);
+        }
+      } catch (e) {
+        console.error("orders fallback search catch error:", e);
+      }
+    }
+
+    const orders = (ordersRaw || []).map((o: any) => ({
       id: o.id,
       number: o.number,
       status: o.status,
@@ -93,8 +182,9 @@ export async function GET() {
       })),
     }));
 
-    return NextResponse.json({ orders }, { headers: noCache });
+    return NextResponse.json({ ok: true, orders }, { headers: noCache });
   } catch (e) {
-    return NextResponse.json({ orders: [] }, { headers: noCache });
+    console.error("/api/account/orders error:", e);
+    return NextResponse.json({ ok: true, orders: [] }, { headers: noCache });
   }
 }

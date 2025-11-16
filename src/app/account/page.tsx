@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
 type Customer = {
   id?: number;
   email?: string;
@@ -35,6 +36,9 @@ type Order = {
   currency: string;
   line_items: OrderItem[];
 };
+
+type ClaimKind = "upgrade" | "birthday";
+
 export default function AccountPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,23 @@ export default function AccountPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // 券領取相關 state
+  const [claimLoading, setClaimLoading] = useState<{
+    upgrade: boolean;
+    birthday: boolean;
+  }>({ upgrade: false, birthday: false });
+
+  const [claimed, setClaimed] = useState<{
+    upgrade: boolean;
+    birthday: boolean;
+  }>({ upgrade: false, birthday: false });
+
+  const [claimMessage, setClaimMessage] = useState<string | null>(null);
+  const [claimStatus, setClaimStatus] = useState<"success" | "error" | null>(
+    null
+  );
+  const [claimedCode, setClaimedCode] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -100,6 +121,49 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders]);
 
+  // 領取升等禮 / 生日禮金
+  const handleClaim = async (kind: ClaimKind) => {
+    setClaimMessage(null);
+    setClaimStatus(null);
+    setClaimedCode(null);
+
+    setClaimLoading((prev) => ({ ...prev, [kind]: true }));
+    try {
+      const res = await fetch("/api/account/coupons/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ kind }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        setClaimStatus("error");
+        setClaimMessage(
+          data?.message || data?.detail || "領取失敗，請稍後再試。"
+        );
+        return;
+      }
+
+      setClaimStatus("success");
+      setClaimMessage(data.message || "領取成功！");
+      if (data.coupon?.code) {
+        setClaimedCode(data.coupon.code);
+      }
+
+      // 不管是第一次領（already:false）還是已領取（already:true），都把按鈕鎖起來
+      setClaimed((prev) => ({ ...prev, [kind]: true }));
+
+      // 有需要的話也可以重新載入會員資料
+      // await loadProfile();
+    } catch (e) {
+      setClaimStatus("error");
+      setClaimMessage("系統錯誤，請稍後再試。");
+    } finally {
+      setClaimLoading((prev) => ({ ...prev, [kind]: false }));
+    }
+  };
+
   // ====== UI ======
   if (loading) {
     return (
@@ -143,7 +207,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-[60vh] py-10 px-4">
-      <div className="mx-auto w-full max-w-2xl rounded-xl mt-[100px] border bg-white p-6 shadow-sm">
+      <div className="mx-auto w全文 max-w-2xl rounded-xl mt-[100px] border bg-white p-6 shadow-sm">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">我的帳戶</h1>
@@ -204,23 +268,72 @@ export default function AccountPage() {
                   {membership.discountLabel || "依活動公告"}
                 </p>
               </div>
-              <div className="rounded-lg bg-white px-3 py-2">
+
+              {/* 升等禮 */}
+              <div className="rounded-lg bg白 px-3 py-2">
                 <p className="text-[11px] font-semibold text-slate-500">
                   升等禮
                 </p>
                 <p className="mt-1 text-sm">
                   購物金 {membership.upgradeGift} 元
                 </p>
+                {membership.upgradeGift > 0 && (
+                  <button
+                    onClick={() => handleClaim("upgrade")}
+                    disabled={claimLoading.upgrade || claimed.upgrade}
+                    className="mt-2 rounded-md border px-3 py-1 text-[11px] hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    {claimed.upgrade
+                      ? "已領取"
+                      : claimLoading.upgrade
+                      ? "領取中…"
+                      : "領取升等禮券"}
+                  </button>
+                )}
               </div>
-              <div className="rounded-lg bg-white px-3 py-2">
+
+              {/* 壽星好禮 */}
+              <div className="rounded-lg bg白 px-3 py-2">
                 <p className="text-[11px] font-semibold text-slate-500">
                   壽星好禮
                 </p>
                 <p className="mt-1 text-sm">
                   生日購物金 {membership.birthdayCredit} 元
                 </p>
+                {membership.birthdayCredit > 0 && (
+                  <button
+                    onClick={() => handleClaim("birthday")}
+                    disabled={claimLoading.birthday || claimed.birthday}
+                    className="mt-2 rounded-md border px-3 py-1 text-[11px] hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    {claimed.birthday
+                      ? "已領取"
+                      : claimLoading.birthday
+                      ? "領取中…"
+                      : "領取生日禮券"}
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* 領券結果提示 */}
+            {claimMessage && (
+              <div
+                className={`mt-3 rounded-md border px-3 py-2 text-xs ${
+                  claimStatus === "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-rose-200 bg-rose-50 text-rose-700"
+                }`}
+              >
+                <p>{claimMessage}</p>
+                {claimedCode && (
+                  <p className="mt-1">
+                    折扣碼：
+                    <span className="font-semibold">{claimedCode}</span>
+                  </p>
+                )}
+              </div>
+            )}
 
             {membership.nextTierName && membership.nextNeedAmount != null && (
               <p className="mt-3 text-xs text-slate-500">
