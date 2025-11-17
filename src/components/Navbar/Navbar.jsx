@@ -164,7 +164,7 @@ function MobileDrawer({
             aria-modal="true"
             aria-label="主選單"
             ref={panelRef}
-            className="fixed left-0 top-0 z-[1200] h-full w-[86%] max-w-[420px] bg-white shadow-2xl md:hidden"
+            className="fixed left-0 top-0 z-[1200] h-full w-[101%]  bg-white shadow-2xl md:hidden"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}

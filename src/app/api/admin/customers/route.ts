@@ -1,4 +1,3 @@
-// app/api/admin/customers/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -24,6 +23,59 @@ function calcTier(totalSpent: number) {
   return "尚未消費";
 }
 
+// ✅ 幫某個 customer 把訂單抓出來加總
+async function fetchOrdersSummaryForCustomer(customerId: number, auth: string) {
+  const perPage = 50;
+  let page = 1;
+
+  let totalSpent = 0;
+  let ordersCount = 0;
+  let lastOrderDate: string | null = null;
+
+  while (true) {
+    const url = `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=${perPage}&page=${page}&status=any&orderby=date&order=desc`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: auth },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error(
+        "Fetch orders error:",
+        res.status,
+        txt,
+        "customer:",
+        customerId
+      );
+      break;
+    }
+
+    const batch = (await res.json()) as any[];
+
+    if (!Array.isArray(batch) || batch.length === 0) break;
+
+    for (const o of batch) {
+      const amount = parseFloat(o.total || "0") || 0;
+      totalSpent += amount;
+      ordersCount += 1;
+
+      const d = o.date_created;
+      if (d) {
+        if (!lastOrderDate || new Date(d) > new Date(lastOrderDate)) {
+          lastOrderDate = d;
+        }
+      }
+    }
+
+    if (batch.length < perPage) break;
+    page += 1;
+  }
+
+  return { totalSpent, ordersCount, lastOrderDate };
+}
+
 export async function GET() {
   const noCache = { "Cache-Control": "no-store, no-cache, must-revalidate" };
 
@@ -39,6 +91,7 @@ export async function GET() {
       );
     }
 
+    // 1) 先把 Woo 的 customers 抓回來
     const perPage = 50;
     let page = 1;
     const allCustomers: any[] = [];
@@ -54,7 +107,6 @@ export async function GET() {
       if (!res.ok) {
         const txt = await res.text();
         console.error("Fetch customers error:", res.status, txt, "url:", url);
-        // 把 Woo 的錯誤訊息也一起丟回去，方便你 debug
         return NextResponse.json(
           {
             ok: false,
@@ -75,11 +127,33 @@ export async function GET() {
       page += 1;
     }
 
-    const customers = allCustomers.map((c) => {
-      const totalSpent = parseFloat(c.total_spent || "0") || 0;
-      const ordersCount = Number(c.orders_count || 0) || 0;
+    // 2) 組出前端要的 customers，必要時用訂單重新計算 totalSpent
+    const customers: any[] = [];
 
-      return {
+    for (const c of allCustomers) {
+      let totalSpent = parseFloat(c.total_spent || "0") || 0;
+      let ordersCount = Number(c.orders_count || 0) || 0;
+      let lastOrderDate: string | null = c.date_last_order || null;
+
+      // 如果 Woo 回來都是 0，就自己用訂單算一次
+      if (totalSpent === 0 && ordersCount === 0) {
+        try {
+          const summary = await fetchOrdersSummaryForCustomer(c.id, auth);
+          totalSpent = summary.totalSpent;
+          ordersCount = summary.ordersCount;
+          if (summary.lastOrderDate) {
+            lastOrderDate = summary.lastOrderDate;
+          }
+        } catch (err) {
+          console.error(
+            "Recalculate customer totalSpent error:",
+            c.id,
+            err
+          );
+        }
+      }
+
+      customers.push({
         id: c.id,
         name:
           c.first_name || c.last_name
@@ -88,14 +162,14 @@ export async function GET() {
         email: c.email,
         username: c.username,
         createdAt: c.date_created,
-        lastOrderDate: c.date_last_order || null,
+        lastOrderDate,
         totalSpent,
         ordersCount,
         tier: calcTier(totalSpent),
         billingCity: c.billing?.city || "",
         billingCountry: c.billing?.country || "",
-      };
-    });
+      });
+    }
 
     return NextResponse.json(
       { ok: true, customers },

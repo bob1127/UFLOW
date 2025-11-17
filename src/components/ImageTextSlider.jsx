@@ -153,7 +153,7 @@ export default function ImageTextSlider({
       </div>
 
       {/* 右側：文字 + 縮圖 + 導覽 */}
-      <div className=" w-full lg:w-[35%] py-3 px-10 flex flex-col items-start justify-end relative">
+      <div className=" w-full lg:w-[35%] py-3 px-3 sm:px-10 flex flex-col items-start justify-end relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={item.title}

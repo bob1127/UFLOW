@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useRef } from "react";
 import {
   motion,
@@ -7,11 +8,10 @@ import {
   useSpring,
   useMotionTemplate,
 } from "framer-motion";
-import { FiArrowUpRight } from "react-icons/fi";
 import Image from "next/image";
-import { useInView } from "framer-motion";
 import ParallaxImage from "../ParallaxImage";
 import Marquee from "react-fast-marquee";
+
 const TextParallaxContentExample = () => {
   const sectionRef = useRef(null);
 
@@ -34,7 +34,7 @@ const TextParallaxContentExample = () => {
     { stiffness: 80, damping: 16 }
   );
 
-  // ✅ 新寫法：blur 改成 useMotionTemplate
+  // blur
   const blurValue = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
@@ -66,21 +66,24 @@ const TextParallaxContentExample = () => {
 
   return (
     <>
-      <div className="bg-white">
+      {/* ✅ isolate：避免 transform 影響 Navbar / Dropdown */}
+      <div className="bg-white relative isolate">
         <section className="flex">
-          <div className="left"></div>
-          <div className="right"> </div>
+          <div className="left" />
+          <div className="right" />
         </section>
+
+        {/* 第一段：產品 + 文案 */}
         <div className="portrait-container relative overflow-hidden">
-          <div className="txt absolute right-[8%] top-[10%] -translate-x-1/2 z-40">
+          <div className="txt absolute right-[8%] top-[10%] -translate-x-1/2 z-40 max-w-[550px]">
             <h2 className="text-5xl font-bold">對美味的講究</h2>
-            <p className="leading-relaxed tracking-wider max-w-[550px]">
+            <p className="leading-relaxed tracking-wider mt-4">
               作為美味基礎的重要原材料是「大豆」。
               為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
               其他原材料，為了不妨礙大豆的美味，我們準備了儘可能接近自然的原材料。
             </p>
             <div className="flex flex-row py-8">
-              <div className="flex flex-col mr-10">
+              <div className="flex flex-col mr-10 items-center">
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-first-ByYP-jMQ.svg"
                   alt=""
@@ -89,10 +92,10 @@ const TextParallaxContentExample = () => {
                   className="w-[70px] h-[70px]"
                   placeholder="empty"
                   loading="lazy"
-                ></Image>
+                />
                 <b className="mt-3">純天然成分</b>
               </div>
-              <div className="flex flex-col mr-10">
+              <div className="flex flex-col mr-10 items-center">
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-second-DFPnTpt2.svg"
                   alt=""
@@ -101,10 +104,13 @@ const TextParallaxContentExample = () => {
                   className="w-[70px] h-[70px]"
                   placeholder="empty"
                   loading="lazy"
-                ></Image>
+                />
                 <b className="mt-3">純天然成分</b>
               </div>
-              <div data-aos="fadeUp" className="flex flex-col mr-10">
+              <div
+                data-aos="fadeUp"
+                className="flex flex-col mr-10 items-center"
+              >
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-third-BBToOs3r.svg"
                   alt=""
@@ -113,12 +119,12 @@ const TextParallaxContentExample = () => {
                   className="w-[70px] h-[70px]"
                   placeholder="empty"
                   loading="lazy"
-                ></Image>
+                />
                 <b className="mt-3">純天然成分</b>
               </div>
             </div>
-            <div className="h-[3px] bg-[#333] w-full rounded-full"></div>
-            <div className="flex justify-between">
+            <div className="h-[3px] bg-[#333] w-full rounded-full" />
+            <div className="flex justify-between mt-2">
               <span className="text-[13px] tracking-widest">
                 經過國家級的驗證，專業醫生的背書
               </span>
@@ -127,47 +133,52 @@ const TextParallaxContentExample = () => {
               </span>
             </div>
           </div>
-          <div className="img  mt-8">
+
+          <div className="img mt-8">
             <ParallaxImage
               src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineGlass-BZwf8QOd.png"
               alt=""
               fill
-              className="object-contain "
+              className="object-contain"
             />
           </div>
         </div>
 
-        {/* <section className="bg-[url('https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineGlass-BZwf8QOd.png')] bg-center bg-cover bg-no-repeat h-[90vh]"></section> */}
-        <section className="flex h-screen w-[85%] mx-auto ">
+        {/* 第二段：左右圖文 */}
+        <section className="flex h-screen w-[85%] mx-auto">
           <div className="left w-1/2 flex justify-center items-center">
-            <div className="flex-col  relative flex justify-center items-center max-w-[600px]">
+            <div className="flex-col relative flex justify-center items-center max-w-[600px]">
               <h1 className="text-4xl font-bold">對原材料的講究</h1>
+
               <div className="flex flex-col p-8">
                 <h2 className="text-3xl font-bold">對美味的講究</h2>
-                <p>
+                <p className="mt-2">
                   作為美味基礎的重要原材料是「大豆」。
                   為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
                   其他原材料，為了不妨礙大豆的美味，我們準備了儘可能接近自然的原材料。
                 </p>
               </div>
+
               <div className="flex flex-col p-8">
                 <h2 className="text-3xl font-bold">對天然甜味劑的講究</h2>
-                <p>
-                  KOREDAKE使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
-                  完全沒有使用糖和人工甜味劑。
-                  不妨礙材料的優良，發揮了自然的甜味。
+                <p className="mt-2">
+                  KOREDAKE
+                  使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
+                  完全沒有使用糖和人工甜味劑。不妨礙材料的優良，發揮了自然的甜味。
                 </p>
               </div>
+
               <div className="flex flex-col p-8">
                 <h2 className="text-3xl font-bold">對天然甜味劑的講究</h2>
-                <p>
-                  KOREDAKE使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
-                  完全沒有使用糖和人工甜味劑。
-                  不妨礙材料的優良，發揮了自然的甜味。
+                <p className="mt-2">
+                  KOREDAKE
+                  使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
+                  完全沒有使用糖和人工甜味劑。不妨礙材料的優良，發揮了自然的甜味。
                 </p>
               </div>
             </div>
           </div>
+
           <div className="right w-1/2 relative">
             <div className="absolute right-0 z-40 top-0">
               <Image
@@ -178,7 +189,7 @@ const TextParallaxContentExample = () => {
                 className="w-[700px]"
                 placeholder="empty"
                 loading="lazy"
-              ></Image>
+              />
             </div>
             <div className="absolute right-[20%] z-20 top-20">
               <Image
@@ -189,16 +200,18 @@ const TextParallaxContentExample = () => {
                 className="w-[530px] rotate-[-45deg]"
                 placeholder="empty"
                 loading="lazy"
-              ></Image>
+              />
             </div>
           </div>
         </section>
+
+        {/* 第三段：sticky parallax（這裡也加 isolate） */}
         <section
           ref={sectionRef}
-          className="relative min-h-[230vh] bg-white" // 整段滾動長度
+          className="relative min-h-[230vh] bg-white isolate"
         >
           <div className="sticky top-0 h-screen overflow-hidden">
-            {/* ✅ 圖片層 */}
+            {/* 圖片層 */}
             <motion.div
               className="absolute inset-0 flex items-center justify-center"
               style={{
@@ -218,61 +231,38 @@ const TextParallaxContentExample = () => {
               />
             </motion.div>
 
-            {/* ✅ 文字層 */}
+            {/* 文字層 */}
             <div className="absolute inset-0 flex items-center justify-between px-[6vw]">
               <motion.h2
                 style={{ x: leftX, opacity: textOpacity }}
                 className="text-[clamp(24px,4vw,54px)] font-extrabold text-neutral-800 whitespace-nowrap select-none"
               >
-                <div className=" text-outline-shadow text-6xl  font-sans tracking-[2px] uppercase">
+                <div className="text-outline-shadow text-6xl font-sans tracking-[2px] uppercase">
                   NATURAL
                 </div>
                 對天然成分的堅持
-                <div className="w-full overflow-hidden  max-w-[500px]">
+                <div className="w-full overflow-hidden max-w-[500px] mt-4">
                   <Marquee>
-                    <div className="flex justify-center items-center w-full overflow-hidden ">
-                      <div className="mx-2 flex justify-center items-center w-full">
-                        <Image
-                          src="https://coralclub.ru/images/labels/icon-gluten-free.svg"
-                          alt=""
-                          placeholder="empty"
-                          loading="lazy"
-                          width={200}
-                          height={200}
-                          className="max-w-[140px]"
-                        ></Image>
-                        <span className="text-base ml-2 mlr-4">
-                          純天然的成分
-                        </span>
-                      </div>
-                      <div className="mx-2 flex justify-center items-center w-full">
-                        <Image
-                          src="https://coralclub.ru/images/labels/icon-gluten-free.svg"
-                          alt=""
-                          placeholder="empty"
-                          loading="lazy"
-                          width={200}
-                          height={200}
-                          className="max-w-[140px]"
-                        ></Image>
-                        <span className="text-base ml-2 mlr-4">
-                          純天然的成分
-                        </span>
-                      </div>
-                      <div className="mx-2 flex justify-center items-center w-full">
-                        <Image
-                          src="https://coralclub.ru/images/labels/icon-gluten-free.svg"
-                          alt=""
-                          placeholder="empty"
-                          loading="lazy"
-                          width={200}
-                          height={200}
-                          className="max-w-[140px]"
-                        ></Image>
-                        <span className="text-base ml-2 mlr-4">
-                          純天然的成分
-                        </span>
-                      </div>
+                    <div className="flex justify-center items-center w-full overflow-hidden">
+                      {Array.from({ length: 3 }).map((_, idx) => (
+                        <div
+                          key={idx}
+                          className="mx-2 flex justify-center items-center w-full"
+                        >
+                          <Image
+                            src="https://coralclub.ru/images/labels/icon-gluten-free.svg"
+                            alt=""
+                            placeholder="empty"
+                            loading="lazy"
+                            width={200}
+                            height={200}
+                            className="max-w-[140px]"
+                          />
+                          <span className="text-base ml-2 mlr-4">
+                            純天然的成分
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </Marquee>
                 </div>
@@ -280,10 +270,11 @@ const TextParallaxContentExample = () => {
 
               <motion.h2
                 style={{ x: rightX, opacity: textOpacity }}
-                className="text-[clamp(24px,4vw,54px)]  font-extrabold text-neutral-800 whitespace-nowrap select-none"
+                className="text-[clamp(24px,4vw,54px)] font-extrabold text-neutral-800 whitespace-nowrap select-none max-w-[520px]"
               >
-                對天然成分的堅持<br></br>
-                <div className="text-[14px] max-w-[500px] text-wrap font-normal">
+                對天然成分的堅持
+                <br />
+                <div className="text-[14px] mt-4 text-wrap font-normal">
                   Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut
                   dolorem alias, excepturi sapiente reiciendis quos maiores
                   mollitia facere perspiciatis. Exercitationem assumenda
@@ -297,9 +288,11 @@ const TextParallaxContentExample = () => {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white/70" />
           </div>
         </section>
+
+        {/* 最後一段 TextParallaxContent */}
         <TextParallaxContent subheading="對天然成分的堅持" heading="UFLOW">
           <div className="space-y-32 min-h-[180vh] px-8 pt-[8vh] pb-32">
-            <h1 className="text-white text-4xl"></h1>
+            <h1 className="text-white text-4xl" />
             <ExampleContent />
           </div>
         </TextParallaxContent>
@@ -308,10 +301,11 @@ const TextParallaxContentExample = () => {
   );
 };
 
+/* ===== TextParallaxContent wrapper ===== */
 const TextParallaxContent = ({ subheading, heading, children }) => {
   const containerRef = useRef(null);
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative isolate">
       <div className="sticky top-0 h-screen z-0 overflow-hidden will-change-transform">
         <StickyBackground containerRef={containerRef} />
         <OverlayCopy
@@ -320,7 +314,7 @@ const TextParallaxContent = ({ subheading, heading, children }) => {
           containerRef={containerRef}
         />
       </div>
-      <div className="relative z-10 ">{children}</div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 };
@@ -339,7 +333,7 @@ const StickyBackground = ({ containerRef }) => {
 
   return (
     <motion.div
-      className="absolute inset-0 bg-[url('https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineCollagen-x6m9vKow.png')] bg-center  bg-cover bg-no-repeat  " // 銀灰色背景
+      className="absolute inset-0 bg-[url('https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineCollagen-x6m9vKow.png')] bg-center bg-cover bg-no-repeat"
       style={{
         scale,
         y,
@@ -374,7 +368,7 @@ const OverlayCopy = ({ subheading, heading, containerRef }) => {
         transform: "translateZ(0)",
         willChange: "transform",
       }}
-      className="absolute left-0 top-0 flex h-screen w-full flex-col items-center justify-center text-white px-4"
+      className="absolute left-0 top-0 flex h-screen w-full flex-col items中心 justify-center text-white px-4"
     >
       <p className="mb-2 text-center text-xl md:mb-4 md:text-3xl">
         {subheading}
@@ -384,11 +378,13 @@ const OverlayCopy = ({ subheading, heading, containerRef }) => {
   );
 };
 
+/* ===== ExampleContent 區塊 ===== */
 const ExampleContent = () => {
   const txtRef = useRef(null);
+
   const { scrollYProgress } = useScroll({
     target: txtRef,
-    offset: ["start 0.8", "end 0.2"], // 提前淡入，提前淡出
+    offset: ["start 0.8", "end 0.2"],
   });
 
   const rawOpacity = useTransform(
@@ -402,7 +398,11 @@ const ExampleContent = () => {
   const y = useSpring(rawY, { damping: 20, stiffness: 100 });
 
   return (
-    <div className="w-[85%] flex flex-row max-w-[1920px] mx-auto">
+    <motion.div
+      ref={txtRef}
+      style={{ opacity, y }}
+      className="w-[85%] flex flex-row max-w-[1920px] mx-auto"
+    >
       <div className="left-card relative h-[120vh] w-1/2 border border-black flex flex-row">
         <div className="card-wrap absolute z-20 top-[0%] left-[15%] h-1/3 border border-red-600 flex flex-row">
           <div className="card bg-white w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
@@ -419,10 +419,10 @@ const ExampleContent = () => {
             </div>
             <div className="txt p-5">
               <h3 className="text-[18px] font-bold">專業的客服人員</h3>
-              <p></p>
             </div>
           </div>
         </div>
+
         <div className="card-wrap absolute z-20 top-[55%] left-[5%] h-1/3 border border-red-600 flex flex-row">
           <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
             <div className="w-full p-4">
@@ -438,12 +438,11 @@ const ExampleContent = () => {
             </div>
             <div className="txt p-5">
               <h3 className="text-[18px] font-bold">專業的客服人員</h3>
-              <p></p>
             </div>
           </div>
-          {/* ✨ Smooth 淡入淡出 + Y 位移 */}
         </div>
       </div>
+
       <div className="right-card relative h-[120vh] justify-end w-1/2 border border-black flex flex-row">
         <div className="card-wrap absolute z-20 top-[20%] right-0 h-1/3 border border-red-600 flex flex-row">
           <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[750px] max-h-[800px]">
@@ -464,13 +463,11 @@ const ExampleContent = () => {
                 作為美味基礎的重要原材料是「大豆」。
                 為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
               </p>
-              <p></p>
             </div>
           </div>
         </div>
-        <div className="card-wrap absolute z-20 bottom-[-20%] right-0 h-1/3 border border-red-600 flex flex-row">
-          {/* ✨ Smooth 淡入淡出 + Y 位移 */}
 
+        <div className="card-wrap absolute z-20 bottom-[-20%] right-0 h-1/3 border border-red-600 flex flex-row">
           <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
             <div className="w-full p-4">
               <Image
@@ -485,12 +482,12 @@ const ExampleContent = () => {
             </div>
             <div className="txt p-5">
               <h3 className="text-[18px] font-bold">專業的客服人員</h3>
-              <p></p>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
+
 export default TextParallaxContentExample;

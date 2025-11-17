@@ -1,3 +1,4 @@
+// app/layout.tsx
 "use client";
 
 import "./globals.css";
@@ -8,16 +9,21 @@ import Footer from "../components/Footer/Footer1";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import CartDrawer from "@/components/cart/CartDrawer";
+
 // 引入 AOS
 import AOS from "aos";
 import "aos/dist/aos.css"; // 引入 AOS 的 CSS
 
 function ScrollToTopOnNav() {
   const pathname = usePathname();
+
   useEffect(() => {
-    // 與你 _app.js 範例一致：換頁回到頂端
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    // 換頁回到頂端
+    window.scrollTo({ top: 0, behavior: "auto" });
+    // 如果你堅持要 "instant" 也可以保留 type cast：
+    // window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [pathname]);
+
   return null;
 }
 
@@ -26,17 +32,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 在 useEffect 中初始化 AOS
+  // 初始化 AOS
   useEffect(() => {
     AOS.init({
       duration: 800, // 動畫持續時間
       once: false, // 是否只執行一次動畫
     });
-  }, []); // 空依賴陣列確保只在元件掛載時執行一次
+  }, []);
 
   return (
     <ViewTransitions>
-      {/* 全域動畫（與你剛剛那套一樣：進場 fade-up、離場 fade-down） */}
+      {/* 全域轉場動畫 */}
       <style jsx global>{`
         :root {
           view-transition-name: app-root;
@@ -84,9 +90,10 @@ export default function RootLayout({
 
       <html lang="zh-Hant">
         <body className="min-h-screen bg-white text-slate-900">
+          {/* 換頁自動捲回頂部 */}
           <ScrollToTopOnNav />
 
-          {/* 不想參與轉場的元素可加上 viewTransitionName: "none" */}
+          {/* Navbar - 固定在最上方，不參與 view transition */}
           <div
             className="fixed left-0 top-0 z-[999999999999999] w-screen"
             style={{ viewTransitionName: "none" }}
@@ -94,9 +101,13 @@ export default function RootLayout({
             <Navbar />
           </div>
 
-          {/* 頁面內容，預留 Navbar 高度（若你的 Navbar 高度不是 64px，請改） */}
+          {/* 頁面內容，預留 Navbar 高度（64px 自己可調） */}
           <main className="min-h-screen pt-[64px]">{children}</main>
+
+          {/* 購物車 Drawer */}
           <CartDrawer />
+
+          {/* 頁尾 */}
           <Footer />
         </body>
       </html>

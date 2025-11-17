@@ -224,7 +224,7 @@ function CartStep({ items, setItems, onNext }) {
   const remove = (id) => setItems((arr) => arr.filter((x) => x.id !== id));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-10 pb-16">
+    <div className="max-w-7xl mx-auto px-4 pt-10 pb-16">
       {/* 上方標題列：左 title，右「繼續購物」 */}
       <div className="flex items-baseline justify-between mb-8">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
@@ -286,6 +286,7 @@ function CartStep({ items, setItems, onNext }) {
                         {currency(it.list)}
                       </span>
                     )}
+                    <br></br>
                     <span className="font-semibold text-gray-900">
                       {currency(it.price)}
                     </span>
