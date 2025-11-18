@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay"; // Import the autoplay plugin
 import {
   NextButton,
   PrevButton,
@@ -8,9 +9,12 @@ import {
 import { DotButton, useDotButton } from "./EmblaCarosuelDotButton";
 import { gsap } from "gsap";
 import Image from "next/image";
+
 const EmblaCarousel = (props) => {
   const { slides, options } = props;
-  const [emblaRef, emblaApi] = useEmblaCarousel(options);
+  // Initialize the autoplay plugin with a 4-second delay
+  const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: false }));
+  const [emblaRef, emblaApi] = useEmblaCarousel(options, [autoplay.current]);
   const dragIndicatorRef = useRef(null);
 
   const { selectedIndex, scrollSnaps, onDotButtonClick } =
@@ -25,6 +29,8 @@ const EmblaCarousel = (props) => {
   const handleMouseEnter = () => {
     gsap.to(dragIndicatorRef.current, { opacity: 1, scale: 1, duration: 0.5 });
     document.body.style.cursor = "grab";
+    // Pause autoplay on hover
+    if (autoplay.current) autoplay.current.stop();
   };
 
   const handleMouseLeave = () => {
@@ -34,6 +40,8 @@ const EmblaCarousel = (props) => {
       duration: 0.5,
     });
     document.body.style.cursor = "default";
+    // Resume autoplay on mouse leave
+    if (autoplay.current) autoplay.current.play();
   };
 
   useEffect(() => {
@@ -47,7 +55,7 @@ const EmblaCarousel = (props) => {
 
   return (
     <div
-      className="w-full py-8 mx-auto  bg-[#EEEBE2]"
+      className="w-full py-8 mx-auto "
       style={{
         "--slide-height": "19rem",
         "--slide-spacing": "1rem",
@@ -70,7 +78,7 @@ const EmblaCarousel = (props) => {
       }
       @media (max-width: 550px) {
         .embla__viewport {
-          --slide-size: 80%;
+          --slide-size: 90%;
         }
       }
     `}
@@ -82,7 +90,7 @@ const EmblaCarousel = (props) => {
         >
           {slides.map((slide, index) => (
             <div
-              className="embla__slide relative  transform flex-none h-full min-w-0"
+              className="embla__slide group relative transform flex-none h-full w-full" // Added 'group' for hover effect
               key={index}
               style={{
                 transform: "translate3d(0, 0, 0)",
@@ -96,7 +104,7 @@ const EmblaCarousel = (props) => {
                 </div>
               </div>
               <div
-                className="embla__slide__number border border-black   bg-white   pt-0 pb-[35px] flex flex-col items-center justify-center "
+                className="embla__slide__number border border-black   bg-white   pt-0 pb-[35px] flex flex-col items-center justify-center relative overflow-hidden" // Added relative and overflow-hidden
                 style={{
                   boxShadow: "inset 0 0 0 0.2rem var(--detail-medium-contrast)",
                   borderRadius: "1.8rem",
@@ -116,9 +124,10 @@ const EmblaCarousel = (props) => {
                       <div className="w-full aspect-[4/3] relative overflow-hidden ">
                         <Image
                           src={slide.image}
-                          alt={`Slide ${index + 1}`}
+                          alt={slide.title}
                           fill
-                          sizes="100vw"
+                          // OPTIMIZED: Responsive image sizes
+                          sizes="(max-width: 550px) 80vw, (max-width: 1000px) 36vw, (max-width: 1700px) 32vw, 26vw"
                           className="object-cover"
                           placeholder="empty"
                           loading="lazy"
@@ -154,6 +163,14 @@ const EmblaCarousel = (props) => {
                     </div>
                   </div>
                 </a>
+
+                {/* --- HOVER DESCRIPTION BLOCK --- */}
+                <div className="absolute bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-sm border-t border-black/10 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-in-out">
+                  <p className="text-center text-[14px] font-normal text-gray-800">
+                    {slide.shortDescription}
+                  </p>
+                </div>
+                {/* --- END HOVER BLOCK --- */}
               </div>
             </div>
           ))}

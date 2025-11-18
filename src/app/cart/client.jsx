@@ -7,8 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 /* ================== 假資料（保底；會被動態載入覆蓋） ================== */
 const INIT_ITEMS = [
   {
-    id: "airflex-pants-gray-l",
-    title: "AirFlex™ 機能基礎訓練長褲（鐵灰）",
+    id: "",
+    title: "",
     variant: "L",
     img: "https://images.unsplash.com/photo-1596755094514-f87e3eaf8d15?q=80&w=600&auto=format&fit=crop",
     list: 2360,

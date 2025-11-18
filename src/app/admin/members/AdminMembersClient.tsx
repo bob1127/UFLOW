@@ -301,12 +301,7 @@ export default function AdminMembersClient() {
         {/* 頂部標題 + 統計 */}
         <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              會員總覽（前端後台）
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              這頁資料來自 WooCommerce REST API，你可以依照會員分級規則客製 UI。
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">會員總覽</h1>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
             <div className="rounded-xl bg-white px-4 py-2 shadow-sm border">
@@ -356,15 +351,21 @@ export default function AdminMembersClient() {
         {!loading && !error && (
           <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+              <thead className="bg-[#F58A9C] text-xs uppercase text-slate-500">
                 <tr>
-                  <th className="px-4 py-2 text-left">會員</th>
-                  <th className="px-4 py-2 text-left">Email</th>
-                  <th className="px-4 py-2 text-left">城市</th>
-                  <th className="px-4 py-2 text-right">訂單數</th>
-                  <th className="px-4 py-2 text-right">累計消費</th>
-                  <th className="px-4 py-2 text-center">會員等級</th>
-                  <th className="px-4 py-2 text-left">最近訂購</th>
+                  <th className="px-4 py-2 text-slate-50 text-left">會員</th>
+                  <th className="px-4 py-2 text-slate-50 text-left">Email</th>
+                  <th className="px-4 py-2 text-slate-50 text-left">城市</th>
+                  <th className="px-4 py-2 text-slate-50 text-right">訂單數</th>
+                  <th className="px-4 py-2 text-slate-50 text-right">
+                    累計消費
+                  </th>
+                  <th className="px-4 py-2 text-slate-50 text-center">
+                    會員等級
+                  </th>
+                  <th className="px-4 py-2 text-slate-50 text-left">
+                    最近訂購
+                  </th>
                 </tr>
               </thead>
               <tbody>

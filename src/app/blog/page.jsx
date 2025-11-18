@@ -16,7 +16,7 @@ import BaseballParallax from "../../components/BaseballParallaxContent/page";
 import HeroSlider from "../../components/HeroSlideContact/page";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import BoxReveal from "../../components/ui/box-reveal";
-import Carousel from "../../components/FactaryCarousel/index";
+
 // 背景圖片陣列
 const backgroundImages = [
   "https://takidanifudouson.or.jp/cms/wp-content/themes/takidanifudouson/assets/images/top/img__fvbottom__image__lg@2x.jpg?rev=20201228174103",
@@ -657,9 +657,6 @@ export default function ProjectListPage() {
             <SwiperSingle />
           </div>
         </section> */}
-        <section className="section-experience-factary w-full overflow-hidden">
-          <Carousel />
-        </section>
 
         {/* <Suspense fallback={<div></div>}>
         <ProjectListClient posts={posts} categories={categories} />

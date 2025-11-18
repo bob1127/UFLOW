@@ -130,13 +130,12 @@ function MobileDrawer({
   onLogout,
   navLinks = [],
   hotItems = [],
+  cartCount = 0,
 }) {
   const panelRef = useRef(null);
 
-  // 將焦點移入抽屜
   useEffect(() => {
     if (open) {
-      // 少量的 focus trap（簡化版）
       const firstFocusable = panelRef.current?.querySelector(
         'a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
       );
@@ -164,7 +163,7 @@ function MobileDrawer({
             aria-modal="true"
             aria-label="主選單"
             ref={panelRef}
-            className="fixed left-0 top-0 z-[1200] h-full w-[101%]  bg-white shadow-2xl md:hidden"
+            className="fixed left-0 top-0 z-[1200] flex h-full w-[100%] max-w-sm flex-col bg-white shadow-2xl md:hidden"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
@@ -172,7 +171,7 @@ function MobileDrawer({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 bg-white">
+            <div className="flex items-center justify-between border-b px-4 py-3 bg-white">
               <div className="flex items-center gap-2">
                 <img
                   src="/images/logo-04.png"
@@ -184,82 +183,164 @@ function MobileDrawer({
               <MenuToggleButton open onClick={onClose} className="h-9 w-9" />
             </div>
 
-            {/* Search */}
-            <div className="px-4 py-3 border-b">
-              <label className="sr-only" htmlFor="mb-search">
-                搜尋
-              </label>
-              <div className="flex items-center rounded-xl border px-3 py-2">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  className="mr-2 text-slate-500"
-                >
-                  <path
-                    d="M21 21l-4.3-4.3M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Search */}
+              <div className="px-4 py-3 border-b">
+                <label className="sr-only" htmlFor="mb-search">
+                  搜尋
+                </label>
+                <div className="flex items-center rounded-xl border px-3 py-2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    className="mr-2 text-slate-500"
+                  >
+                    <path
+                      d="M21 21l-4.3-4.3M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <input
+                    id="mb-search"
+                    className="w-full bg-transparent text-[15px] outline-none placeholder:text-slate-400"
+                    placeholder="搜尋商品/內容…"
                   />
-                </svg>
-                <input
-                  id="mb-search"
-                  className="w-full bg-transparent text-[15px] outline-none placeholder:text-slate-400"
-                  placeholder="搜尋商品/內容…"
-                />
-              </div>
-            </div>
-
-            {/* Nav links */}
-            <nav className="px-2 py-2">
-              {navLinks.map((it) => (
-                <Link
-                  key={it.href}
-                  href={it.href}
-                  onClick={onClose}
-                  className="block rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  {it.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Hot items（簡版） */}
-            {hotItems?.length > 0 && (
-              <div className="px-4 pt-1 pb-3">
-                <h3 className="px-1 pb-2 text-sm font-semibold tracking-wide text-slate-500">
-                  熱銷產品
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {hotItems.slice(0, 6).map((it) => (
-                    <Link
-                      key={it.title}
-                      href={it.href}
-                      onClick={onClose}
-                      className="group overflow-hidden rounded-lg border"
-                    >
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img
-                          src={it.imageUrl}
-                          alt={it.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                      <div className="p-2">
-                        <p className="line-clamp-2 text-xs font-medium text-slate-800">
-                          {it.title}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
                 </div>
               </div>
-            )}
 
-            {/* Account actions */}
+              {/* Nav links */}
+              <nav className="px-2 py-2">
+                {navLinks.map((it) => (
+                  <Link
+                    key={it.href}
+                    href={it.href}
+                    onClick={onClose}
+                    className="block rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                  >
+                    {it.label}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* 購物車與會員區塊 */}
+              <div className="mx-4 my-2 border-t border-slate-200" />
+              <nav className="px-2 py-1">
+                <Link
+                  href="/cart"
+                  onClick={onClose}
+                  className="flex items-center justify-between rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      className="text-slate-700"
+                    >
+                      <path
+                        d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+                      <circle cx="17" cy="20" r="1.5" fill="currentColor" />
+                    </svg>
+                    <span>購物車</span>
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="min-w-[20px] rounded-full bg-rose-500 px-2 py-0.5 text-center text-xs font-semibold leading-none text-white">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href="/account"
+                  onClick={onClose}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    className="text-slate-700"
+                  >
+                    <path
+                      d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 9a7 7 0 0 0-14 0"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span>會員資訊</span>
+                </Link>
+                <Link
+                  href="/benefits"
+                  onClick={onClose}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    className="text-slate-700"
+                  >
+                    <path
+                      d="M12 3l2.09 4.24L19 8l-3.5 3.4L16.18 17 12 14.8 7.82 17 9 11.4 5 8l4.91-.76L12 3z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>會員福利</span>
+                </Link>
+              </nav>
+
+              {/* Hot items（簡版） */}
+              {hotItems?.length > 0 && (
+                <div className="px-4 pt-3 pb-3">
+                  <h3 className="px-1 pb-2 text-sm font-semibold tracking-wide text-slate-500">
+                    熱銷產品
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {hotItems.slice(0, 6).map((it) => (
+                      <Link
+                        key={it.title}
+                        href={it.href}
+                        onClick={onClose}
+                        className="group overflow-hidden rounded-lg border"
+                      >
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <img
+                            src={it.imageUrl}
+                            alt={it.title}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="p-2">
+                          <p className="line-clamp-2 text-xs font-medium text-slate-800">
+                            {it.title}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Account actions (Footer) */}
             <div className="mt-auto border-t px-4 py-3">
               {isLoggedIn ? (
                 <div className="flex items-center justify-between">
@@ -298,7 +379,6 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const openerRef = useRef(null);
 
-  // 真實的 auth 狀態
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
 
@@ -307,7 +387,6 @@ export default function App() {
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // 讀取登入狀態（/api/account/profile）
   const refreshAuth = useCallback(async () => {
     try {
       const r = await fetch("/api/account/profile", {
@@ -333,7 +412,6 @@ export default function App() {
     }
   }, []);
 
-  // 初次載入 + 視窗回到焦點時刷新
   useEffect(() => {
     refreshAuth();
     const onFocus = () => refreshAuth();
@@ -346,7 +424,6 @@ export default function App() {
     };
   }, [refreshAuth]);
 
-  // ESC 關閉 + 鎖捲動 + 回焦觸發鈕
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && closeMenu();
     window.addEventListener("keydown", onKey);
@@ -358,13 +435,11 @@ export default function App() {
     };
   }, [menuOpen, closeMenu]);
 
-  // 導向登入（保留 next 參數）
   const handleLogin = () => {
     const next = typeof window !== "undefined" ? window.location.pathname : "/";
     window.location.href = `/login?next=${encodeURIComponent(next)}`;
   };
 
-  // 登出：呼叫 API 清 Cookie，然後刷新
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -393,16 +468,16 @@ export default function App() {
     },
   ];
 
+  // --- 唯一的修改在此處 ---
+  // 更新 navLinks 陣列以匹配桌面版導覽列
   const navLinks = [
     { label: "首頁", href: "/" },
     { label: "品牌資訊", href: "/car" },
-    { label: "聯絡我們", href: "/contact" },
-    { label: "Blog", href: "/blog" },
-    { label: "我們的產品", href: "/blog" },
-    { label: "熱銷產品", href: "/products/hot" },
+    { label: "客戶分析(暫時)", href: "/admin/members" },
+    { label: "限時優惠", href: "/blog" },
+    { label: "商品介紹", href: "/products" },
   ];
 
-  // 路由變更時也刷新（確保切頁會更新狀態）
   const pathname = usePathname();
   useEffect(() => {
     refreshAuth();
@@ -444,10 +519,10 @@ export default function App() {
               品牌資訊
             </Link>
             <Link
-              href="/contact"
+              href="/admin/members"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              醫護推薦
+              客戶分析(暫時)
             </Link>
             <Link
               href="/blog"
@@ -474,7 +549,6 @@ export default function App() {
           <div className="flex w-[30%] items-center justify-end gap-2">
             <CartButton count={cartCount} onClick={openCart} />
             <div className="hidden md:block">
-              {/* Desktop user menu（原本的） */}
               <UserMenu
                 isLoggedIn={isLoggedIn}
                 user={user}
@@ -482,7 +556,6 @@ export default function App() {
                 onLogout={handleLogout}
               />
             </div>
-            {/* 行動版：把登入/登出搬到 Drawer 底部 */}
           </div>
         </div>
       </div>
@@ -497,6 +570,7 @@ export default function App() {
         onLogout={handleLogout}
         navLinks={navLinks}
         hotItems={hotItems}
+        cartCount={cartCount}
       />
 
       {/* ====== 桌面版 Fullscreen 85vh 面板（>= md） ====== */}
@@ -626,13 +700,11 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
   }, []);
 
   const handleRegister = () => {
-    // 依你的實際註冊網址調整
     window.location.href = "/register";
   };
 
   return (
     <div className="relative">
-      {/* 主按鈕：文字改成「會員」，不再區分登入/未登入 */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -673,7 +745,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
         </svg>
       </button>
 
-      {/* 下拉選單 */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -685,7 +756,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
             className="absolute right-0 z-[1600] mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
             onMouseLeave={() => setOpen(false)}
           >
-            {/* 頂部狀態 */}
             <div className="px-4 py-3">
               <p className="text-[13px] text-slate-500">
                 {isLoggedIn ? "已登入會員" : "尚未登入"}
@@ -699,10 +769,9 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
 
             <div className="border-t border-slate-200" />
 
-            {/* 共用：會員相關連結 */}
             <nav className="p-1">
               <Link
-                href="/benefits" // 會員福利頁（依你實際路由調整）
+                href="/benefits"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 onClick={() => setOpen(false)}
               >
@@ -720,7 +789,7 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
               </Link>
 
               <Link
-                href="/account" // 會員資訊 / 帳戶中心
+                href="/account"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 onClick={() => setOpen(false)}
               >
@@ -738,7 +807,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
 
               <div className="my-1 border-t border-slate-200" />
 
-              {/* 未登入狀態：顯示 登入 / 註冊 */}
               {!isLoggedIn && (
                 <>
                   <button
@@ -785,7 +853,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
                 </>
               )}
 
-              {/* 已登入狀態：顯示登出 */}
               {isLoggedIn && (
                 <button
                   type="button"
