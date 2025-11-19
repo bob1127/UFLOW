@@ -188,23 +188,28 @@ const Section2 = () => {
             </li>
             <li>
               <Link href="/privacy" className="hover:text-black">
-                プライバシーポリシー
+                關於退換貨
               </Link>
             </li>
             <li>
               <Link href="/terms" className="hover:text-black">
-                利用規約
+                隱私權政策
               </Link>
             </li>
             <li>
               <Link href="/law" className="hover:text-black">
-                特定商取引法に基づく表示
+                合作資訊
               </Link>
             </li>
           </ul>
 
-          <div className="text-gray-500">
-            © {new Date().getFullYear()} KOREDAKE
+          <div className="text-gray-500 flex">
+            © {new Date().getFullYear()} UFLOW
+            <div className="text-gray-500 ml-4">
+              <a href="https://www.jeek-webdesign.com.tw" target="_blank">
+                Design by 極客網頁設計
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -497,7 +497,7 @@ export default function App() {
         <div className="h-[.5px] w-[87%] bg-gray-200 mx-auto "></div>
         <div className="mx-auto flex py-4 w-[90%] items-center px-4">
           {/* Left │ 漢堡 + 熱銷產品 */}
-          <div className="flex w-[30%] justify-start items-center gap-2">
+          <div className="flex w-[40%] justify-start items-center gap-2">
             <MenuToggleButton
               open={menuOpen}
               onClick={toggleMenu}
@@ -536,17 +536,23 @@ export default function App() {
             >
               商品介紹
             </Link>
+            <Link
+              href="/cooperate"
+              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+            >
+              與我們合作
+            </Link>
           </div>
 
           {/* Logo */}
-          <div className="flex w-[40%] justify-center">
+          <div className="flex w-[20%] justify-center">
             <Link href="/" className="text-3xl tracking-wider font-normal">
               <img src="/images/logo-04.png" className="w-[70px]" alt="LOGO" />
             </Link>
           </div>
 
           {/* Right │ 購物車 + 會員 */}
-          <div className="flex w-[30%] items-center justify-end gap-2">
+          <div className="flex w-[40%] items-center justify-end gap-2">
             <CartButton count={cartCount} onClick={openCart} />
             <div className="hidden md:block">
               <UserMenu
