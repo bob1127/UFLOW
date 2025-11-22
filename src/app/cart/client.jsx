@@ -33,6 +33,26 @@ function calcPricing(items, { shippingBase = 80, freeShipThreshold = 1800 }) {
   return { subtotal, shipping, discount: 0, total, saveFromSale };
 }
 
+// 依 Woo coupon 型態計算折扣
+function computeDiscountByCoupon(pricing, couponObj) {
+  if (!couponObj) return 0;
+  const base = pricing.subtotal + pricing.shipping;
+  const type = String(couponObj.discount_type || "").toLowerCase();
+  const amountNum = Number(couponObj.amount || 0);
+
+  if (type === "fixed_cart") {
+    return Math.min(base, amountNum);
+  }
+
+  if (type === "percent") {
+    const cut = Math.round(base * (amountNum / 100));
+    return Math.min(base, cut);
+  }
+
+  // 其他型態先不算（避免錯）
+  return 0;
+}
+
 /* ================== 共用 UI 小元件 ================== */
 function Field({ label, required, error, help, children }) {
   return (
@@ -78,10 +98,14 @@ function SummaryPanel({
   codeMsg,
   onCodeChange,
   onApplyCode,
+  availableCoupons = [],
+  availableLoading = false,
+  selectedCouponCode,
+  onSelectCoupon,
 }) {
   return (
-    <aside className=" sm:w-[80%] w-full mx-auto lg:w-1/2 bg-slate-50 pl-10">
-      <div className="lg:sticky max-w-xl  lg:top-24  rounded-xl p-5 lg:p-6 shadow-sm">
+    <aside className=" sm:w-[80%] w-full mx-auto lg:w-1/2 bg-slate-50 ">
+      <div className="lg:sticky max-w-xl top-0 lg:top-24 mx-auto  rounded-xl p-5 lg:p-6 shadow-sm">
         {/* 商品清單 */}
         <div className="space-y-4">
           {items.map((it) => (
@@ -122,8 +146,25 @@ function SummaryPanel({
           ))}
         </div>
 
-        {/* 折扣碼 */}
-        <div className="mt-5">
+        {/* 折扣碼 + 可用券下拉 */}
+        <div className="mt-5 space-y-2">
+          {availableLoading ? (
+            <div className="text-xs text-gray-500">讀取可用折扣碼中…</div>
+          ) : availableCoupons.length > 0 ? (
+            <select
+              value={selectedCouponCode || ""}
+              onChange={(e) => onSelectCoupon(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10 bg-white"
+            >
+              <option value="">選擇可用折扣碼</option>
+              {availableCoupons.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code}（{Number(c.amount) || 0}）
+                </option>
+              ))}
+            </select>
+          ) : null}
+
           <div className="flex gap-2">
             <input
               value={code}
@@ -225,7 +266,6 @@ function CartStep({ items, setItems, onNext }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-10 pb-16">
-      {/* 上方標題列：左 title，右「繼續購物」 */}
       <div className="flex items-baseline justify-between mb-8">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           Your cart
@@ -238,7 +278,6 @@ function CartStep({ items, setItems, onNext }) {
         </button>
       </div>
 
-      {/* 欄位標題（桌機版） */}
       <div className="hidden md:grid grid-cols-12 text-xs tracking-wide text-gray-500 px-4 mb-2">
         <div className="col-span-6">PRODUCT</div>
         <div className="col-span-2">PRICE</div>
@@ -247,14 +286,12 @@ function CartStep({ items, setItems, onNext }) {
       </div>
 
       <div className="grid lg:grid-cols-12 gap-10">
-        {/* 左：商品列表 */}
         <section className="lg:col-span-8">
           <div className="divide-y border-t border-b rounded-none md:rounded-xl bg-white">
             {items.map((it) => {
               const rowTotal = it.price * it.qty;
               return (
                 <div key={it.id} className="grid grid-cols-12 gap-4 p-4">
-                  {/* 產品資訊 */}
                   <div className="col-span-12 md:col-span-6 flex gap-4">
                     <img
                       src={it.img}
@@ -279,20 +316,18 @@ function CartStep({ items, setItems, onNext }) {
                     </div>
                   </div>
 
-                  {/* 單價 */}
                   <div className="col-span-6 md:col-span-2 flex md:block items-center gap-2 text-sm">
                     {it.list && (
                       <span className="text-gray-400 line-through mr-1">
                         {currency(it.list)}
                       </span>
                     )}
-                    <br></br>
+                    <br />
                     <span className="font-semibold text-gray-900">
                       {currency(it.price)}
                     </span>
                   </div>
 
-                  {/* 數量 */}
                   <div className="col-span-6 md:col-span-2 flex md:block items-center">
                     <div className="inline-flex items-center border rounded-full text-sm">
                       <button
@@ -315,7 +350,6 @@ function CartStep({ items, setItems, onNext }) {
                     </div>
                   </div>
 
-                  {/* 小計 */}
                   <div className="col-span-12 md:col-span-2 md:text-right flex md:block items中心 justify-between md:justify-end text-sm font-semibold">
                     <span className="md:hidden text-gray-500">小計</span>
                     <span>{currency(rowTotal)}</span>
@@ -325,16 +359,13 @@ function CartStep({ items, setItems, onNext }) {
             })}
           </div>
 
-          {/* 可有可無的小提醒，依需求保留或移除 */}
           <p className="mt-3 text-xs text-gray-500">
             稅金與運費將於結帳時計算。
           </p>
         </section>
 
-        {/* 右：結帳總覽 */}
         <aside className="lg:col-span-4 lg:pl-4">
           <div className="lg:sticky lg:top-24 space-y-4">
-            {/* 小計區塊 */}
             <div className="bg-white border rounded-xl p-4 sm:p-5 text-sm space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
@@ -353,7 +384,6 @@ function CartStep({ items, setItems, onNext }) {
               </p>
             </div>
 
-            {/* 結帳按鈕們：主按鈕 + 其他支付 */}
             <button
               onClick={onNext}
               className="w-full h-11 sm:h-12 bg-black text-white font-semibold rounded-md hover:opacity-90 text-sm"
@@ -386,8 +416,13 @@ function CheckoutStep({
   setPayMethod,
   onPrev,
   onSubmitOk,
+
+  // ✅ 新增
+  availableCoupons,
+  availableLoading,
+  selectedCouponCode,
+  onSelectCoupon,
 }) {
-  // 折扣碼
   const onApplyCode = () => {
     const v = code.trim().toUpperCase();
     if (!v) {
@@ -399,6 +434,23 @@ function CheckoutStep({
       }));
       return;
     }
+
+    // ✅ 1) 優先套用「可用券」規則
+    const found = (availableCoupons || []).find(
+      (c) => String(c.code || "").toUpperCase() === v
+    );
+    if (found && found.coupon) {
+      const discount = computeDiscountByCoupon(pricing, found.coupon);
+      setCodeMsg(`已套用折扣碼：${found.code}`);
+      setPricing((p) => ({
+        ...p,
+        discount,
+        total: Math.max(0, p.subtotal + p.shipping - discount),
+      }));
+      return;
+    }
+
+    // ✅ 2) 保底：你原本的 hardcode
     if (v === "ST35") {
       setCodeMsg("已套用折扣碼：ST35（-NT$35）");
       setPricing((p) => ({
@@ -449,7 +501,7 @@ function CheckoutStep({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((it) => ({
-            wcProductId: it.wcProductId, // ⚠ 要帶 WooCommerce product_id
+            wcProductId: it.wcProductId,
             qty: it.qty,
             price: it.price,
             title: it.title,
@@ -460,6 +512,7 @@ function CheckoutStep({
           addr,
           shipMethod,
           payMethod,
+          couponCode: code.trim() || null, // ✅ 送去後端
         }),
       });
 
@@ -729,7 +782,6 @@ function CheckoutStep({
                       </div>
                     }
                   >
-                    {/* 這裡接 Stripe/藍新；先放示意欄位 */}
                     <div className="grid sm:grid-cols-2 gap-3 pt-2">
                       <input
                         className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
@@ -781,7 +833,7 @@ function CheckoutStep({
             </div>
           </section>
 
-          {/* 右側：摘要 */}
+          {/* 右側：摘要（含下拉券） */}
           <SummaryPanel
             items={items}
             pricing={pricing}
@@ -789,6 +841,10 @@ function CheckoutStep({
             codeMsg={codeMsg}
             onCodeChange={setCode}
             onApplyCode={onApplyCode}
+            availableCoupons={availableCoupons}
+            availableLoading={availableLoading}
+            selectedCouponCode={selectedCouponCode}
+            onSelectCoupon={onSelectCoupon}
           />
         </div>
       </div>
@@ -797,6 +853,7 @@ function CheckoutStep({
 }
 
 /* ================== Step 3：感謝頁 ================== */
+// 你原本 ThankYouStep / Stepper 不動
 function ThankYouStep({ order, onBackToShop }) {
   if (!order) {
     return (
@@ -815,7 +872,6 @@ function ThankYouStep({ order, onBackToShop }) {
 
   return (
     <main className="w-full max-w-[1500px] mx-auto px-4 pt-8 pb-16 grid lg:grid-cols-12 gap-8">
-      {/* 左：資訊 */}
       <section className="lg:col-span-8 space-y-6">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white border rounded-xl p-5 shadow-sm">
@@ -876,7 +932,6 @@ function ThankYouStep({ order, onBackToShop }) {
         </div>
       </section>
 
-      {/* 右：金額摘要與商品 */}
       <aside className="lg:col-span-4">
         <div className="bg-white border rounded-xl p-5 shadow-sm">
           <div className="space-y-4">
@@ -945,7 +1000,6 @@ function ThankYouStep({ order, onBackToShop }) {
   );
 }
 
-/* ================== Stepper ================== */
 function Stepper({ step }) {
   const steps = ["購物車", "填寫資料", "感謝頁"];
   return (
@@ -992,26 +1046,21 @@ function Stepper({ step }) {
 
 /* ================== 主頁面 ================== */
 export default function CartIntegratedPage() {
-  // Step：1 購物車 / 2 結帳 / 3 感謝頁
   const [step, setStep] = useState(1);
-  const [direction, setDirection] = useState(1); // 1 前進 / -1 後退
+  const [direction, setDirection] = useState(1);
 
-  // 商品與金額（動態載入）
   const [items, setItems] = useState([]);
   const [itemsLoaded, setItemsLoaded] = useState(false);
 
-  // 定價
   const basePricing = useMemo(
     () => calcPricing(items, { shippingBase: 80, freeShipThreshold: 1800 }),
     [items]
   );
   const [pricing, setPricing] = useState(basePricing);
 
-  // 折扣
   const [code, setCode] = useState("");
   const [codeMsg, setCodeMsg] = useState("");
 
-  // 聯絡/地址（多一個 lockedEmail flag）
   const [contact, setContact] = useState({
     email: "",
     newsletter: true,
@@ -1029,17 +1078,18 @@ export default function CartIntegratedPage() {
     saveInfo: false,
   });
 
-  // 運送/付款
   const [shipMethod, setShipMethod] = useState("000");
   const [payMethod, setPayMethod] = useState("card");
 
-  // 送出後的訂單
   const [order, setOrder] = useState(null);
 
-  /* ---------- 動態載入 items ---------- */
+  // ✅ 可用折扣碼
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [availableLoading, setAvailableLoading] = useState(false);
+  const [selectedCouponCode, setSelectedCouponCode] = useState("");
+
   useEffect(() => {
     async function loadCartItems() {
-      // (A) 先嘗試 sessionStorage
       try {
         const fromSS = sessionStorage.getItem("cart_items");
         if (fromSS) {
@@ -1052,7 +1102,6 @@ export default function CartIntegratedPage() {
         }
       } catch {}
 
-      // (B) 再嘗試 GET /api/cart（若你有做）
       try {
         const res = await fetch("/api/cart", { method: "GET" });
         if (res.ok) {
@@ -1063,11 +1112,8 @@ export default function CartIntegratedPage() {
             return;
           }
         }
-      } catch {
-        // 靜默失敗
-      }
+      } catch {}
 
-      // (C) 最後退回預設
       setItems(INIT_ITEMS);
       setItemsLoaded(true);
     }
@@ -1075,7 +1121,6 @@ export default function CartIntegratedPage() {
     loadCartItems();
   }, []);
 
-  /* ---------- 載入登入會員的 email（如果有登入） ---------- */
   useEffect(() => {
     async function loadSessionEmail() {
       try {
@@ -1096,7 +1141,6 @@ export default function CartIntegratedPage() {
     loadSessionEmail();
   }, []);
 
-  // items 變動即重算（並清空折扣提示）
   useEffect(() => {
     const next = calcPricing(items, {
       shippingBase: 80,
@@ -1105,7 +1149,32 @@ export default function CartIntegratedPage() {
     setPricing(next);
     setCode("");
     setCodeMsg("");
+    setSelectedCouponCode("");
   }, [items]);
+
+  // ✅ 讀取可用折扣碼（登入會員）
+  useEffect(() => {
+    async function loadAvailableCoupons() {
+      setAvailableLoading(true);
+      try {
+        const res = await fetch("/api/account/coupons/available", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (res.ok && data?.ok && Array.isArray(data.available)) {
+          setAvailableCoupons(data.available);
+        } else {
+          setAvailableCoupons([]);
+        }
+      } catch {
+        setAvailableCoupons([]);
+      } finally {
+        setAvailableLoading(false);
+      }
+    }
+    loadAvailableCoupons();
+  }, []);
 
   const nextStep = () => {
     setDirection(1);
@@ -1116,16 +1185,44 @@ export default function CartIntegratedPage() {
     setStep((s) => Math.max(1, s - 1));
   };
 
-  // 動畫
   const variants = {
     enter: (d) => ({ x: d > 0 ? 40 : -40, opacity: 0 }),
     center: { x: 0, opacity: 1 },
     exit: (d) => ({ x: d < 0 ? 40 : -40, opacity: 0 }),
   };
 
+  // ✅ 選到券：自動帶入 code + 自動套用
+  const handleSelectCoupon = (couponCode) => {
+    setSelectedCouponCode(couponCode);
+    setCode(couponCode || "");
+    setCodeMsg("");
+    if (couponCode) {
+      const found = availableCoupons.find(
+        (c) =>
+          String(c.code || "").toUpperCase() ===
+          String(couponCode).toUpperCase()
+      );
+      if (found && found.coupon) {
+        const discount = computeDiscountByCoupon(pricing, found.coupon);
+        setCodeMsg(`已套用折扣碼：${found.code}`);
+        setPricing((p) => ({
+          ...p,
+          discount,
+          total: Math.max(0, p.subtotal + p.shipping - discount),
+        }));
+      }
+    } else {
+      // 清空
+      setPricing((p) => ({
+        ...p,
+        discount: 0,
+        total: p.subtotal + p.shipping,
+      }));
+    }
+  };
+
   return (
     <div className="h-auto bg-white pb-10">
-      {/* 頂部品牌列 */}
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
           <img
@@ -1139,7 +1236,6 @@ export default function CartIntegratedPage() {
       <main className="w-full mx-auto px-4 pt-8">
         <Stepper step={step} />
 
-        {/* 高度修正 */}
         <div className="relative min-h-[60vh] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.section
@@ -1182,6 +1278,11 @@ export default function CartIntegratedPage() {
                     setOrder(ord);
                     nextStep();
                   }}
+                  // ✅ 新增傳入
+                  availableCoupons={availableCoupons}
+                  availableLoading={availableLoading}
+                  selectedCouponCode={selectedCouponCode}
+                  onSelectCoupon={handleSelectCoupon}
                 />
               )}
 

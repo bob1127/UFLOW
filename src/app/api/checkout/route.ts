@@ -36,6 +36,7 @@ export async function POST(req: Request) {
       addr,
       shipMethod,
       payMethod,
+      couponCode, // ✅ 新增：前台送來的折扣碼
     }: {
       items: {
         wcProductId?: number;
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
       addr: any;
       shipMethod: string;
       payMethod: string;
+      couponCode?: string | null;
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -109,7 +111,6 @@ export async function POST(req: Request) {
         if (cRes.ok) {
           const arr = (await cRes.json().catch(() => [])) as any[];
           if (Array.isArray(arr) && arr.length > 0 && arr[0]?.id) {
-            // Woo 的 customers.id 就是 WP user id
             customerId = Number(arr[0].id) || 0;
           }
         }
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
         country: addr.country || "TW",
       },
       line_items: items.map((it) => ({
-        product_id: it.wcProductId, // Woo 的 product_id
+        product_id: it.wcProductId,
         quantity: it.qty,
       })),
       shipping_lines: [
@@ -162,6 +163,14 @@ export async function POST(req: Request) {
       wcOrderPayload.customer_id = customerId;
     }
 
+    // ✅✅ 關鍵修正：把折扣碼真的套進訂單
+    const trimmedCoupon = (couponCode || "").trim();
+    if (trimmedCoupon) {
+      wcOrderPayload.coupon_lines = [
+        { code: trimmedCoupon.toUpperCase() },
+      ];
+    }
+
     const res = await fetch(`${BASE}/wp-json/wc/v3/orders`, {
       method: "POST",
       headers: {
@@ -175,9 +184,7 @@ export async function POST(req: Request) {
     let parsed: any = null;
     try {
       parsed = JSON.parse(text);
-    } catch {
-      // not json, ignore
-    }
+    } catch {}
 
     if (!res.ok) {
       console.error("Create order error:", res.status, text);
@@ -202,6 +209,8 @@ export async function POST(req: Request) {
           id: wcOrder.id,
           number: wcOrder.number,
           status: wcOrder.status,
+          coupon_lines: wcOrder.coupon_lines || [],
+          discount_total: wcOrder.discount_total || "0",
         },
       },
       { headers: noCache }

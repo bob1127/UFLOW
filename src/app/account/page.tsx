@@ -46,6 +46,18 @@ type ReferralInfo = {
   ambassadorReward: number;
 };
 
+type AvailableCoupon = {
+  kind?: string;
+  code: string;
+  amount: number;
+  coupon?: any;
+};
+
+function isReferralCouponCode(code?: string) {
+  if (!code) return false;
+  return code.toUpperCase().startsWith("UFAMB-");
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -57,11 +69,14 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  // ✅ referral state
   const [referral, setReferral] = useState<ReferralInfo | null>(null);
   const [referralLoading, setReferralLoading] = useState(false);
 
-  // 券領取相關 state
+  const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>(
+    []
+  );
+  const [availableLoading, setAvailableLoading] = useState(false);
+
   const [claimLoading, setClaimLoading] = useState<{
     upgrade: boolean;
     birthday: boolean;
@@ -96,7 +111,7 @@ export default function AccountPage() {
         setCustomer(null);
         setMembership(null);
       }
-    } catch (e: any) {
+    } catch {
       setError("讀取會員資料失敗，請稍後再試。");
       setLoggedIn(false);
       setCustomer(null);
@@ -115,14 +130,13 @@ export default function AccountPage() {
       });
       const data = await res.json();
       setOrders(data.orders || []);
-    } catch (e) {
+    } catch {
       setOrders([]);
     } finally {
       setOrdersLoading(false);
     }
   }, []);
 
-  // ✅ referral loader
   const loadReferral = useCallback(async () => {
     setReferralLoading(true);
     try {
@@ -131,15 +145,32 @@ export default function AccountPage() {
         credentials: "include",
       });
       const data = await res.json();
-      if (res.ok && data?.ok) {
-        setReferral(data);
-      } else {
-        setReferral(null);
-      }
+      if (res.ok && data?.ok) setReferral(data);
+      else setReferral(null);
     } catch {
       setReferral(null);
     } finally {
       setReferralLoading(false);
+    }
+  }, []);
+
+  const loadAvailableCoupons = useCallback(async () => {
+    setAvailableLoading(true);
+    try {
+      const res = await fetch("/api/account/coupons/available", {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok && Array.isArray(data.available)) {
+        setAvailableCoupons(data.available);
+      } else {
+        setAvailableCoupons([]);
+      }
+    } catch {
+      setAvailableCoupons([]);
+    } finally {
+      setAvailableLoading(false);
     }
   }, []);
 
@@ -151,10 +182,10 @@ export default function AccountPage() {
     if (loggedIn) {
       loadOrders();
       loadReferral();
+      loadAvailableCoupons();
     }
-  }, [loggedIn, loadOrders, loadReferral]);
+  }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
-  // 領取升等禮 / 生日禮金
   const handleClaim = async (kind: ClaimKind) => {
     setClaimMessage(null);
     setClaimStatus(null);
@@ -180,18 +211,26 @@ export default function AccountPage() {
 
       setClaimStatus("success");
       setClaimMessage(data.message || "領取成功！");
-      if (data.coupon?.code) {
-        setClaimedCode(data.coupon.code);
-      }
+      if (data.coupon?.code) setClaimedCode(data.coupon.code);
 
       setClaimed((prev) => ({ ...prev, [kind]: true }));
-    } catch (e) {
+      loadAvailableCoupons();
+    } catch {
       setClaimStatus("error");
       setClaimMessage("系統錯誤，請稍後再試。");
     } finally {
       setClaimLoading((prev) => ({ ...prev, [kind]: false }));
     }
   };
+
+  // ✅ 這裡改成「不使用 hook」的推薦券整理
+  const referralCoupons = availableCoupons.filter(
+    (c) => c.kind === "referral" || isReferralCouponCode(c.code)
+  );
+  const referralTotal = referralCoupons.reduce(
+    (sum, c) => sum + (Number(c.amount) || 0),
+    0
+  );
 
   // ====== UI ======
   if (loading) {
@@ -335,6 +374,7 @@ export default function AccountPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
               MEMBERSHIP
             </p>
+
             <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
               <div>
                 <p className="text-sm text-slate-500">目前等級</p>
@@ -351,6 +391,7 @@ export default function AccountPage() {
             </div>
 
             <div className="mt-3 grid gap-3 text-xs text-slate-600 md:grid-cols-3">
+              {/* 消費優惠 */}
               <div className="rounded-lg bg-white px-3 py-2">
                 <p className="text-[11px] font-semibold text-slate-500">
                   消費優惠
@@ -403,6 +444,42 @@ export default function AccountPage() {
                       ? "領取中…"
                       : "領取生日禮券"}
                   </button>
+                )}
+              </div>
+
+              {/* ✅ 推薦獎金 */}
+              <div className="rounded-lg bg-white px-3 py-2">
+                <p className="text-[11px] font-semibold text-slate-500">
+                  推薦獎金
+                </p>
+
+                {availableLoading ? (
+                  <p className="mt-1 text-sm text-slate-400">讀取中…</p>
+                ) : referralCoupons.length === 0 ? (
+                  <p className="mt-1 text-sm">目前尚無推薦獎金</p>
+                ) : (
+                  <>
+                    <p className="mt-1 text-sm">
+                      可用購物金{" "}
+                      <span className="font-semibold text-slate-900">
+                        {referralTotal}
+                      </span>{" "}
+                      元
+                    </p>
+
+                    <div className="mt-1 text-[11px] text-slate-500 space-y-1">
+                      {referralCoupons.slice(0, 3).map((c) => (
+                        <div key={c.code}>
+                          折扣碼：{" "}
+                          <span className="font-semibold text-slate-700">
+                            {c.code}
+                          </span>
+                          （{c.amount} 元）
+                        </div>
+                      ))}
+                      {referralCoupons.length > 3 && <div>…</div>}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -502,13 +579,19 @@ export default function AccountPage() {
           )}
         </div>
 
-        {/* 重新整理會員資料 */}
-        <div className="mt-6">
+        {/* 重新整理 */}
+        <div className="mt-6 flex gap-2">
           <button
             onClick={loadProfile}
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-slate-50"
           >
             重新整理會員資料
+          </button>
+          <button
+            onClick={loadAvailableCoupons}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-slate-50"
+          >
+            重新整理可用購物金
           </button>
         </div>
       </div>
