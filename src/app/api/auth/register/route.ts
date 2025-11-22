@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
+export const runtime = "nodejs";
+
 const BASE = process.env.WC_API_BASE;
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
@@ -120,7 +122,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, username, password, ref } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const email: string = String(body.email || "").trim().toLowerCase();
+    const username: string = String(body.username || "").trim();
+    const password: string = String(body.password || "");
+    const ref: string | null = body.ref ? String(body.ref) : null;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -171,7 +177,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const newCustomerId = data.id;
+    const newCustomerId: number = data.id;
+
+    // ✅ WooCommerce 實際建立的 email（防止前端送錯、或 WC 回傳不同值）
+    const createdEmail = String(data?.email || email).trim().toLowerCase();
 
     /* =========================
        ✅ referral: grant 50 after create
@@ -186,11 +195,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2) 產生驗證 token
+    // 2) 產生驗證 token（用 createdEmail）
     const token = jwt.sign(
       {
         type: "verify-email",
-        email,
+        email: createdEmail,
         customerId: newCustomerId,
       },
       RESET_SECRET,
@@ -200,11 +209,14 @@ export async function POST(req: Request) {
     const url = new URL("/verify-email", SITE_URL);
     url.searchParams.set("token", token);
 
-    // 3) 寄出驗證信
+    // 3) 寄出驗證信（可觀測 + 不吞錯）
     try {
       const transporter = createTransport();
-      const mailFrom = process.env.SMTP_USER!;
 
+      // ✅ 先 verify SMTP 連線
+      await transporter.verify();
+
+      const mailFrom = process.env.SMTP_USER!;
       const html = `
         <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6;">
           <h2>會員註冊信箱驗證</h2>
@@ -223,14 +235,21 @@ export async function POST(req: Request) {
         </div>
       `;
 
-      await transporter.sendMail({
+      const info = await transporter.sendMail({
         from: mailFrom,
-        to: email,
+        to: createdEmail,
         subject: "UFLOW – 信箱驗證",
         html,
       });
+
+      console.log("[verify-email] sent:", info.messageId, info.response);
     } catch (e) {
       console.error("send verify email error:", e);
+      // ✅ 寄信失敗就不要假裝成功
+      return NextResponse.json(
+        { ok: false, message: "驗證信寄送失敗，請稍後重試或聯絡客服。" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
@@ -238,7 +257,6 @@ export async function POST(req: Request) {
         ok: true,
         user: data,
         message: "註冊成功，請前往信箱完成驗證。",
-        // ✅ referral: optional hint for UI/debug
         referralApplied: ambassadorOk ? true : false,
       },
       { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
@@ -246,7 +264,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error("register error:", err);
     return NextResponse.json(
-      { message: err?.message || "伺服器錯誤" },
+      { ok: false, message: err?.message || "伺服器錯誤" },
       { status: 500 }
     );
   }
