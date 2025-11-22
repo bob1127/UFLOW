@@ -24,21 +24,54 @@ async function fetchProfileWithSameCookies() {
 }
 
 function genRefCode(customerId: number) {
-  // 你可以換更漂亮的編碼（hash/base36）
   return `UF${customerId}`;
 }
 
 export async function GET() {
   try {
     const profile = await fetchProfileWithSameCookies();
-    if (!profile?.loggedIn || !profile?.customer?.id) {
+    if (!profile?.loggedIn) {
       return NextResponse.json({ ok: false, message: "未登入" }, { status: 401 });
     }
 
-    const customerId = profile.customer.id;
     const authHeader = { Authorization: basicAuth() };
 
-    // 讀 customer meta
+    let customerId: number | null = profile?.customer?.id ?? null;
+    const email = profile?.customer?.email;
+
+    // ✅ 1) 如果 profile 沒 id，就用 email 去 WC 找 / 建 customer
+    if (!customerId && email) {
+      const findRes = await fetch(
+        `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
+        { headers: authHeader, cache: "no-store" }
+      );
+      const arr = await findRes.json();
+
+      if (Array.isArray(arr) && arr.length > 0) {
+        customerId = arr[0].id;
+      } else {
+        // ✅ 建一個 WC customer（給社群註冊的人補上）
+        const createRes = await fetch(`${BASE}/wp-json/wc/v3/customers`, {
+          method: "POST",
+          headers: { ...authHeader, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            username: email.split("@")[0],
+            meta_data: [{ key: "email_verified", value: "1" }], // 社群登入就視為已驗證
+          }),
+        });
+        const created = await createRes.json();
+        if (createRes.ok && created?.id) {
+          customerId = created.id;
+        }
+      }
+    }
+
+    if (!customerId) {
+      return NextResponse.json({ ok: false, message: "找不到會員ID" }, { status: 400 });
+    }
+
+    // ✅ 2) 讀 meta，看有沒有推薦碼
     const uRes = await fetch(`${BASE}/wp-json/wc/v3/customers/${customerId}`, {
       headers: authHeader,
       cache: "no-store",
@@ -50,8 +83,6 @@ export async function GET() {
 
     if (!refCode) {
       refCode = genRefCode(customerId);
-
-      // 寫入推薦碼（只寫一次）
       await fetch(`${BASE}/wp-json/wc/v3/customers/${customerId}`, {
         method: "PUT",
         headers: { ...authHeader, "Content-Type": "application/json" },
