@@ -15,6 +15,11 @@ type AdminCustomer = {
   tier: string;
   billingCity?: string;
   billingCountry?: string;
+
+  // ✅ referral stats from API
+  referredCount: number; // 推薦註冊人數
+  rewardedCount: number; // 成功首單數
+  referralEarned: number; // 已賺推薦金
 };
 
 type AdminOrder = {
@@ -32,7 +37,13 @@ const formatNTD = (val: number) =>
   "NT$" + Math.round(val || 0).toLocaleString("zh-TW");
 
 /* ========== 會員分析圖表元件（使用 MUI X Charts） ========== */
-function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
+function MemberAnalytics({
+  orders,
+  customer,
+}: {
+  orders: AdminOrder[];
+  customer: AdminCustomer;
+}) {
   if (!orders || orders.length === 0) {
     return (
       <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-500">
@@ -41,12 +52,10 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
     );
   }
 
-  // --- 指標卡：總金額 / 訂單數 / 平均客單價 ---
   const totalAmount = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   const orderCount = orders.length;
   const avgAmount = orderCount > 0 ? totalAmount / orderCount : 0;
 
-  // --- 每月消費金額 ---
   const monthLabels: string[] = [];
   const monthTotalsMap: Record<string, number> = {};
 
@@ -61,11 +70,9 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
     monthTotalsMap[key] = (monthTotalsMap[key] || 0) + (o.total || 0);
   });
 
-  monthLabels.sort(); // 時間排序
-
+  monthLabels.sort();
   const monthTotals = monthLabels.map((m) => monthTotalsMap[m] || 0);
 
-  // --- 商品偏好 Top 5 ---
   const productMap: Record<string, number> = {};
   orders.forEach((o) =>
     o.line_items.forEach((it) => {
@@ -83,7 +90,7 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
   return (
     <div className="mt-4 space-y-3">
       {/* 指標卡片 */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <div className="rounded-lg border bg-white px-3 py-2">
           <div className="text-[11px] text-slate-500">訂單數</div>
           <div className="mt-1 text-lg font-semibold text-slate-800">
@@ -102,11 +109,30 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
             {orderCount === 0 ? "—" : formatNTD(avgAmount)}
           </div>
         </div>
+
+        {/* ✅ referral cards */}
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">推薦註冊人數</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {customer.referredCount || 0}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">成功首單推薦</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {customer.rewardedCount || 0}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">已賺推薦金</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {formatNTD(customer.referralEarned || 0)}
+          </div>
+        </div>
       </div>
 
       {/* 圖表：左右兩塊 */}
       <div className="grid gap-3 md:grid-cols-2">
-        {/* 左：月度消費金額折線圖 */}
         <div className="rounded-lg border bg-white px-3 py-2">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
             每月消費金額趨勢
@@ -117,11 +143,7 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
             <div className="h-52">
               <LineChart
                 xAxis={[
-                  {
-                    scaleType: "point",
-                    data: monthLabels,
-                    label: "月份",
-                  },
+                  { scaleType: "point", data: monthLabels, label: "月份" },
                 ]}
                 series={[
                   {
@@ -136,7 +158,6 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
           )}
         </div>
 
-        {/* 右：最常購買商品 Top 5 長條圖 */}
         <div className="rounded-lg border bg-white px-3 py-2">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
             最常購買商品 TOP 5
@@ -146,24 +167,10 @@ function MemberAnalytics({ orders }: { orders: AdminOrder[] }) {
           ) : (
             <div className="h-52">
               <BarChart
-                layout="horizontal" // x 橫軸：數值，y 軸：品名
-                xAxis={[
-                  {
-                    label: "購買次數 / 數量",
-                  },
-                ]}
-                yAxis={[
-                  {
-                    scaleType: "band",
-                    data: productLabels,
-                  },
-                ]}
-                series={[
-                  {
-                    data: productQty,
-                    label: "數量",
-                  },
-                ]}
+                layout="horizontal"
+                xAxis={[{ label: "購買次數 / 數量" }]}
+                yAxis={[{ scaleType: "band", data: productLabels }]}
+                series={[{ data: productQty, label: "數量" }]}
                 margin={{ left: 80, right: 10, top: 20, bottom: 30 }}
               />
             </div>
@@ -217,6 +224,11 @@ export default function AdminMembersClient() {
 
   const totalMembers = data.length;
   const totalRevenue = data.reduce((s, c) => s + c.totalSpent, 0);
+  const totalReferred = data.reduce((s, c) => s + (c.referredCount || 0), 0);
+  const totalReferralEarned = data.reduce(
+    (s, c) => s + (c.referralEarned || 0),
+    0
+  );
 
   const toggleExpand = async (customerId: number) => {
     if (expandedId === customerId) {
@@ -303,6 +315,7 @@ export default function AdminMembersClient() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">會員總覽</h1>
           </div>
+
           <div className="flex flex-wrap gap-3 text-sm">
             <div className="rounded-xl bg-white px-4 py-2 shadow-sm border">
               <div className="text-xs text-slate-500">會員數</div>
@@ -312,6 +325,20 @@ export default function AdminMembersClient() {
               <div className="text-xs text-slate-500">累計消費總額</div>
               <div className="text-lg font-semibold">
                 {formatNTD(totalRevenue)}
+              </div>
+            </div>
+
+            {/* ✅ referral totals */}
+            <div className="rounded-xl bg-white px-4 py-2 shadow-sm border">
+              <div className="text-xs text-slate-500">全站推薦註冊數</div>
+              <div className="text-lg font-semibold text-amber-700">
+                {totalReferred}
+              </div>
+            </div>
+            <div className="rounded-xl bg-white px-4 py-2 shadow-sm border">
+              <div className="text-xs text-slate-500">全站推薦金支出</div>
+              <div className="text-lg font-semibold text-amber-700">
+                {formatNTD(totalReferralEarned)}
               </div>
             </div>
           </div>
@@ -335,7 +362,6 @@ export default function AdminMembersClient() {
           </div>
         </div>
 
-        {/* 內容區 */}
         {loading && (
           <div className="mt-10 flex justify-center text-slate-500">
             載入中…
@@ -360,6 +386,13 @@ export default function AdminMembersClient() {
                   <th className="px-4 py-2 text-slate-50 text-right">
                     累計消費
                   </th>
+
+                  {/* ✅ new columns */}
+                  <th className="px-4 py-2 text-slate-50 text-right">
+                    推薦註冊
+                  </th>
+                  <th className="px-4 py-2 text-slate-50 text-right">推薦金</th>
+
                   <th className="px-4 py-2 text-slate-50 text-center">
                     會員等級
                   </th>
@@ -368,10 +401,10 @@ export default function AdminMembersClient() {
                   </th>
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((c) => (
                   <Fragment key={c.id}>
-                    {/* 主列：點一下展開 */}
                     <tr
                       className="border-t last:border-b hover:bg-slate-50/80 cursor-pointer"
                       onClick={() => toggleExpand(c.id)}
@@ -386,6 +419,7 @@ export default function AdminMembersClient() {
                           </div>
                         )}
                       </td>
+
                       <td className="px-4 py-2 align-middle text-slate-700">
                         {c.email}
                       </td>
@@ -398,6 +432,15 @@ export default function AdminMembersClient() {
                       <td className="px-4 py-2 align-middle text-right">
                         {formatNTD(c.totalSpent)}
                       </td>
+
+                      {/* ✅ referral columns */}
+                      <td className="px-4 py-2 align-middle text-right text-amber-700 font-semibold">
+                        {c.referredCount || 0}
+                      </td>
+                      <td className="px-4 py-2 align-middle text-right text-amber-700 font-semibold">
+                        {formatNTD(c.referralEarned || 0)}
+                      </td>
+
                       <td className="px-4 py-2 align-middle text-center">
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
@@ -417,6 +460,7 @@ export default function AdminMembersClient() {
                           {c.tier}
                         </span>
                       </td>
+
                       <td className="px-4 py-2 align-middle text-xs text-slate-500">
                         {c.lastOrderDate
                           ? new Date(c.lastOrderDate).toLocaleDateString(
@@ -426,17 +470,16 @@ export default function AdminMembersClient() {
                       </td>
                     </tr>
 
-                    {/* 展開列：訂單 + 分析圖表 */}
                     {expandedId === c.id && (
                       <tr className="bg-slate-50/40">
-                        <td colSpan={7} className="px-4 pb-3 pt-0">
+                        <td colSpan={9} className="px-4 pb-3 pt-0">
                           <div className="pt-2 text-xs text-slate-500 mb-1">
                             會員訂單明細
                           </div>
                           {renderOrders()}
 
-                          {/* ⬇️ 會員圖表分析（MUI X Charts） */}
-                          <MemberAnalytics orders={orders} />
+                          {/* ✅ pass customer into analytics */}
+                          <MemberAnalytics orders={orders} customer={c} />
                         </td>
                       </tr>
                     )}
@@ -446,7 +489,7 @@ export default function AdminMembersClient() {
                 {filtered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={9}
                       className="px-4 py-6 text-center text-sm text-slate-500"
                     >
                       找不到符合條件的會員。

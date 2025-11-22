@@ -1,3 +1,4 @@
+// app/api/admin/customers/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -23,6 +24,20 @@ function calcTier(totalSpent: number) {
   return "尚未消費";
 }
 
+// 解析 meta array 取指定 key
+function getMetaValue(meta: any[], key: string): any {
+  return meta?.find((m) => m.key === key)?.value;
+}
+
+function parseRewardedList(val: any): number[] {
+  try {
+    const arr = JSON.parse(String(val || "[]"));
+    return Array.isArray(arr) ? arr.map((x) => Number(x)).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ✅ 幫某個 customer 把訂單抓出來加總
 async function fetchOrdersSummaryForCustomer(customerId: number, auth: string) {
   const perPage = 50;
@@ -40,20 +55,9 @@ async function fetchOrdersSummaryForCustomer(customerId: number, auth: string) {
       cache: "no-store",
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error(
-        "Fetch orders error:",
-        res.status,
-        txt,
-        "customer:",
-        customerId
-      );
-      break;
-    }
+    if (!res.ok) break;
 
     const batch = (await res.json()) as any[];
-
     if (!Array.isArray(batch) || batch.length === 0) break;
 
     for (const o of batch) {
@@ -81,7 +85,7 @@ export async function GET() {
 
   try {
     const session = await getServerSession(authOptions);
-    // 如要做權限控管，在這裡用 session.user.email 去比對 ADMIN_EMAILS
+    // 如要做權限控管，在這裡檢查 session.user.email
 
     const auth = basicAuth();
     if (!auth) {
@@ -91,7 +95,7 @@ export async function GET() {
       );
     }
 
-    // 1) 先把 Woo 的 customers 抓回來
+    // 1) 抓全部 customers
     const perPage = 50;
     let page = 1;
     const allCustomers: any[] = [];
@@ -106,28 +110,44 @@ export async function GET() {
 
       if (!res.ok) {
         const txt = await res.text();
-        console.error("Fetch customers error:", res.status, txt, "url:", url);
         return NextResponse.json(
-          {
-            ok: false,
-            message: `取得顧客資料失敗（Woo API 狀態碼 ${res.status}）`,
-            detail: txt,
-          },
+          { ok: false, message: "取得顧客資料失敗", detail: txt },
           { status: 500, headers: noCache }
         );
       }
 
       const batch = (await res.json()) as any[];
-
       if (!Array.isArray(batch) || batch.length === 0) break;
 
       allCustomers.push(...batch);
-
       if (batch.length < perPage) break;
       page += 1;
     }
 
-    // 2) 組出前端要的 customers，必要時用訂單重新計算 totalSpent
+    // =============================
+    // ✅ referral 統計：先掃一次 allCustomers
+    // =============================
+    const referredCountMap: Record<number, number> = {};
+    const rewardedCountMap: Record<number, number> = {};
+
+    for (const c of allCustomers) {
+      const meta: any[] = Array.isArray(c.meta_data) ? c.meta_data : [];
+
+      // 被推薦人 uf_referred_by → 推薦人 +1
+      const referredBy = Number(getMetaValue(meta, "uf_referred_by") || 0);
+      if (referredBy) {
+        referredCountMap[referredBy] = (referredCountMap[referredBy] || 0) + 1;
+      }
+
+      // 推薦人 uf_ref_rewarded_orders → 已成功首單數
+      const rewardedOrdersVal = getMetaValue(meta, "uf_ref_rewarded_orders");
+      const rewardedOrders = parseRewardedList(rewardedOrdersVal);
+      if (rewardedOrders.length > 0) {
+        rewardedCountMap[c.id] = rewardedOrders.length;
+      }
+    }
+
+    // 2) 組資料回前端
     const customers: any[] = [];
 
     for (const c of allCustomers) {
@@ -135,23 +155,18 @@ export async function GET() {
       let ordersCount = Number(c.orders_count || 0) || 0;
       let lastOrderDate: string | null = c.date_last_order || null;
 
-      // 如果 Woo 回來都是 0，就自己用訂單算一次
       if (totalSpent === 0 && ordersCount === 0) {
         try {
           const summary = await fetchOrdersSummaryForCustomer(c.id, auth);
           totalSpent = summary.totalSpent;
           ordersCount = summary.ordersCount;
-          if (summary.lastOrderDate) {
-            lastOrderDate = summary.lastOrderDate;
-          }
-        } catch (err) {
-          console.error(
-            "Recalculate customer totalSpent error:",
-            c.id,
-            err
-          );
-        }
+          if (summary.lastOrderDate) lastOrderDate = summary.lastOrderDate;
+        } catch {}
       }
+
+      const referredCount = referredCountMap[c.id] || 0;
+      const rewardedCount = rewardedCountMap[c.id] || 0;
+      const referralEarned = rewardedCount * 200;
 
       customers.push({
         id: c.id,
@@ -168,13 +183,15 @@ export async function GET() {
         tier: calcTier(totalSpent),
         billingCity: c.billing?.city || "",
         billingCountry: c.billing?.country || "",
+
+        // ✅ 回傳 referral 統計
+        referredCount,        // 推薦註冊人數
+        rewardedCount,        // 成功首單數
+        referralEarned,       // 已賺推薦金
       });
     }
 
-    return NextResponse.json(
-      { ok: true, customers },
-      { headers: noCache }
-    );
+    return NextResponse.json({ ok: true, customers }, { headers: noCache });
   } catch (e) {
     console.error("admin/customers error:", e);
     return NextResponse.json(

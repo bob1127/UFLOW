@@ -1,6 +1,6 @@
 // app/account/page.tsx
 "use client";
-
+import { Link } from "next-view-transitions";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
@@ -316,9 +316,15 @@ export default function AccountPage() {
 
           {!referralLoading && referral && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
-              <p className="text-xs font-semibold tracking-widest text-amber-700">
-                金牌大使推薦
-              </p>
+              <div className="flex items-center">
+                <p className="text-md font-semibold tracking-widest text-amber-700">
+                  金牌大使推薦
+                </p>
+                <Link href="/cooperate" className="font-bold text-[14px] ml-4">
+                  {" "}
+                  關於合作資訊{" "}
+                </Link>
+              </div>
 
               <div className="mt-2 text-sm text-slate-700 leading-relaxed">
                 1. 分享你的專屬推薦連結給親友。
