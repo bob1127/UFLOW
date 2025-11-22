@@ -6,7 +6,7 @@ import nodemailer from "nodemailer";
 const BASE = process.env.WC_API_BASE;
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
-const RESET_SECRET = process.env.RESET_TOKEN_SECRET!; // ✅ 沿用原本的
+const RESET_SECRET = process.env.RESET_TOKEN_SECRET!;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 function basicAuth() {
@@ -32,6 +32,85 @@ function createTransport() {
   });
 }
 
+/* =========================
+   ✅ referral helpers
+========================= */
+
+// 你前面方案用 UF{id} 當 refCode，這裡直接解析
+function parseAmbassadorId(ref?: string | null): number | null {
+  if (!ref) return null;
+  const s = String(ref).trim();
+  if (!s.startsWith("UF")) return null;
+  const n = Number(s.replace("UF", ""));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
+// 確認這個 ambassadorId 真的存在（避免亂填）
+async function ensureAmbassadorExists(id: number): Promise<boolean> {
+  try {
+    const r = await fetch(`${BASE}/wp-json/wc/v3/customers/${id}`, {
+      headers: { Authorization: basicAuth() },
+      cache: "no-store",
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+// 給親友 50 元註冊禮（一次）
+async function grantFriendCoupon(newCustomerId: number, ambassadorId: number) {
+  const authHeader = { Authorization: basicAuth() };
+
+  // 讀新客 meta，確認沒給過
+  const uRes = await fetch(`${BASE}/wp-json/wc/v3/customers/${newCustomerId}`, {
+    headers: authHeader,
+    cache: "no-store",
+  });
+  const user = await uRes.json();
+  const meta: any[] = Array.isArray(user.meta_data) ? user.meta_data : [];
+
+  const already = meta.find(
+    (m) => m.key === "uf_ref_signup_rewarded" && String(m.value) === "1"
+  );
+  if (already) return;
+
+  const code = `UFFRD-${newCustomerId}`; // 一人一碼
+  const expires = new Date();
+  expires.setMonth(expires.getMonth() + 2);
+
+  // 建 coupon（限定 email）
+  await fetch(`${BASE}/wp-json/wc/v3/coupons`, {
+    method: "POST",
+    headers: { ...authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      code,
+      discount_type: "fixed_cart",
+      amount: "50",
+      individual_use: true,
+      usage_limit: 1,
+      usage_limit_per_user: 1,
+      email_restrictions: [user.email],
+      date_expires: expires.toISOString(),
+      description: "好友推薦註冊禮 50 元",
+      meta_data: [
+        { key: "uf_ref_friend_coupon", value: "1" },
+        { key: "uf_referred_by", value: String(ambassadorId) },
+      ],
+    }),
+  });
+
+  // 寫 meta 防止重發
+  await fetch(`${BASE}/wp-json/wc/v3/customers/${newCustomerId}`, {
+    method: "PUT",
+    headers: { ...authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      meta_data: [{ key: "uf_ref_signup_rewarded", value: "1" }],
+    }),
+  });
+}
+
 export async function POST(req: Request) {
   try {
     if (!BASE) {
@@ -41,7 +120,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, username, password } = await req.json();
+    const { email, username, password, ref } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -50,7 +129,24 @@ export async function POST(req: Request) {
       );
     }
 
+    /* =========================
+       ✅ referral: parse + verify
+    ========================= */
+    const ambassadorId = parseAmbassadorId(ref);
+    const ambassadorOk =
+      ambassadorId ? await ensureAmbassadorExists(ambassadorId) : false;
+
     // 1) 建立 WooCommerce customer，預設 email 未驗證
+    const meta_data: any[] = [{ key: "email_verified", value: "0" }];
+
+    // ✅ referral: 若 ref 合法，先寫 uf_referred_by
+    if (ambassadorOk && ambassadorId) {
+      meta_data.push({
+        key: "uf_referred_by",
+        value: String(ambassadorId),
+      });
+    }
+
     const res = await fetch(`${BASE}/wp-json/wc/v3/customers`, {
       method: "POST",
       headers: {
@@ -61,9 +157,7 @@ export async function POST(req: Request) {
         email,
         username: username || email,
         password,
-        meta_data: [
-          { key: "email_verified", value: "0" }, // 0 = 未驗證
-        ],
+        meta_data,
       }),
       cache: "no-store",
     });
@@ -77,21 +171,36 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) 產生驗證 token（用 RESET_TOKEN_SECRET）
+    const newCustomerId = data.id;
+
+    /* =========================
+       ✅ referral: grant 50 after create
+       - 避免自我推薦: ambassadorId !== newCustomerId
+    ========================= */
+    if (ambassadorOk && ambassadorId && ambassadorId !== newCustomerId) {
+      try {
+        await grantFriendCoupon(newCustomerId, ambassadorId);
+      } catch (e) {
+        console.error("grantFriendCoupon error:", e);
+        // 不影響註冊流程
+      }
+    }
+
+    // 2) 產生驗證 token
     const token = jwt.sign(
       {
         type: "verify-email",
         email,
-        customerId: data.id,
+        customerId: newCustomerId,
       },
       RESET_SECRET,
-      { expiresIn: "1d" } // 連結有效 1 天
+      { expiresIn: "1d" }
     );
 
     const url = new URL("/verify-email", SITE_URL);
     url.searchParams.set("token", token);
 
-    // 3) 寄出驗證信（沿用 SMTP_*）
+    // 3) 寄出驗證信
     try {
       const transporter = createTransport();
       const mailFrom = process.env.SMTP_USER!;
@@ -122,7 +231,6 @@ export async function POST(req: Request) {
       });
     } catch (e) {
       console.error("send verify email error:", e);
-      // 信寄失敗你可以視需求決定要不要直接擋掉註冊
     }
 
     return NextResponse.json(
@@ -130,6 +238,8 @@ export async function POST(req: Request) {
         ok: true,
         user: data,
         message: "註冊成功，請前往信箱完成驗證。",
+        // ✅ referral: optional hint for UI/debug
+        referralApplied: ambassadorOk ? true : false,
       },
       { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
     );

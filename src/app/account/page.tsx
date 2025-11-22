@@ -39,6 +39,13 @@ type Order = {
 
 type ClaimKind = "upgrade" | "birthday";
 
+type ReferralInfo = {
+  refCode: string;
+  referralLink: string;
+  friendReward: number;
+  ambassadorReward: number;
+};
+
 export default function AccountPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -49,6 +56,10 @@ export default function AccountPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // ✅ referral state
+  const [referral, setReferral] = useState<ReferralInfo | null>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
 
   // 券領取相關 state
   const [claimLoading, setClaimLoading] = useState<{
@@ -111,6 +122,27 @@ export default function AccountPage() {
     }
   }, []);
 
+  // ✅ referral loader
+  const loadReferral = useCallback(async () => {
+    setReferralLoading(true);
+    try {
+      const res = await fetch("/api/account/referral", {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        setReferral(data);
+      } else {
+        setReferral(null);
+      }
+    } catch {
+      setReferral(null);
+    } finally {
+      setReferralLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
@@ -118,8 +150,9 @@ export default function AccountPage() {
   useEffect(() => {
     if (loggedIn) {
       loadOrders();
+      loadReferral();
     }
-  }, [loggedIn, loadOrders]);
+  }, [loggedIn, loadOrders, loadReferral]);
 
   // 領取升等禮 / 生日禮金
   const handleClaim = async (kind: ClaimKind) => {
@@ -151,11 +184,7 @@ export default function AccountPage() {
         setClaimedCode(data.coupon.code);
       }
 
-      // 不管是第一次領（already:false）還是已領取（already:true），都把按鈕鎖起來
       setClaimed((prev) => ({ ...prev, [kind]: true }));
-
-      // 有需要的話也可以重新載入會員資料
-      // await loadProfile();
     } catch (e) {
       setClaimStatus("error");
       setClaimMessage("系統錯誤，請稍後再試。");
@@ -207,7 +236,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-[60vh] py-10 px-4">
-      <div className="mx-auto w全文 max-w-2xl rounded-xl mt-[100px] border bg-white p-6 shadow-sm">
+      <div className="mx-auto w-full max-w-2xl rounded-xl mt-[100px] border bg-white p-6 shadow-sm">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">我的帳戶</h1>
@@ -236,6 +265,68 @@ export default function AccountPage() {
             <div className="col-span-1 text-sm text-slate-500">使用者名稱</div>
             <div className="col-span-2">{customer?.username || "-"}</div>
           </div>
+        </div>
+
+        {/* ✅ 金牌大使推薦區塊 */}
+        <div className="mt-8">
+          {referralLoading && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+              讀取推薦資訊中…
+            </div>
+          )}
+
+          {!referralLoading && referral && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+              <p className="text-xs font-semibold tracking-widest text-amber-700">
+                金牌大使推薦
+              </p>
+
+              <div className="mt-2 text-sm text-slate-700 leading-relaxed">
+                1. 分享你的專屬推薦連結給親友。
+                <br />
+                2. 親友用連結註冊立刻獲得{" "}
+                <span className="font-semibold text-amber-700">
+                  NT$ {referral.friendReward}
+                </span>{" "}
+                購物金。
+                <br />
+                3. 親友完成首單後，你可獲得{" "}
+                <span className="font-semibold text-amber-700">
+                  NT$ {referral.ambassadorReward}
+                </span>{" "}
+                抵用金折抵下次訂單。
+              </div>
+
+              <div className="mt-3">
+                <div className="text-xs text-slate-500 mb-1">
+                  你的專屬推薦連結
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={referral.referralLink}
+                    className="w-full rounded-md border bg-white px-3 py-2 text-xs"
+                  />
+                  <button
+                    onClick={() =>
+                      navigator.clipboard.writeText(referral.referralLink)
+                    }
+                    className="rounded-md bg-slate-900 px-3 py-2 text-xs text-white hover:bg-slate-800"
+                  >
+                    複製
+                  </button>
+                </div>
+
+                <div className="mt-2 text-xs text-slate-500">
+                  推薦碼：
+                  <span className="font-semibold text-slate-900">
+                    {" "}
+                    {referral.refCode}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 會員等級區塊 */}
@@ -270,7 +361,7 @@ export default function AccountPage() {
               </div>
 
               {/* 升等禮 */}
-              <div className="rounded-lg bg白 px-3 py-2">
+              <div className="rounded-lg bg-white px-3 py-2">
                 <p className="text-[11px] font-semibold text-slate-500">
                   升等禮
                 </p>
@@ -293,7 +384,7 @@ export default function AccountPage() {
               </div>
 
               {/* 壽星好禮 */}
-              <div className="rounded-lg bg白 px-3 py-2">
+              <div className="rounded-lg bg-white px-3 py-2">
                 <p className="text-[11px] font-semibold text-slate-500">
                   壽星好禮
                 </p>

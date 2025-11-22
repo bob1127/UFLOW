@@ -1,3 +1,4 @@
+// src/app/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -19,6 +20,9 @@ export default function RegisterPage() {
   const search = useSearchParams();
   const next = search.get("next") || "/account";
 
+  // ✅ 讀推薦碼
+  const ref = search.get("ref") || "";
+
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +32,6 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fbLoading, setFbLoading] = useState(false);
 
-  // ✅ 註冊完成後，改顯示「請去信箱驗證」的成功畫面
   const [registered, setRegistered] = useState(false);
 
   async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
@@ -41,12 +44,10 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, ref }), // ✅ 帶 ref
       });
       const data = await res.json();
       if (res.ok) {
-        // ⛔ 不再直接跳登入頁
-        // ✅ 改成顯示成功頁面，提示「請去信箱完成驗證」
         setRegistered(true);
       } else {
         setError(data?.message || "註冊失敗");
@@ -63,6 +64,8 @@ export default function RegisterPage() {
     setError("");
     setGoogleLoading(true);
     try {
+      // ⚠️ Google/FB 註冊目前不會走 /api/auth/register
+      // 若你要完整支援推薦碼，需在 NextAuth callback 讀 cookie/ref
       await signIn("google", { callbackUrl: getCallbackUrl(next) });
     } finally {
       setTimeout(() => setGoogleLoading(false), 1200);
@@ -80,9 +83,6 @@ export default function RegisterPage() {
     }
   }
 
-  // ========================
-  // ✅ 註冊成功後的提示畫面
-  // ========================
   if (registered) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -117,9 +117,6 @@ export default function RegisterPage() {
     );
   }
 
-  // ========================
-  // 🧾 一般註冊表單（含 Google / FB 快速註冊）
-  // ========================
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4">
@@ -131,7 +128,7 @@ export default function RegisterPage() {
           </p>
         )}
 
-        {/* ✅ 保留：Google / Facebook 快速註冊 */}
+        {/* Google / Facebook 快速註冊 */}
         <div className="space-y-2">
           <button
             type="button"
@@ -169,7 +166,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* ✅ 自行填寫帳密註冊 */}
+        {/* 自行填寫帳密註冊 */}
         <form onSubmit={handleRegister} className="space-y-3">
           <input
             type="text"
