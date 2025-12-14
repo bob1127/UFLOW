@@ -4,12 +4,15 @@
 import Image from "next/image";
 import { Link } from "next-view-transitions";
 
+// 這裡定義一個與 WooCommerce 回傳資料相容的 Type
+// 注意：不要從 server-only 的檔案匯入 type
 type Product = {
-  id: number | string;
+  id: number;
   slug: string;
   name: string;
-  sale_price?: string;
-  images?: { src: string; alt?: string }[];
+  price: string; // Woo 回傳的價格是字串
+  sale_price?: string; // 用來判斷是否顯示標籤
+  images: { src: string; alt?: string }[];
 };
 
 const COLORS = {
@@ -23,12 +26,15 @@ const COLORS = {
 };
 
 export default function Client({ items }: { items: Product[] }) {
+  // 安全取得第一張圖片，沒有就用預設圖
   const firstImg = (p: Product) => p.images?.[0]?.src || "/placeholder.png";
-  const isNew = (p: Product) => !!p.sale_price;
+
+  // 判斷是否有特價 (沿用你原本的邏輯：有 sale_price 就顯示 NEW)
+  const isNew = (p: Product) => !!p.sale_price && p.sale_price !== "";
 
   return (
     <div className="bg-slate-50">
-      {/* HERO 橫幅 */}
+      {/* HERO 橫幅 (維持不變) */}
       <div
         className="w-full md:aspect-[1080/576] aspect-square xl:aspect-[1920/700] bg-center bg-cover bg-no-repeat"
         style={{
@@ -38,7 +44,7 @@ export default function Client({ items }: { items: Product[] }) {
       />
 
       <main className="mx-auto max-w-6xl px-4 py-16">
-        {/* 標題 + 說明 */}
+        {/* 標題 + 說明 (維持不變) */}
         <h1
           className=" text-3xl  xl:text-5xl font-semibold tracking-wide text-[#111]"
           style={{ letterSpacing: ".02em" }}
@@ -60,7 +66,7 @@ export default function Client({ items }: { items: Product[] }) {
               href={`/products/${p.slug}`}
               className="group block"
             >
-              {/* 卡片 */}
+              {/* 卡片本體 */}
               <div
                 className="relative rounded-3xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg border border-black/5"
                 style={{ backgroundColor: COLORS.cardBg }}
@@ -77,7 +83,7 @@ export default function Client({ items }: { items: Product[] }) {
                   BUY
                 </div>
 
-                {/* NEW 標籤 */}
+                {/* NEW (或 SALE) 標籤 */}
                 {isNew(p) && (
                   <div
                     className="absolute right-5 top-5 px-3 py-1 rounded-full text-xs font-semibold"
@@ -102,16 +108,17 @@ export default function Client({ items }: { items: Product[] }) {
                 </div>
               </div>
 
-              {/* 名稱 + 規格 */}
+              {/* 名稱 + 價格 (原本是規格) */}
               <div className="mt-4">
                 <div className="text-[18px] md:text-[20px] leading-7 text-[#111]">
                   “{p.name}”
                 </div>
+                {/* 這裡改為顯示價格，比顯示 22oz 更實用 */}
                 <div
-                  className="mt-1 text-sm"
+                  className="mt-1 text-sm font-medium"
                   style={{ color: COLORS.metaText }}
                 >
-                  22oz　/　淨重
+                  NT$ {p.price}
                 </div>
               </div>
             </Link>

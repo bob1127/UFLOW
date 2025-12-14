@@ -74,13 +74,23 @@ const TextParallaxContentExample = () => {
         </section>
 
         {/* 第一段：產品 + 文案 */}
-        <div className="portrait-container relative overflow-hidden">
+        <section className="portrait-container relative overflow-hidden">
           <div className="txt absolute right-[8%] top-[10%] -translate-x-1/2 z-40 max-w-[550px]">
-            <h2 className="text-5xl font-bold">對美味的講究</h2>
+            <h2 className="text-5xl font-bold">GABA 鎂鎂香蜂草</h2>
+            <div className="mt-5">
+              <h3 className="text-2xl font-normal my-2">
+                舒壓好眠．能量代謝的科學新方
+              </h3>
+              <h3 className="text-2xl font-normal my-2">
+                專利GABA x 速可包覆鎂 x 法國香蜂草
+              </h3>
+            </div>
             <p className="leading-relaxed tracking-wider mt-4">
-              作為美味基礎的重要原材料是「大豆」。
-              為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
-              其他原材料，為了不妨礙大豆的美味，我們準備了儘可能接近自然的原材料。
+              針對生活步調緊湊、壓力大與睡眠品質不佳的現代人設計 。嚴選韓國專利
+              GABAEX® (500mg) 作為情緒煞車，搭配義大利 SideMag® 速可包覆鎂
+              (200mg)，利用 Sucrosomial® 專利技術提升吸收率達 300%
+              。加上法國香蜂草萃取，以黃金三角配方，幫助您日間提振精神、夜間放鬆入眠
+              。
             </p>
             <div className="flex flex-row py-8">
               <div className="flex flex-col mr-10 items-center">
@@ -142,65 +152,101 @@ const TextParallaxContentExample = () => {
               className="object-contain"
             />
           </div>
-        </div>
+        </section>
 
         {/* 第二段：左右圖文 */}
-        <section className="flex h-screen w-[85%] mx-auto">
-          <div className="left w-1/2 flex justify-center items-center">
-            <div className="flex-col relative flex justify-center items-center max-w-[600px]">
-              <h1 className="text-4xl font-bold">對原材料的講究</h1>
+        <section className="w-full bg-[#f9f9f9] py-12 lg:py-24">
+          {/* 限制最大寬度並居中，確保在大螢幕上不失真 */}
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            {/* Flex 容器：手機版垂直排列 (col-reverse 讓圖片在手機上先顯示)，桌機版左右並排 */}
+            <div className="flex flex-col-reverse lg:flex-row lg:items-start lg:gap-16">
+              {/* ----- 左側：文字內容區域 ----- */}
+              <div className="flex flex-col w-full lg:w-1/2 space-y-16 pt-8 lg:pt-0">
+                {/* Header */}
+                <div className="space-y-4">
+                  <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
+                    維他菌合生元
+                  </h1>
 
-              <div className="flex flex-col p-8">
-                <h2 className="text-3xl font-bold">對美味的講究</h2>
-                <p className="mt-2">
-                  作為美味基礎的重要原材料是「大豆」。
-                  為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
-                  其他原材料，為了不妨礙大豆的美味，我們準備了儘可能接近自然的原材料。
-                </p>
+                  <p className="text-xl font-medium text-slate-600">
+                    益生菌 x 益生元 x 後生元 (益萃質®)
+                  </p>
+                </div>
+
+                {/* Content Block 1 */}
+                <div className="space-y-4 border-l-4 border-yellow-400 pl-6">
+                  <h3 className="text-2xl font-bold text-slate-800">
+                    建構腸道「黃金三角」，開啟消化環保新紀元
+                  </h3>
+                  <p className="text-lg leading-relaxed text-slate-600">
+                    超越傳統益生菌的單一補充，我們採用現代腸道保健的頂級規格——
+                    <span className="font-bold text-slate-800">
+                      「合生元 (Synbiotics) 搭配後生元 (Postbiotics)」
+                    </span>
+                    的黃金三角配方。這套系統性的保養邏輯，不僅提供「活的益菌」作為種子，更足量添加「益菌的食物」如難消化性麥芽糊精與異麥芽寡醣。
+                    結合新一代後生元，實現「先顧、再補、後養」的全方位循環。
+                  </p>
+                </div>
+
+                {/* Content Block 2 */}
+                <div className="space-y-4 border-l-4 border-blue-400 pl-6">
+                  <h3 className="text-2xl font-bold text-slate-800">
+                    嚴選 4 大專利機能菌 x Totipro® 益萃質
+                  </h3>
+                  <p className="text-lg leading-relaxed text-slate-600">
+                    嚴選適合亞洲人體質的 4 大專利機能益菌：
+                    <span className="font-bold text-blue-900">
+                      CP-9、F-1、LPL-28 與 AP-32
+                    </span>
+                    。 這些菌株均經過業界最高標準的連續式酸性與膽鹽環境測試。
+                    特別添加專利 Totipro® 益萃質®
+                    (PE0401)，經實驗證實能有效全面提升消化道表皮組織的屏障力，從根本打造健康的細菌叢生態。
+                  </p>
+                </div>
+
+                {/* Content Block 3 */}
+                <div className="space-y-4 border-l-4 border-green-400 pl-6">
+                  <h3 className="text-2xl font-bold text-slate-800">
+                    漢方智慧加持，溫和調理的舒暢哲學
+                  </h3>
+                  <p className="text-lg leading-relaxed text-slate-600">
+                    獨家融入傳統漢方智慧，特別添加
+                    <span className="font-bold text-green-800">
+                      山藥、山楂與牛蒡
+                    </span>
+                    三種溫和草本精華。這種「中西合璧」的配方設計，不僅能緩解生活壓力帶來的消化不適，更能溫和地滋養身體，是適合全家大小的日常保養首選。
+                  </p>
+                </div>
               </div>
 
-              <div className="flex flex-col p-8">
-                <h2 className="text-3xl font-bold">對天然甜味劑的講究</h2>
-                <p className="mt-2">
-                  KOREDAKE
-                  使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
-                  完全沒有使用糖和人工甜味劑。不妨礙材料的優良，發揮了自然的甜味。
-                </p>
-              </div>
+              {/* ----- 右側：圖片區域 (Sticky) ----- */}
+              {/* lg:sticky lg:top-10 讓圖片在桌機版捲動時會固定住 */}
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-screen">
+                <div className="relative flex justify-center items-center w-full aspect-square lg:aspect-auto lg:h-[600px]">
+                  {/* 背景裝飾圖 (旋轉的那張) */}
+                  <div className="absolute z-0 w-[80%] max-w-[500px] opacity-80 transition-transform duration-700 hover:rotate-[-15deg]">
+                    <Image
+                      src="/images/3c3vnce4cqjbowo0tetrzx0x2jbrrayr-Photoroom.png"
+                      alt="Background decoration"
+                      width={600}
+                      height={600}
+                      className="w-full h-auto object-contain rotate-[-45deg]"
+                    />
+                  </div>
 
-              <div className="flex flex-col p-8">
-                <h2 className="text-3xl font-bold">對天然甜味劑的講究</h2>
-                <p className="mt-2">
-                  KOREDAKE
-                  使用了「羅漢果（拉坎卡）」和「赤蘚糖醇」的零卡路里天然甜味劑。
-                  完全沒有使用糖和人工甜味劑。不妨礙材料的優良，發揮了自然的甜味。
-                </p>
+                  {/* 主產品圖 */}
+                  <div className="absolute z-10 w-[90%] max-w-[600px] drop-shadow-2xl">
+                    <Image
+                      src="/images/2491274-cover-Photoroom.png"
+                      alt="維他菌合生元產品圖"
+                      width={800}
+                      height={800}
+                      className="w-full h-auto object-contain"
+                      priority
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="right w-1/2 relative">
-            <div className="absolute right-0 z-40 top-0">
-              <Image
-                src="/images/2491274-cover-Photoroom.png"
-                alt=""
-                width={800}
-                height={800}
-                className="w-[700px]"
-                placeholder="empty"
-                loading="lazy"
-              />
-            </div>
-            <div className="absolute right-[20%] z-20 top-20">
-              <Image
-                src="/images/3c3vnce4cqjbowo0tetrzx0x2jbrrayr-Photoroom.png"
-                alt=""
-                width={800}
-                height={800}
-                className="w-[530px] rotate-[-45deg]"
-                placeholder="empty"
-                loading="lazy"
-              />
             </div>
           </div>
         </section>
@@ -290,7 +336,10 @@ const TextParallaxContentExample = () => {
         </section>
 
         {/* 最後一段 TextParallaxContent */}
-        <TextParallaxContent subheading="對天然成分的堅持" heading="UFLOW">
+        <TextParallaxContent
+          subheading="晶透煥亮．喚回芙蓉貴婦肌"
+          heading="肽晶芙蓉"
+        >
           <div className="space-y-32 min-h-[180vh] px-8 pt-[8vh] pb-32">
             <h1 className="text-white text-4xl" />
             <ExampleContent />
@@ -403,85 +452,116 @@ const ExampleContent = () => {
       style={{ opacity, y }}
       className="w-[85%] flex flex-row max-w-[1920px] mx-auto"
     >
-      <div className="left-card relative h-[120vh] w-1/2 border border-black flex flex-row">
-        <div className="card-wrap absolute z-20 top-[0%] left-[15%] h-1/3 border border-red-600 flex flex-row">
-          <div className="card bg-white w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
-            <div className="w-full p-4">
-              <Image
-                src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/maxicollagen-video-8RNlkPI1.png"
-                placeholder="empty"
-                loading="lazy"
-                width={600}
-                height={400}
-                className="w-full rounded-[20px]"
-                alt="card-image"
-              />
+      {/* 外層容器：手機版垂直排列，電腦版並排且固定高度 */}
+      <div className="w-full flex flex-col lg:flex-row relative lg:h-[120vh]">
+        {/* Left Column */}
+        <div className="left-card w-full lg:w-1/2 relative flex flex-col items-center gap-8 lg:gap-0 lg:block lg:h-full">
+          {/* Card 1: 晶透源頭 */}
+          {/* 手機版 relative + flex center / 電腦版 absolute 定位 */}
+          <div className="card-wrap relative w-full flex justify-center lg:absolute lg:z-20 lg:top-[5%] lg:left-[10%] lg:w-auto lg:block">
+            <div className="card bg-white  flex flex-col items-center w-[90%] max-w-[400px] lg:w-[450px] h-auto min-h-[450px] p-6 lg:p-8  duration-300 border border-gray-100">
+              <div className="w-full mb-4">
+                <Image
+                  src="/images/about/晶透源頭：LiposoMax微脂體穀胱甘肽.png"
+                  placeholder="empty"
+                  loading="lazy"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-contain"
+                  alt="LiposoMax® 微脂體穀胱甘肽"
+                />
+              </div>
+              <div className="flex flex-col justify-center items-center w-full space-y-3 text-center">
+                <h3 className="text-lg lg:text-xl font-bold leading-snug">
+                  晶透源頭：LiposoMax® <br className="hidden lg:block" />
+                  微脂體穀胱甘肽
+                </h3>
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
+                  採用美國專利微脂體技術，突破吸收極限，讓高濃度穀胱甘肽直達肌底，由內而外綻放極致透亮光采。
+                </p>
+              </div>
             </div>
-            <div className="txt p-5">
-              <h3 className="text-[18px] font-bold">專業的客服人員</h3>
+          </div>
+
+          {/* Card 2: 隱形防護 */}
+          <div className="card-wrap relative w-full flex justify-center lg:absolute lg:z-20 lg:top-[55%] lg:left-[5%] lg:w-auto lg:block">
+            <div className="card bg-white  flex flex-col items-center w-[90%] max-w-[400px] lg:w-[450px] h-auto min-h-[450px] p-6 lg:p-8  duration-300 border border-gray-100">
+              <div className="w-full mb-4">
+                <Image
+                  src="/images/about/日本冰晶番茄 嚴選日本專利冰晶番茄.png"
+                  placeholder="empty"
+                  loading="lazy"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-contain"
+                  alt="Phytonoid® 日本冰晶番茄"
+                />
+              </div>
+              <div className="flex flex-col justify-center items-center w-full space-y-3 text-center">
+                <h3 className="text-lg lg:text-xl font-bold leading-snug">
+                  隱形防護：Phytonoid® <br className="hidden lg:block" />
+                  日本冰晶番茄
+                </h3>
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
+                  嚴選日本專利冰晶番茄，富含珍稀植萃能量，有效抵禦外在光線刺激，為肌膚撐起全天候的隱形防護傘。
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="card-wrap absolute z-20 top-[55%] left-[5%] h-1/3 border border-red-600 flex flex-row">
-          <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
-            <div className="w-full p-4">
-              <Image
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa0MqYPgFYrkL5ViHSGpWuQOEiz8J17LUoIw&s"
-                placeholder="empty"
-                loading="lazy"
-                width={600}
-                height={400}
-                className="w-full rounded-[20px]"
-                alt="card-image"
-              />
-            </div>
-            <div className="txt p-5">
-              <h3 className="text-[18px] font-bold">專業的客服人員</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="right-card relative h-[120vh] justify-end w-1/2 border border-black flex flex-row">
-        <div className="card-wrap absolute z-20 top-[20%] right-0 h-1/3 border border-red-600 flex flex-row">
-          <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[750px] max-h-[800px]">
-            <div className="w-full p-4">
-              <Image
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdEiHLCSsSPzvJrybxksy1gvOCPl36IqkcvA&s"
-                placeholder="empty"
-                loading="lazy"
-                width={600}
-                height={400}
-                className="w-full rounded-[20px]"
-                alt="card-image"
-              />
-            </div>
-            <div className="txt p-5">
-              <h3 className="text-[18px] font-bold">天然的成分</h3>
-              <p className="text-[13px]">
-                作為美味基礎的重要原材料是「大豆」。
-                為了能夠享受到大豆本來的甜味和美味，我們努力製作簡單的味道。
-              </p>
+        {/* Right Column */}
+        <div className="right-card w-full lg:w-1/2 relative flex flex-col items-center gap-8 lg:gap-0 mt-8 lg:mt-0 lg:block lg:h-full">
+          {/* Card 3: 彈力支撐 */}
+          <div className="card-wrap relative w-full flex justify-center lg:absolute lg:z-20 lg:top-[-5%] lg:right-[5%] lg:w-auto lg:block">
+            <div className="card bg-white  flex flex-col items-center w-[90%] max-w-[400px] lg:w-[450px] h-auto min-h-[450px] p-6 lg:p-8  duration-300 border border-gray-100">
+              <div className="w-full mb-4">
+                <Image
+                  src="/images/about/彈力支撐：Mesoporosil® 比利時正矽酸.png"
+                  placeholder="empty"
+                  loading="lazy"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-contain"
+                  alt="Mesoporosil® 比利時正矽酸"
+                />
+              </div>
+              <div className="flex flex-col justify-center items-center w-full space-y-3 text-center">
+                <h3 className="text-lg lg:text-xl font-bold leading-snug">
+                  彈力支撐：Mesoporosil® <br className="hidden lg:block" />
+                  比利時正矽酸
+                </h3>
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
+                  比利時專利正矽酸複合物，能穩固膠原蛋白結構，精準支撐肌底彈力網，重現青春必備的緊緻與澎潤感。
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="card-wrap absolute z-20 bottom-[-20%] right-0 h-1/3 border border-red-600 flex flex-row">
-          <div className="card bg-white rounded-[25px] w-[450px] max-w-[450px] h-[550px] max-h-[500px]">
-            <div className="w-full p-4">
-              <Image
-                src="https://www.nissan-nics.co.jp/wp-content/themes/nics2024/assets/images/top/img-advantage01.avif"
-                placeholder="empty"
-                loading="lazy"
-                width={600}
-                height={400}
-                className="w-full rounded-[20px]"
-                alt="card-image"
-              />
-            </div>
-            <div className="txt p-5">
-              <h3 className="text-[18px] font-bold">專業的客服人員</h3>
+          {/* Card 4: 抗氧封存 */}
+          <div className="card-wrap relative w-full flex justify-center mb-10 lg:mb-0 lg:absolute lg:z-20 lg:bottom-[10%] lg:right-[10%] lg:w-auto lg:block">
+            <div className="card bg-white  flex flex-col items-center w-[90%] max-w-[400px] lg:w-[450px] h-auto min-h-[450px] p-6 lg:p-8  duration-300 border border-gray-100">
+              <div className="w-full mb-4">
+                <Image
+                  src="/images/about/抗氧封存：PUREWAY-C® 複方維生素 C.png"
+                  placeholder="empty"
+                  loading="lazy"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-contain"
+                  alt="PUREWAY-C® 複方維生素 C"
+                />
+              </div>
+              <div className="flex flex-col justify-center items-center w-full space-y-3 text-center">
+                <h3 className="text-lg lg:text-xl font-bold leading-snug">
+                  抗氧封存：PUREWAY-C® <br className="hidden lg:block" />
+                  複方維生素 C
+                </h3>
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
+                  結合美國複方維生素
+                  C，以卓越抗氧化力進行協同作用，全方位喚回肌膚彈、緊、嫩，打造無瑕芙蓉貴婦肌。
+                </p>
+              </div>
             </div>
           </div>
         </div>

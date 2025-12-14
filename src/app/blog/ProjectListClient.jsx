@@ -1,6 +1,13 @@
 // ProjectListClient.js
 "use client";
-import { Form, Input, Select, SelectItem, Checkbox, Button } from "@heroui/react";
+import {
+  Form,
+  Input,
+  Select,
+  SelectItem,
+  Checkbox,
+  Button,
+} from "@heroui/react";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -29,7 +36,9 @@ export default function ProjectListClient({ posts, categories }) {
 
   useEffect(() => {
     const transformed = posts.map((post) => {
-      const categorySlugs = (post._embedded?.["wp:term"]?.[0] || []).map((cat) => cat.slug);
+      const categorySlugs = (post._embedded?.["wp:term"]?.[0] || []).map(
+        (cat) => cat.slug
+      );
       return { ...post, categories_slug: categorySlugs };
     });
     setPostsWithSlug(transformed);
@@ -55,35 +64,59 @@ export default function ProjectListClient({ posts, categories }) {
     let result = [...postsWithSlug];
 
     if (activeCategory !== "all") {
-      result = result.filter((post) => post.categories_slug.includes(activeCategory));
+      result = result.filter((post) =>
+        post.categories_slug.includes(activeCategory)
+      );
     }
 
     if (minSize || maxSize) {
       result = result.filter((post) => {
         const size = Number(post.acf?.size || 0);
-        return (!minSize || size >= Number(minSize)) && (!maxSize || size <= Number(maxSize));
+        return (
+          (!minSize || size >= Number(minSize)) &&
+          (!maxSize || size <= Number(maxSize))
+        );
       });
     }
 
     if (minPrice || maxPrice) {
       result = result.filter((post) => {
         const price = Number(post.acf?.price || 0);
-        return (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice));
+        return (
+          (!minPrice || price >= Number(minPrice)) &&
+          (!maxPrice || price <= Number(maxPrice))
+        );
       });
     }
 
     if (sortOption === "size-asc") {
-      result.sort((a, b) => Number(a.acf?.size || 0) - Number(b.acf?.size || 0));
+      result.sort(
+        (a, b) => Number(a.acf?.size || 0) - Number(b.acf?.size || 0)
+      );
     } else if (sortOption === "size-desc") {
-      result.sort((a, b) => Number(b.acf?.size || 0) - Number(a.acf?.size || 0));
+      result.sort(
+        (a, b) => Number(b.acf?.size || 0) - Number(a.acf?.size || 0)
+      );
     } else if (sortOption === "price-asc") {
-      result.sort((a, b) => Number(a.acf?.price || 0) - Number(b.acf?.price || 0));
+      result.sort(
+        (a, b) => Number(a.acf?.price || 0) - Number(b.acf?.price || 0)
+      );
     } else if (sortOption === "price-desc") {
-      result.sort((a, b) => Number(b.acf?.price || 0) - Number(a.acf?.price || 0));
+      result.sort(
+        (a, b) => Number(b.acf?.price || 0) - Number(a.acf?.price || 0)
+      );
     }
 
     return result;
-  }, [postsWithSlug, activeCategory, minSize, maxSize, minPrice, maxPrice, sortOption]);
+  }, [
+    postsWithSlug,
+    activeCategory,
+    minSize,
+    maxSize,
+    minPrice,
+    maxPrice,
+    sortOption,
+  ]);
 
   const paginatedPosts = useMemo(() => {
     const start = (currentPage - 1) * postsPerPage;
@@ -91,7 +124,8 @@ export default function ProjectListClient({ posts, categories }) {
     return sortedPosts.slice(start, end);
   }, [sortedPosts, currentPage]);
 
-  if (!postsWithSlug.length) return <div className="text-center py-20">載入中...</div>;
+  if (!postsWithSlug.length)
+    return <div className="text-center py-20">載入中...</div>;
 
   return (
     <div className="pt-[10vh]">
@@ -99,7 +133,9 @@ export default function ProjectListClient({ posts, categories }) {
         <div className="title w-[75%] mx-auto flex flex-col">
           <h1 className="text-[5rem] font-bold flex-col sm:flex-row flex items-center justify-between">
             WORKS.
-            <div className=" text-[1rem] sm:text-[1.2rem] 2xl:text-[1.7rem] font-normal">案件實例</div>
+            <div className=" text-[1rem] sm:text-[1.2rem] 2xl:text-[1.7rem] font-normal">
+              案件實例
+            </div>
           </h1>
         </div>
         <div className="mb-[100px]">
@@ -117,12 +153,40 @@ export default function ProjectListClient({ posts, categories }) {
           <h1 className="text-3xl font-bold">設計作品</h1>
           <div className="flex gap-2 ml-auto">
             <div className="sm:hidden flex gap-2">
-              <button onClick={() => setColumns(1)} className={`p-2 rounded-md ${columns === 1 ? "bg-gray-300" : "bg-gray-100"}`}><Grid size={18} /></button>
-              <button onClick={() => setColumns(2)} className={`p-2 rounded-md ${columns === 2 ? "bg-gray-300" : "bg-gray-100"}`}><Grid2X2 size={18} /></button>
+              <button
+                onClick={() => setColumns(1)}
+                className={`p-2 rounded-md ${
+                  columns === 1 ? "bg-gray-300" : "bg-gray-100"
+                }`}
+              >
+                <Grid size={18} />
+              </button>
+              <button
+                onClick={() => setColumns(2)}
+                className={`p-2 rounded-md ${
+                  columns === 2 ? "bg-gray-300" : "bg-gray-100"
+                }`}
+              >
+                <Grid2X2 size={18} />
+              </button>
             </div>
             <div className="hidden sm:flex gap-2">
-              <button onClick={() => setViewMode("list") } className={`p-2 rounded-md ${viewMode === "list" ? "bg-gray-300" : "bg-gray-100"}`}><Grid size={18} /></button>
-              <button onClick={() => setViewMode("gallery")} className={`p-2 rounded-md ${viewMode === "gallery" ? "bg-gray-300" : "bg-gray-100"}`}><Grid2X2 size={18} /></button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-md ${
+                  viewMode === "list" ? "bg-gray-300" : "bg-gray-100"
+                }`}
+              >
+                <Grid size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode("gallery")}
+                className={`p-2 rounded-md ${
+                  viewMode === "gallery" ? "bg-gray-300" : "bg-gray-100"
+                }`}
+              >
+                <Grid2X2 size={18} />
+              </button>
             </div>
           </div>
         </div>
@@ -138,18 +202,42 @@ export default function ProjectListClient({ posts, categories }) {
           {/* 篩選表單 */}
           <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-6 text-sm">
             <div className="flex flex-col gap-2 w-full max-w-full sm:max-w-[300px]">
-              <label className="text-sm font-medium text-gray-700">坪數區間</label>
+              <label className="text-sm font-medium text-gray-700">
+                坪數區間
+              </label>
               <div className="flex gap-2">
-                <Input value={minSize} onChange={(e) => setMinSize(e.target.value)} placeholder="最小" size="sm" />
-                <Input value={maxSize} onChange={(e) => setMaxSize(e.target.value)} placeholder="最大" size="sm" />
+                <Input
+                  value={minSize}
+                  onChange={(e) => setMinSize(e.target.value)}
+                  placeholder="最小"
+                  size="sm"
+                />
+                <Input
+                  value={maxSize}
+                  onChange={(e) => setMaxSize(e.target.value)}
+                  placeholder="最大"
+                  size="sm"
+                />
               </div>
             </div>
 
             <div className="flex flex-col gap-2 w-full max-w-full sm:max-w-[300px]">
-              <label className="text-sm font-medium text-gray-700">價格區間</label>
+              <label className="text-sm font-medium text-gray-700">
+                價格區間
+              </label>
               <div className="flex gap-2">
-                <Input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="最小" size="sm" />
-                <Input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="最大" size="sm" />
+                <Input
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="最小"
+                  size="sm"
+                />
+                <Input
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="最大"
+                  size="sm"
+                />
               </div>
             </div>
 
@@ -174,7 +262,12 @@ export default function ProjectListClient({ posts, categories }) {
             </div>
 
             <div className="flex items-end w-full max-w-full sm:max-w-[300px]">
-              <Button variant="flat" size="sm" onClick={handleClearFilters} className="w-full">
+              <Button
+                variant="flat"
+                size="sm"
+                onClick={handleClearFilters}
+                className="w-full"
+              >
                 清除條件
               </Button>
             </div>
@@ -193,7 +286,9 @@ export default function ProjectListClient({ posts, categories }) {
           >
             <AnimatePresence>
               {paginatedPosts.map((post) => {
-                const rawImage = post.clean_featured_image || extractFirstGalleryImage(post.content?.rendered);
+                const rawImage =
+                  post.clean_featured_image ||
+                  extractFirstGalleryImage(post.content?.rendered);
                 const previewImage = rawImage || "/images/fallback.jpg";
 
                 return (
@@ -211,9 +306,19 @@ export default function ProjectListClient({ posts, categories }) {
                   >
                     <AnimatedLink
                       href={`/project/${post.slug}`}
-                      className={`group block ${viewMode === "list" ? "flex gap-6 items-center border-b-1 pb-4 border-gray-800" : ""}`}
+                      className={`group block ${
+                        viewMode === "list"
+                          ? "flex gap-6 items-center border-b-1 pb-4 border-gray-800"
+                          : ""
+                      }`}
                     >
-                      <div className={`${viewMode === "list" ? "w-[10%] aspect-auto" : "aspect-[4/5] w-full"} overflow-hidden rounded-md bg-gray-100`}>
+                      <div
+                        className={`${
+                          viewMode === "list"
+                            ? "w-[10%] aspect-auto"
+                            : "aspect-[4/5] w-full"
+                        } overflow-hidden rounded-md bg-gray-100`}
+                      >
                         <Image
                           src={previewImage}
                           alt={post.title.rendered}
@@ -222,14 +327,25 @@ export default function ProjectListClient({ posts, categories }) {
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
-                      <div className={`${viewMode === "list" ? "w-[60%]" : "w-full"}`}>
+                      <div
+                        className={`${
+                          viewMode === "list" ? "w-[60%]" : "w-full"
+                        }`}
+                      >
                         <h2 className="mt-2 font-bold text-sm group-hover:text-neutral-700 transition">
                           {post.title.rendered.replace(/<[^>]+>/g, "")}
                         </h2>
                         {(post.acf?.size || post.acf?.price) && (
                           <div className="text-xs text-gray-600 mt-1 leading-snug">
-                            {post.acf?.size && <div>坪數：{Number(post.acf.size)} 坪</div>}
-                            {post.acf?.price && <div>價格：{Number(post.acf.price).toLocaleString()} 元</div>}
+                            {post.acf?.size && (
+                              <div>坪數：{Number(post.acf.size)} 坪</div>
+                            )}
+                            {post.acf?.price && (
+                              <div>
+                                價格：{Number(post.acf.price).toLocaleString()}{" "}
+                                元
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -242,17 +358,22 @@ export default function ProjectListClient({ posts, categories }) {
 
           {/* 分頁按鈕 */}
           <div className="flex justify-center gap-2 mt-10">
-            {Array.from({ length: Math.ceil(sortedPosts.length / postsPerPage) }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentPage(index + 1)}
-                className={`px-3 py-1 rounded-md border ${
-                  currentPage === index + 1 ? "bg-black text-white" : "bg-white text-black"
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
+            {Array.from(
+              { length: Math.ceil(sortedPosts.length / postsPerPage) },
+              (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-3 py-1 rounded-md border ${
+                    currentPage === index + 1
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>

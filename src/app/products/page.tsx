@@ -1,8 +1,8 @@
 // app/products/page.tsx
-import { fetchProducts } from "@/lib/woo";
+import { fetchAllProducts } from "@/lib/woo"; // 使用我們剛定義好的抓全部商品的函式
 import Client from "./Client";
 
-export const revalidate = 60; // ISR 60 秒
+export const revalidate = 60; // ISR 60 秒更新一次
 
 export const metadata = {
   title: "所有商品一覽｜UFLOW 保健食品",
@@ -35,10 +35,13 @@ export default async function ProductsPage() {
   let items: any[] = [];
 
   try {
-    items = await fetchProducts({ page: 1, perPage: 24 });
-  } catch {
+    // 這裡改用 fetchAllProducts 一次抓多一點，或者用 fetchProducts({ page: 1, perPage: 24 })
+    items = await fetchAllProducts();
+  } catch (error) {
+    console.error("Failed to load products:", error);
     items = [];
   }
 
+  // 將資料傳給 Client Component
   return <Client items={items} />;
 }
