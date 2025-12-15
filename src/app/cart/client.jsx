@@ -214,7 +214,7 @@ function CartStep({ items, setItems, onNext }) {
       {/* 上方標題列：左 title，右「繼續購物」 */}
       <div className="flex items-baseline justify-between mb-8">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Your cart
+          您的購物車
         </h1>
         <button
           type="button"
@@ -226,10 +226,10 @@ function CartStep({ items, setItems, onNext }) {
 
       {/* 欄位標題（桌機版） */}
       <div className="hidden md:grid grid-cols-12 text-xs tracking-wide text-gray-500 px-4 mb-2">
-        <div className="col-span-6">PRODUCT</div>
-        <div className="col-span-2">PRICE</div>
-        <div className="col-span-2">QUANTITY</div>
-        <div className="col-span-2 text-right">TOTAL</div>
+        <div className="col-span-6">商品</div>
+        <div className="col-span-2">價格</div>
+        <div className="col-span-2">數量</div>
+        <div className="col-span-2 text-right">合計</div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-10">
@@ -253,7 +253,7 @@ function CartStep({ items, setItems, onNext }) {
                       </div>
                       {it.variant && (
                         <div className="mt-1 text-xs text-gray-500">
-                          Color / Size：{it.variant}
+                          顏色 / 尺寸：{it.variant}
                         </div>
                       )}
                       <button
@@ -322,19 +322,19 @@ function CartStep({ items, setItems, onNext }) {
             {/* 小計區塊 */}
             <div className="bg-white border rounded-xl p-4 sm:p-5 text-sm space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600">小計</span>
                 <span>{currency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-xs text-gray-500">
-                <span>Shipping</span>
+                <span>運費</span>
                 <span>計算於結帳頁面</span>
               </div>
               <div className="flex justify-between pt-3 mt-1 border-t text-base font-semibold">
-                <span>Total</span>
+                <span>總計</span>
                 <span>{currency(total)}</span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1">
-                Taxes and shipping will be calculated at checkout.
+                稅金與運費將於結帳步驟計算。
               </p>
             </div>
 
@@ -343,7 +343,7 @@ function CartStep({ items, setItems, onNext }) {
               onClick={onNext}
               className="w-full h-11 sm:h-12 bg-black text-white font-semibold rounded-md hover:opacity-90 text-sm"
             >
-              Check out
+              前往結帳
             </button>
           </div>
         </aside>
@@ -531,7 +531,7 @@ function CheckoutStep({
 
               {/* 配送地址 */}
               <div className="bg-white my-5 border rounded-xl p-5 lg:p-6 shadow-sm">
-                <h2 className="text-lg font-semibold">配送</h2>
+                <h2 className="text-lg font-semibold">配送資訊</h2>
                 <div className="mt-4 grid gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field label="國家/地區">
@@ -950,7 +950,7 @@ function Stepper({ step }) {
                     : "text-gray-400"
                 }`}
               >
-                STEP-{idx}
+                步驟 {idx}
               </span>
               <span
                 className={`text-lg font-bold mt-1 transition-colors ${
@@ -1052,7 +1052,11 @@ export default function CartIntegratedPage() {
       }
 
       // (C) 最後退回預設
-      setItems(INIT_ITEMS);
+      // 注意：原本的 code 這裡引用了 INIT_ITEMS 但未定義，
+      // 若您的專案中有定義請保留，若無則建議設為空陣列或其他預設值。
+      // setItems(INIT_ITEMS);
+      // 暫時註解避免報錯，或請自行補上 INIT_ITEMS
+      setItems([]);
       setItemsLoaded(true);
     }
 

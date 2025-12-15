@@ -454,17 +454,17 @@ export default function App() {
     {
       title: "鎂鎂香蜂草",
       href: "/products/14",
-      imageUrl: "/images/2491274-cover-Photoroom.png",
+      imageUrl: "/images/products/sample.png",
     },
     {
       title: "維他菌合生元",
       href: "/products/14",
-      imageUrl: "/images/2491274-cover-Photoroom.png",
+      imageUrl: "/images/products/sample.png",
     },
     {
       title: "冰晶芙蓉",
       href: "/products/14",
-      imageUrl: "/images/2491274-cover-Photoroom.png",
+      imageUrl: "/images/products/sample.png",
     },
   ];
 
@@ -655,7 +655,7 @@ export default function App() {
                           <img
                             src={it.imageUrl}
                             alt={it.title}
-                            className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                            className="h-full w-full object-contain transition-transform duration-300 ease-in-out group-hover:scale-105"
                           />
                         </div>
                         <div className="p-4">

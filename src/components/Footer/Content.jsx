@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import Marquee from "react-fast-marquee";
 import AnimatedLink from "../AnimatedLink";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { PlaceholdersAndVanishInput } from "../ui/placeholders-and-vanish-input";
 
 export default function Content() {

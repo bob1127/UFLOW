@@ -549,12 +549,10 @@ export default function Home() {
                 <div className="w-full md:w-1/2">
                   <div className="flex flex-col pl-1 sm:pl-3 py-6 sm:py-10">
                     <p className="text-base sm:text-lg lg:text-[1.3rem] font-light leading-relaxed">
-                      建築と環境の「間」を考える
+                      專利配方 | 醫師推薦
                     </p>
                     <span className="mt-4 sm:mt-5 leading-relaxed text-gray-500 font-light text-sm sm:text-[0.95rem] max-w-md">
-                      Having the architecture as black and the environment as
-                      white, we consider that human being’s comfort zone lies
-                      within the ranges of gray.
+                      我們選擇與全球領先的科學研究機構合作，確保每一款產品都符合最嚴格的品質標準，並能有效促進身心健康。從日常生活出發，為您找回身體原本的循環與平衡。
                     </span>
                   </div>
                 </div>
@@ -563,17 +561,17 @@ export default function Home() {
                 <div className="w-full md:w-1/2">
                   <div className="flex items-end md:items-end justify-end flex-col text-right">
                     <span className="mt-2 sm:mt-5 leading-relaxed text-gray-500 font-light text-sm sm:text-[0.95rem] max-w-md">
-                      Please find our concept, <br />
-                      philosophy, and information here.
+                      UFLOW 是一家以提供高品質健康產品為核心的品牌。 <br />
+                      我們的研發精神在於將科學方法應用於天然原料，以科技養護身心。
                     </span>
 
                     <button className="group mt-6 sm:mt-10 relative inline-flex h-10 sm:h-12 items-center justify-center overflow-hidden rounded-full px-5 sm:px-6 text-sm sm:text-base text-neutral-950">
                       <span className="relative inline-flex overflow-hidden">
                         <div className="absolute origin-bottom transition duration-500 [transform:translateX(-150%)_skewX(33deg)] group-hover:[transform:translateX(0)_skewX(0deg)]">
-                          Go PROJECTS →
+                          Go Product →
                         </div>
                         <div className="transition duration-500 [transform:translateX(0%)_skewX(0deg)] group-hover:[transform:translateX(150%)_skewX(33deg)]">
-                          Go PROJECTS →
+                          Go Product →
                         </div>
                       </span>
                     </button>
@@ -587,19 +585,24 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* 文字區 */}
             <div className="text max-w-xl md:max-w-[500px] pt-4 md:pt-0 pb-4 md:pb-0 md:pr-6">
+              {/* H1 品牌名稱 */}
               <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
-                Mission
+                UFLOW
               </h1>
+              {/* H2 核心標語：養分循環補給 [cite: 2] */}
               <h2 className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold">
-                我們的使命
+                養分循環補給
               </h2>
               <div className="mt-4 space-y-2">
+                {/* 第一段：強調效果與願景 [cite: 3, 4] */}
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
-                  打造每個人在繁忙生活中的健康節奏。
+                  重返 17 歲的元氣，遠離惡體質。
                 </p>
+                {/* 第二段：強調產品特點（植萃、科學、專利）[cite: 7, 18, 19] */}
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
-                  我們選擇與全球領先的科學研究機構合作，
-                  確保每一款產品都符合最嚴格的品質標準， 並能有效促進身心健康。
+                  堅持「植萃天然」與「科學創新」。
+                  我們選用國際大廠專利原料，以科學實證的足量配方，
+                  為您找回身體原本的循環與平衡，打造簡單且富有活力的健康生活。
                 </p>
               </div>
             </div>
