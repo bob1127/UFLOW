@@ -94,15 +94,19 @@ export default async function ProductPage({
         id="ld-product"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
+
       <ProductClient
         product={
           woo
             ? {
                 id: String(woo.id),
                 name: woo.name,
-                subname: "", // 如果 WooCommerce 有額外欄位可對應，可填入
-                price: Number(woo.price || 0),
-                // ✅ 重點修改：分開傳遞 簡短說明 與 詳細說明
+                subname: "",
+                // 👇 修改這裡：傳遞更多價格資訊
+                price: Number(woo.price || 0), // 這是目前實際售價 (若有特價會是特價，沒特價會是原價)
+                regularPrice: Number(woo.regular_price || woo.price || 0), // 原價
+                salePrice: woo.sale_price ? Number(woo.sale_price) : null, // 特價 (如果有的話)
+
                 shortDescription: woo.short_description || "",
                 description: woo.description || "",
                 images: (woo.images || []).map((i) => i.src),

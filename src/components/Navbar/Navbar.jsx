@@ -452,17 +452,17 @@ export default function App() {
 
   const hotItems = [
     {
-      title: "UP100 極致靜音空氣清淨機",
+      title: "鎂鎂香蜂草",
       href: "/products/14",
       imageUrl: "/images/2491274-cover-Photoroom.png",
     },
     {
-      title: "UP200 全域淨化旗艦款",
+      title: "維他菌合生元",
       href: "/products/14",
       imageUrl: "/images/2491274-cover-Photoroom.png",
     },
     {
-      title: "UP-Mini 行動清淨",
+      title: "冰晶芙蓉",
       href: "/products/14",
       imageUrl: "/images/2491274-cover-Photoroom.png",
     },
@@ -472,10 +472,12 @@ export default function App() {
   // 更新 navLinks 陣列以匹配桌面版導覽列
   const navLinks = [
     { label: "首頁", href: "/" },
-    { label: "品牌資訊", href: "/car" },
+    { label: "品牌資訊", href: "/brand" },
+    { label: "熱銷產品", href: "/products" },
     { label: "客戶分析(暫時)", href: "/admin/members" },
-    { label: "限時優惠", href: "/blog" },
-    { label: "商品介紹", href: "/products" },
+    { label: "保健知識", href: "/blog" },
+    { label: "關於我們", href: "/about" },
+    { label: "聯絡我們", href: "/contact" },
   ];
 
   const pathname = usePathname();
@@ -513,34 +515,49 @@ export default function App() {
             </button>
 
             <Link
-              href="/car"
+              href="/brand"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
               品牌資訊
             </Link>
             <Link
+              href="/products"
+              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+            >
+              熱銷產品
+            </Link>
+            {/* <Link
               href="/admin/members"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
               客戶分析(暫時)
-            </Link>
+            </Link> */}
             <Link
               href="/blog"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
-              限時優惠
+              保健知識
             </Link>
-            <Link
-              href="/products"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
-            >
-              商品介紹
-            </Link>
+
             <Link
               href="/cooperate"
               className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
             >
               與我們合作
+            </Link>
+
+            <Link
+              href="/about"
+              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+            >
+              關於我們
+            </Link>
+
+            <Link
+              href="/contact"
+              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+            >
+              聯絡我們
             </Link>
           </div>
 
@@ -608,9 +625,7 @@ export default function App() {
                   <h2 className="text-lg font-semibold tracking-wide">
                     熱銷產品
                   </h2>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    精選熱門型號與耗材快速導覽
-                  </p>
+                  <p className="mt-0.5 text-sm text-slate-500">UFLOW</p>
                 </div>
                 <MenuToggleButton
                   open={menuOpen}

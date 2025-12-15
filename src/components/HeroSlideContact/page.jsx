@@ -191,10 +191,10 @@ const Photos = () => {
 
         <div className="slider-title">
           <div className="slider-title-wrapper" ref={titlesRef}>
-            <p>Above The Canvas</p>
-            <p>Above The Canvas</p>
-            <p>Harmony in Every Note</p>
-            <p>Redefining Imagination</p>
+            <p>UFLOW 專家一致推薦</p>
+            <p>成分足量 專利配方</p>
+            <p>國際原料廠商 生醫產業碩博士</p>
+            <p>植萃 天然 科學 創新</p>
           </div>
         </div>
       </div>

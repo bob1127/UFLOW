@@ -68,14 +68,9 @@ const TextParallaxContentExample = () => {
     <>
       {/* ✅ isolate：避免 transform 影響 Navbar / Dropdown */}
       <div className="bg-white relative isolate">
-        <section className="flex">
-          <div className="left" />
-          <div className="right" />
-        </section>
-
         {/* 第一段：產品 + 文案 */}
-        <section className="portrait-container relative overflow-hidden">
-          <div className="txt absolute right-[8%] top-[10%] -translate-x-1/2 z-40 max-w-[550px]">
+        <section className=" relative overflow-hidden flex flex-col justify-center items-center">
+          <div className="txt absolute right-[8%] top-[25%] -translate-x-1/2 flex flex-col justify-center items-center z-40 max-w-[550px]">
             <h2 className="text-5xl font-bold">GABA 鎂鎂香蜂草</h2>
             <div className="mt-5">
               <h3 className="text-2xl font-normal my-2">

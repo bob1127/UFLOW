@@ -92,8 +92,9 @@ export default function ProductClient({ product }) {
     if (pkgOptions.length > 0 && !pkg) setPkg(pkgOptions[0]);
   }, [flavorOptions, pkgOptions, flavor, pkg]);
 
-  const originalPrice = Number(product.price || 0);
-  const subscriptionPrice = Math.floor(originalPrice * 0.85);
+  const currentPrice = Number(product.price || 0);
+  const originalPrice = Number(product.regularPrice || currentPrice);
+  const isOnSale = product.salePrice && currentPrice < originalPrice;
 
   const canBuy =
     (flavorOptions.length === 0 || flavor) && (pkgOptions.length === 0 || pkg);
@@ -110,7 +111,7 @@ export default function ProductClient({ product }) {
       id: product.id,
       wcProductId: product.id,
       name: `${product.name}｜${product.subname || ""}`,
-      price: subscriptionPrice,
+      price: currentPrice,
       image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: qty,
@@ -200,8 +201,9 @@ export default function ProductClient({ product }) {
             <p className="text-gray-500 text-lg mb-4">{product.subname}</p>
 
             <div className="text-2xl font-medium text-gray-900 mb-6 flex items-center gap-3">
-              NT$ {subscriptionPrice.toLocaleString()}
-              {subscriptionPrice < originalPrice && (
+              NT$ {currentPrice.toLocaleString()}
+              {/* 只有當「正在特價」時，才顯示刪除線的原價 */}
+              {isOnSale && (
                 <span className="text-base text-gray-400 line-through">
                   NT$ {originalPrice.toLocaleString()}
                 </span>
@@ -329,7 +331,7 @@ export default function ProductClient({ product }) {
                     : "bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] hover:brightness-110"
                 }`}
               >
-                加入購物車 - NT$ {(subscriptionPrice * qty).toLocaleString()}
+                加入購物車
               </button>
             </div>
 
