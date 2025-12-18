@@ -93,7 +93,7 @@ export default function ContactPage() {
                     href="mailto:service@example.com"
                     className="text-gray-600 hover:text-blue-600 transition block mt-1"
                   >
-                    uflowbaojianshipin@gmail.com
+                    uflowspace@gmail.com
                   </a>
                   <span className="text-sm text-gray-400">
                     我們通常在 24 小時內回覆

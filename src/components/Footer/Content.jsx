@@ -78,10 +78,10 @@ const Section2 = () => {
               <p className="flex items-center gap-2">
                 <span className="font-medium text-gray-900">電子信箱：</span>
                 <a
-                  href="mailto:service@uflow.com.tw"
+                  href="mailto:uflowspace@gmail.com"
                   className="hover:text-blue-600 transition"
                 >
-                  service@uflow.com.tw
+                  uflowspace@gmail.com
                 </a>
               </p>
             </div>
