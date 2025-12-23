@@ -1,42 +1,45 @@
 // lib/ecpay.ts
 import crypto from "crypto";
 
-export function generateCheckMacValue(params: any, HashKey: string, HashIV: string) {
-  // 1. 將參數依照 Key 字母排序 (A-Z)
-  const keys = Object.keys(params).sort();
+export function getEcpayDate(): string {
+  const d = new Date();
+  const offset = 8; // UTC+8
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+  const nd = new Date(utc + 3600000 * offset);
+  const year = nd.getFullYear();
+  const month = ("0" + (nd.getMonth() + 1)).slice(-2);
+  const day = ("0" + nd.getDate()).slice(-2);
+  const hour = ("0" + nd.getHours()).slice(-2);
+  const min = ("0" + nd.getMinutes()).slice(-2);
+  const sec = ("0" + nd.getSeconds()).slice(-2);
+  return `${year}/${month}/${day} ${hour}:${min}:${sec}`;
+}
 
-  // 2. 串接字串: HashKey=xxx&A=val&B=val...&HashIV=xxx
-  let raw = `HashKey=${HashKey}`;
-  keys.forEach((key) => {
-    raw += `&${key}=${params[key]}`;
+export function generateCheckMacValue(params: any, hashKey: string, hashIV: string): string {
+  // 1. 排序
+  const keys = Object.keys(params).filter((k) => k !== "CheckMacValue").sort();
+
+  // 2. 串接字串
+  let rawString = `HashKey=${hashKey}`;
+  keys.forEach((k) => {
+    rawString += `&${k}=${params[k]}`;
   });
-  raw += `&HashIV=${HashIV}`;
+  rawString += `&HashIV=${hashIV}`;
 
-  // 3. URL Encode (綠界的特殊規則：轉換成小寫後，將特定字元轉回符號)
-  // 綠界要求 .NET 樣式的 Encode，這裡做簡單模擬
-  let encoded = encodeURIComponent(raw).toLowerCase();
+  // 3. URL Encode (關鍵步驟！)
+  let encodedString = encodeURIComponent(rawString).toLowerCase();
 
-  // 修正 encodeURIComponent 沒處理到的符號，或綠界不編碼的符號
-  encoded = encoded
+  // 4. 綠界特殊的取代規則 (.NET 相容性)
+  encodedString = encodedString
     .replace(/%2d/g, "-")
     .replace(/%5f/g, "_")
     .replace(/%2e/g, ".")
     .replace(/%21/g, "!")
     .replace(/%2a/g, "*")
     .replace(/%28/g, "(")
-    .replace(/%29/g, ")");
+    .replace(/%29/g, ")")
+    .replace(/%20/g, "+"); // 空白轉 +
 
-  // 4. SHA256 加密
-  const sha256 = crypto.createHash("sha256").update(encoded).digest("hex");
-
-  // 5. 轉大寫
-  return sha256.toUpperCase();
-}
-
-// 產生當前時間字串 yyyy/MM/dd HH:mm:ss
-export function getEcpayDate() {
-  const d = new Date();
-  // 補零 helper
-  const p = (n: number) => (n < 10 ? `0${n}` : n);
-  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  // 5. SHA256 加密並轉大寫
+  return crypto.createHash("sha256").update(encodedString).digest("hex").toUpperCase();
 }

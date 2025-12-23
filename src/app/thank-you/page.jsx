@@ -1,29 +1,61 @@
-// app/thank-you/page.jsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 const currency = (n) =>
   `NT$${(Math.round(n * 100) / 100).toLocaleString("zh-TW")}`;
 
-export default function ThankYouPage() {
+// 1. 將邏輯提取到獨立組件
+function ThankYouContent() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("last_order");
-      if (raw) setOrder(JSON.parse(raw));
-    } catch {}
-  }, []);
+    async function fetchOrder() {
+      if (!orderId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // 使用 window.location.origin 確保 URL 格式完整，避免編譯警告
+        const baseUrl = window.location.origin;
+        const res = await fetch(`${baseUrl}/api/orders/${orderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setOrder(data);
+        }
+      } catch (err) {
+        console.error("抓取訂單失敗", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      </main>
+    );
+  }
 
   if (!order) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
-        <h1 className="text-2xl font-bold">感謝您的訂購！</h1>
-        <p className="text-gray-600">
-          找不到訂單資料，但您可以回到首頁或查看帳號訂單。
+        <h1 className="text-2xl font-bold">訂單處理中...</h1>
+        <p className="text-gray-600 text-center">
+          若您剛完成付款，系統正在處理您的訂單。
+          <br />
+          您可以稍後在「我的帳戶」中查看。
         </p>
-        <a href="/" className="px-4 py-2 rounded bg-black text-white">
+        <a href="/" className="px-6 py-2 rounded bg-black text-white">
           回首頁
         </a>
       </main>
@@ -34,132 +66,81 @@ export default function ThankYouPage() {
     <div className="min-h-screen bg-gray-50 pb-16">
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
-          <img src="/images/logo/logo-y.png" alt="ARDOAK" className="h-7" />
+          <img src="/images/logo/logo-y.png" alt="UFLOW" className="h-7" />
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 pt-8 grid lg:grid-cols-12 gap-8">
-        {/* 左：地圖卡＋訊息（示意） */}
         <section className="lg:col-span-8 space-y-6">
           <div className="bg-white border rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full border grid place-items-center">
+              <div className="h-8 w-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">
                 ✓
               </div>
               <div>
-                <div className="text-sm text-gray-500">確認 #{order.id}</div>
-                <h1 className="text-xl font-semibold">已送出，感謝您！</h1>
+                <div className="text-sm text-gray-500">
+                  訂單編號 #{order.id}
+                </div>
+                <h1 className="text-xl font-semibold">
+                  付款成功，感謝您的訂購！
+                </h1>
               </div>
             </div>
-
-            <div className="mt-4 rounded-lg overflow-hidden border">
-              {/* 你可換成實際 Google Map iframe */}
-              <img
-                src="https://maps.googleapis.com/maps/api/staticmap?center=Taichung&zoom=12&size=800x300&scale=2&maptype=roadmap&markers=color:red%7CTaichung"
-                alt="選送地址地圖（示意）"
-                className="w-full h-auto"
-              />
-            </div>
-
             <p className="mt-4 text-sm text-gray-700">
-              您很快就會收到確認電子郵件。
+              我們已收到您的訂單，確認信件已寄送至您的電子信箱：
+              <strong>{order.billing?.email}</strong>
             </p>
           </div>
 
           <div className="bg-white border rounded-xl p-5 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">訂單詳細資訊</h2>
-            <div className="grid sm:grid-cols-2 gap-6 text-sm">
+            <h2 className="text-lg font-semibold mb-4">配送資訊</h2>
+            <div className="grid sm:grid-cols-2 gap-6 text-sm text-gray-600">
               <div>
-                <div className="text-gray-500 mb-1">聯絡資訊</div>
-                <div>{order.contact?.email || "—"}</div>
+                <p className="font-medium text-gray-900 mb-1">收件人</p>
+                <p>
+                  {order.billing?.first_name} {order.billing?.last_name}
+                </p>
+                <p>{order.billing?.phone}</p>
               </div>
               <div>
-                <div className="text-gray-500 mb-1">付款方式</div>
-                <div>
-                  {order.payMethod === "card" ? "信用卡" : "LINE Pay"} —{" "}
-                  <span className="font-medium">
-                    {currency(order.pricing.total)}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500 mb-1">運送地址</div>
-                <div className="whitespace-pre-line">
-                  {order.addr?.zip ? `${order.addr.zip}\n` : ""}
-                  {order.addr?.country} {order.addr?.city}
-                  {order.addr?.line1 ? `\n${order.addr.line1}` : ""}
-                  {order.addr?.line2 ? `\n${order.addr.line2}` : ""}
-                  {order.addr?.phone ? `\n${order.addr.phone}` : ""}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500 mb-1">運送方式</div>
-                <div>000「宅配速送」新竹物流</div>
+                <p className="font-medium text-gray-900 mb-1">配送地址</p>
+                <p>
+                  {order.billing?.city}
+                  {order.billing?.address_1}
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 右：金額摘要與商品 */}
         <aside className="lg:col-span-4">
-          <div className="bg-white border rounded-xl p-5 shadow-sm">
-            <div className="space-y-4">
-              {order.items.map((it) => (
-                <div key={it.id} className="flex gap-3">
-                  <div className="w-14 h-14 rounded-md overflow-hidden border">
-                    <img
-                      src={it.img}
-                      alt={it.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium line-clamp-2">
-                        {it.title}
-                      </p>
-                      <div className="text-sm whitespace-nowrap">
-                        {currency(it.price * it.qty)}
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      尺寸 {it.variant} × {it.qty}
-                    </p>
-                  </div>
+          <div className="bg-white border rounded-xl p-5 shadow-sm sticky top-8">
+            <h3 className="font-semibold mb-4">訂單摘要</h3>
+            <div className="space-y-4 mb-5 border-b pb-5">
+              {order.line_items?.map((it) => (
+                <div key={it.id} className="flex justify-between text-sm">
+                  <span className="text-gray-600">
+                    {it.name} x {it.quantity}
+                  </span>
+                  <span className="font-medium">{currency(it.total)}</span>
                 </div>
               ))}
             </div>
-
-            <div className="mt-5 space-y-2 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">小計</span>
-                <span>{currency(order.pricing.subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">運送</span>
-                <span>
-                  {order.pricing.shipping === 0
-                    ? "免費"
-                    : currency(order.pricing.shipping)}
+                <span>總計金額</span>
+                <span className="text-lg font-bold">
+                  {currency(order.total)}
                 </span>
               </div>
-              {order.pricing.discount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">折扣</span>
-                  <span className="text-emerald-700">
-                    - {currency(order.pricing.discount)}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between border-t pt-3 text-base font-semibold">
-                <span>總計</span>
-                <span>{currency(order.pricing.total)}</span>
-              </div>
+              <p className="text-xs text-green-600 font-medium text-right">
+                訂單狀態：
+                {order.status === "processing" ? "已付款/處理中" : "等待確認"}
+              </p>
             </div>
-
             <a
               href="/"
-              className="mt-6 block text-center px-4 py-3 rounded-lg bg-black text-white"
+              className="mt-6 block text-center px-4 py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
             >
               繼續購物
             </a>
@@ -167,5 +148,20 @@ export default function ThankYouPage() {
         </aside>
       </main>
     </div>
+  );
+}
+
+// 2. 主組件使用 Suspense 包裹以符合 Next.js 編譯規範
+export default function ThankYouPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          載入中...
+        </div>
+      }
+    >
+      <ThankYouContent />
+    </Suspense>
   );
 }

@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
+// 強制宣告為動態路由，防止 build 時出現 DYNAMIC_SERVER_USAGE 錯誤
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE =
@@ -14,8 +16,6 @@ function basicAuth() {
   if (!CK || !CS) return undefined;
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
-
-// 這裡可以用你的 isAdminEmail 做權限檢查（略）
 
 export async function GET(req: Request) {
   const noCache = { "Cache-Control": "no-store, no-cache, must-revalidate" };

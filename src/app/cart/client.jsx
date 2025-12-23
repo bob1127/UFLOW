@@ -372,6 +372,8 @@ function CheckoutStep({
   onPrev,
   onSubmitOk,
 }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // 折扣碼
   const onApplyCode = () => {
     const v = code.trim().toUpperCase();
@@ -427,6 +429,7 @@ function CheckoutStep({
 
   const submit = async () => {
     if (!validate()) return;
+    setIsSubmitting(true);
 
     try {
       const res = await fetch("/api/checkout", {
@@ -445,6 +448,7 @@ function CheckoutStep({
           addr,
           shipMethod,
           payMethod,
+          couponCode: codeMsg.includes("已套用") ? code : null,
         }),
       });
 
@@ -453,12 +457,36 @@ function CheckoutStep({
       if (!res.ok || !data.ok) {
         console.log("checkout error:", res.status, data);
         alert(data.message || "建立 WooCommerce 訂單失敗");
+        setIsSubmitting(false);
         return;
       }
 
+      // ★★★ 綠界轉導核心邏輯 ★★★
+      if (data.html) {
+        // 1. 建立一個隱藏的 div 容器
+        const div = document.createElement("div");
+        div.className = "hidden";
+        // 2. 將後端回傳的 HTML form 注入
+        div.innerHTML = data.html;
+
+        // 3. 加入 document
+        document.body.appendChild(div);
+
+        // 4. 抓取 form 並提交
+        const form = document.getElementById("_form_ecpay");
+        if (form) {
+          form.submit();
+          // 注意：這裡不需要 setIsSubmitting(false)，因為頁面即將跳轉
+        } else {
+          alert("轉導支付頁面失敗，請重試。");
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
+      // 若非綠界 (備用邏輯)
       const mergedOrder = {
-        id: data.order.id,
-        number: data.order.number,
+        id: data.orderId,
         items,
         pricing,
         contact,
@@ -472,6 +500,7 @@ function CheckoutStep({
     } catch (err) {
       console.error(err);
       alert("系統錯誤，請稍後再試。");
+      setIsSubmitting(false);
     }
   };
 
@@ -685,65 +714,27 @@ function CheckoutStep({
               <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">付款</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  所有交易都受安全加密保護。{" "}
+                  請點擊下方按鈕以進入綠界安全加密支付頁面。{" "}
                 </p>
 
                 <div className="mt-4 grid gap-3">
+                  {/* 因為綠界是用 ALL，這裡其實只需顯示一個選項，或保留多個選項但都觸發綠界 */}
                   <RadioRow
                     checked={payMethod === "card"}
                     onChange={() => setPayMethod("card")}
-                    label="信用卡支付"
+                    label="綠界科技 ECPay (信用卡/ATM/超商代碼)"
                     right={
                       <div className="flex items-center gap-1 opacity-70">
-                        <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
-                          alt="VISA"
-                          className="h-4 w-auto"
-                        />
-                        <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-                          alt="Mastercard"
-                          className="h-4 w-auto"
-                        />
-                        <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg"
-                          alt="AMEX"
-                          className="h-4 w-auto"
-                        />
+                        <span className="text-xs font-bold text-green-600">
+                          ECPay
+                        </span>
                       </div>
                     }
                   >
-                    {/* 這裡接 Stripe/藍新；先放示意欄位 */}
-                    <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                      <input
-                        className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                        placeholder="卡號 •••• •••• •••• ••••"
-                      />
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                          placeholder="MM/YY"
-                        />
-                        <input
-                          className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                          placeholder="CVC"
-                        />
-                      </div>
+                    <div className="p-2 text-sm text-gray-500">
+                      將轉導至綠界金流頁面進行付款。
                     </div>
                   </RadioRow>
-
-                  <RadioRow
-                    checked={payMethod === "linepay"}
-                    onChange={() => setPayMethod("linepay")}
-                    label="LINE Pay"
-                    right={
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
-                        alt="LINE"
-                        className="h-4 w-auto"
-                      />
-                    }
-                  />
                 </div>
               </div>
 
@@ -757,9 +748,10 @@ function CheckoutStep({
                 </button>
                 <button
                   onClick={submit}
-                  className="px-6 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900"
+                  disabled={isSubmitting}
+                  className="px-6 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  立即付款
+                  {isSubmitting ? "處理中..." : "立即付款"}
                 </button>
               </div>
             </div>
@@ -782,11 +774,36 @@ function CheckoutStep({
 
 /* ================== Step 3：感謝頁 ================== */
 function ThankYouStep({ order, onBackToShop }) {
-  if (!order) {
+  // 注意：綠界付款成功後，使用者按「返回商店」會回到這裡
+  // 此時可能還沒有 order 物件 (因為是 redirect 回來的)，
+  // 您可以透過 URL query params (例如 orderId) 重新 fetch 訂單資訊。
+  // 這裡為了範例簡單，暫時保留原樣，但實務上建議在 useEffect 裡檢查 URL 參數。
+
+  // 簡單範例：若 URL 有 orderId 但沒 order 資料
+  const [localOrder, setLocalOrder] = useState(order);
+
+  useEffect(() => {
+    if (!localOrder) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get("orderId");
+      if (orderId) {
+        // 您可以選擇在這裡 fetch 訂單詳情
+        // 暫時顯示簡易訊息
+        setLocalOrder({
+          id: orderId,
+          pricing: { total: 0, subtotal: 0, shipping: 0, discount: 0 },
+          items: [],
+          // ... 模擬資料以免報錯
+        });
+      }
+    }
+  }, [localOrder]);
+
+  if (!localOrder && !order) {
     return (
       <main className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-4">
-        <h1 className="text-2xl font-bold">感謝您的訂購！</h1>
-        <p className="text-gray-600">找不到訂單資料，您可以回到首頁。</p>
+        <h1 className="text-2xl font-bold">訂單處理中...</h1>
+        <p className="text-gray-600">若您剛完成付款，請稍候。</p>
         <button
           onClick={onBackToShop}
           className="px-4 py-2 rounded bg-black text-white"
@@ -797,6 +814,8 @@ function ThankYouStep({ order, onBackToShop }) {
     );
   }
 
+  const displayOrder = localOrder || order;
+
   return (
     <main className="w-full max-w-[1500px] mx-auto px-4 pt-8 pb-16 grid lg:grid-cols-12 gap-8">
       {/* 左：資訊 */}
@@ -804,119 +823,27 @@ function ThankYouStep({ order, onBackToShop }) {
         <div className="max-w-3xl mx-auto">
           <div className="bg-white border rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full border grid place-items-center">
+              <div className="h-8 w-8 rounded-full border grid place-items-center bg-green-100 text-green-600">
                 ✓
               </div>
               <div>
-                <div className="text-sm text-gray-500">確認 #{order.id}</div>
-                <h1 className="text-xl font-semibold">已送出，感謝您！</h1>
+                <div className="text-sm text-gray-500">
+                  確認 #{displayOrder.id}
+                </div>
+                <h1 className="text-xl font-semibold">感謝您，訂單已收到！</h1>
               </div>
-            </div>
-
-            <div className="mt-4 rounded-lg overflow-hidden border">
-              <img
-                src="https://maps.googleapis.com/maps/api/staticmap?center=Taichung&zoom=12&size=800x300&scale=2&maptype=roadmap&markers=color:red%7CTaichung"
-                alt="選送地址地圖（示意）"
-                className="w-full h-auto"
-              />
             </div>
 
             <p className="mt-4 text-sm text-gray-700">
-              您很快就會收到確認電子郵件。
+              付款狀態將稍後更新，您會收到確認電子郵件。
             </p>
-          </div>
-          <div className="bg-white border rounded-xl mt-8 p-5 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">訂單詳細資訊</h2>
-            <div className="grid sm:grid-cols-2 gap-6 text-sm">
-              <div>
-                <div className="text-gray-500 mb-1">聯絡資訊</div>
-                <div>{order.contact?.email || "—"}</div>
-              </div>
-              <div>
-                <div className="text-gray-500 mb-1">付款方式</div>
-                <div>
-                  {order.payMethod === "card" ? "信用卡" : "LINE Pay"} —{" "}
-                  <span className="font-medium">
-                    {currency(order.pricing.total)}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500 mb-1">運送地址</div>
-                <div className="whitespace-pre-line">
-                  {order.addr?.zip ? `${order.addr.zip}\n` : ""}
-                  {order.addr?.country} {order.addr?.city}
-                  {order.addr?.line1 ? `\n${order.addr.line1}` : ""}
-                  {order.addr?.line2 ? `\n${order.addr.line2}` : ""}
-                  {order.addr?.phone ? `\n${order.addr.phone}` : ""}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500 mb-1">運送方式</div>
-                <div>000「宅配速送」新竹物流</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 右：金額摘要與商品 */}
+      {/* 右：金額摘要與商品 (略，若無資料可隱藏) */}
       <aside className="lg:col-span-4">
         <div className="bg-white border rounded-xl p-5 shadow-sm">
-          <div className="space-y-4">
-            {order.items.map((it) => (
-              <div key={it.id} className="flex gap-3">
-                <div className="w-14 h-14 rounded-md overflow-hidden border">
-                  <img
-                    src={it.img}
-                    alt={it.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-medium line-clamp-2">
-                      {it.title}
-                    </p>
-                    <div className="text-sm whitespace-nowrap">
-                      {currency(it.price * it.qty)}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    尺寸 {it.variant} × {it.qty}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">小計</span>
-              <span>{currency(order.pricing.subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">運送</span>
-              <span>
-                {order.pricing.shipping === 0
-                  ? "免費"
-                  : currency(order.pricing.shipping)}
-              </span>
-            </div>
-            {order.pricing.discount > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">折扣</span>
-                <span className="text-emerald-700">
-                  - {currency(order.pricing.discount)}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between border-t pt-3 text-base font-semibold">
-              <span>總計</span>
-              <span>{currency(order.pricing.total)}</span>
-            </div>
-          </div>
-
           <button
             onClick={onBackToShop}
             className="mt-6 w-full text-center px-4 py-3 rounded-lg bg-black text-white"
@@ -995,7 +922,7 @@ export default function CartIntegratedPage() {
   const [code, setCode] = useState("");
   const [codeMsg, setCodeMsg] = useState("");
 
-  // 聯絡/地址（多一個 lockedEmail flag）
+  // 聯絡/地址
   const [contact, setContact] = useState({
     email: "",
     newsletter: true,
@@ -1020,6 +947,17 @@ export default function CartIntegratedPage() {
   // 送出後的訂單
   const [order, setOrder] = useState(null);
 
+  /* ---------- 接收綠界返回後的處理 ---------- */
+  useEffect(() => {
+    // 檢查網址參數是否為綠界返回 (?step=3&orderId=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const stepParam = urlParams.get("step");
+    if (stepParam === "3") {
+      setStep(3);
+      setItemsLoaded(true); // 避免顯示 loading
+    }
+  }, []);
+
   /* ---------- 動態載入 items ---------- */
   useEffect(() => {
     async function loadCartItems() {
@@ -1036,7 +974,7 @@ export default function CartIntegratedPage() {
         }
       } catch {}
 
-      // (B) 再嘗試 GET /api/cart（若你有做）
+      // (B) 再嘗試 GET /api/cart
       try {
         const res = await fetch("/api/cart", { method: "GET" });
         if (res.ok) {
@@ -1051,19 +989,18 @@ export default function CartIntegratedPage() {
         // 靜默失敗
       }
 
-      // (C) 最後退回預設
-      // 注意：原本的 code 這裡引用了 INIT_ITEMS 但未定義，
-      // 若您的專案中有定義請保留，若無則建議設為空陣列或其他預設值。
-      // setItems(INIT_ITEMS);
-      // 暫時註解避免報錯，或請自行補上 INIT_ITEMS
       setItems([]);
       setItemsLoaded(true);
     }
 
-    loadCartItems();
+    // 只有在非 step 3 (綠界返回) 時才載入購物車
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("step") !== "3") {
+      loadCartItems();
+    }
   }, []);
 
-  /* ---------- 載入登入會員的 email（如果有登入） ---------- */
+  /* ---------- 載入登入會員的 email ---------- */
   useEffect(() => {
     async function loadSessionEmail() {
       try {
@@ -1084,7 +1021,7 @@ export default function CartIntegratedPage() {
     loadSessionEmail();
   }, []);
 
-  // items 變動即重算（並清空折扣提示）
+  // items 變動即重算
   useEffect(() => {
     const next = calcPricing(items, {
       shippingBase: 80,
@@ -1177,7 +1114,8 @@ export default function CartIntegratedPage() {
                 <ThankYouStep
                   order={order}
                   onBackToShop={() => {
-                    setStep(1);
+                    // 清空網址參數並回首頁 (或重置為 step 1)
+                    window.location.href = "/";
                   }}
                 />
               )}

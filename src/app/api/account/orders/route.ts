@@ -1,8 +1,11 @@
+// app/api/account/orders/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
+// 強制宣告為動態路由，因為使用了 cookies()
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE =
@@ -61,7 +64,6 @@ export async function GET() {
 
     const normalizedEmail = email ? email.trim().toLowerCase() : null;
 
-    // 1) 優先用 WP user id 找 Woo customer（不保證一定對應，但先試）
     let customerId: number | null = null;
 
     if (wpUserId) {
@@ -82,7 +84,6 @@ export async function GET() {
       }
     }
 
-    // 2) 若還是沒有，再用 email 查一次客戶
     if (!customerId && normalizedEmail) {
       try {
         const cRes = await fetch(
@@ -102,11 +103,7 @@ export async function GET() {
           }
         } else {
           const txt = await cRes.text();
-          console.error(
-            "orders fetch customer by email error:",
-            cRes.status,
-            txt
-          );
+          console.error("orders fetch customer by email error:", cRes.status, txt);
         }
       } catch (e) {
         console.error("orders fetch customer by email catch error:", e);
@@ -115,7 +112,6 @@ export async function GET() {
 
     let ordersRaw: any[] = [];
 
-    // 3a) 先用 customerId 撈最近 10 筆訂單
     if (customerId) {
       try {
         const oRes = await fetch(
@@ -137,7 +133,6 @@ export async function GET() {
       }
     }
 
-    // 3b) 如果用 customerId 撈不到訂單，或者根本沒有 customerId，就用 billing.email fallback
     if ((!ordersRaw || ordersRaw.length === 0) && normalizedEmail) {
       try {
         const oRes = await fetch(

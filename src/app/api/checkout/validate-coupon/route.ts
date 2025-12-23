@@ -1,10 +1,11 @@
 // src/app/api/checkout/validate-coupon/route.ts
 import { NextResponse } from "next/server";
 
+// 強制宣告為動態路由，防止 build 時出現 DYNAMIC_SERVER_USAGE 錯誤
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const BASE =
-  process.env.WC_API_BASE || "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+const BASE = process.env.WC_API_BASE || "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 
@@ -62,7 +63,7 @@ export async function GET(req: Request) {
 
     const coupon = arr[0];
 
-    // 過期檢查（Woo 會再檢查一次，這裡先擋掉明顯過期的）
+    // 過期檢查
     if (coupon.date_expires) {
       const now = new Date();
       const exp = new Date(coupon.date_expires);
