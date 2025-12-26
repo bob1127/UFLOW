@@ -21,10 +21,12 @@ function setRefCookie(ref: string) {
   const v = (ref || "").trim();
   if (!v) return;
 
+  const isHttps = window.location.protocol === "https:";
   // 30 天，SameSite=Lax 可在 OAuth 來回時保留
+  // https 正式站建議加 Secure
   document.cookie = `uf_ref=${encodeURIComponent(v)}; Path=/; Max-Age=${
     60 * 60 * 24 * 30
-  }; SameSite=Lax`;
+  }; SameSite=Lax${isHttps ? "; Secure" : ""}`;
 }
 
 export default function RegisterPage() {
@@ -58,7 +60,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // ✅ 確保帳密註冊時也把 ref 寫入 cookie（之後你後端也可用 cookie）
+      // ✅ 確保帳密註冊時也把 ref 寫入 cookie（後端可用 cookie / body 都行）
       if (ref) setRefCookie(ref);
 
       const res = await fetch("/api/auth/register", {
@@ -86,11 +88,16 @@ export default function RegisterPage() {
     setGoogleLoading(true);
 
     try {
-      // ✅ 重要：按下 Google 前再寫一次 cookie，確保不會被丟
+      // ✅ 按下 Google 前再寫一次 cookie，確保不會被丟
       if (ref) setRefCookie(ref);
 
+      // ✅ 把 ref 一起放進 callbackUrl（非必要，但 debug 很方便）
+      const cb = getCallbackUrl(next);
+      const cbUrl = new URL(cb);
+      if (ref) cbUrl.searchParams.set("ref", ref);
+
       await signIn("google", {
-        callbackUrl: getCallbackUrl(next),
+        callbackUrl: cbUrl.toString(),
       });
     } finally {
       setTimeout(() => setGoogleLoading(false), 1200);
@@ -103,11 +110,14 @@ export default function RegisterPage() {
     setFbLoading(true);
 
     try {
-      // ✅ 重要：按下 Facebook 前再寫一次 cookie
       if (ref) setRefCookie(ref);
 
+      const cb = getCallbackUrl(next);
+      const cbUrl = new URL(cb);
+      if (ref) cbUrl.searchParams.set("ref", ref);
+
       await signIn("facebook", {
-        callbackUrl: getCallbackUrl(next),
+        callbackUrl: cbUrl.toString(),
       });
     } finally {
       setTimeout(() => setFbLoading(false), 1200);
@@ -159,7 +169,6 @@ export default function RegisterPage() {
           </p>
         )}
 
-        {/* Google / Facebook 快速註冊 */}
         <div className="space-y-2">
           <button
             type="button"
@@ -197,7 +206,6 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* 自行填寫帳密註冊 */}
         <form onSubmit={handleRegister} className="space-y-3">
           <input
             type="text"
