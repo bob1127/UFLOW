@@ -224,9 +224,21 @@ export default function AccountPage() {
   };
 
   // ✅ 這裡改成「不使用 hook」的推薦券整理
-  const referralCoupons = availableCoupons.filter(
-    (c) => c.kind === "referral" || isReferralCouponCode(c.code)
-  );
+  function isFriendReferralCouponCode(code?: string) {
+    if (!code) return false;
+    return code.toUpperCase().startsWith("UFFRD-");
+  }
+
+  const referralCoupons = availableCoupons.filter((c) => {
+    const k = String(c.kind || "");
+    return (
+      k === "ref_friend_50" ||
+      k === "ref_ambassador_200" ||
+      isFriendReferralCouponCode(c.code) ||
+      isReferralCouponCode(c.code)
+    );
+  });
+
   const referralTotal = referralCoupons.reduce(
     (sum, c) => sum + (Number(c.amount) || 0),
     0
