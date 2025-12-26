@@ -20,29 +20,6 @@ function parseRewardedList(val: any): number[] {
   }
 }
 
-// ✅ uf_referred_by 允許存 "UF14" / "14" / 14，最後都會回傳 14
-function parseReferrerId(raw: any): number {
-  const s = String(raw ?? "").trim();
-  if (!s) return 0;
-
-  // "UF14" / "uf14"
-  const m = s.match(/^UF(\d+)$/i);
-  if (m) return Number(m[1]) || 0;
-
-  // "14"
-  const n = Number(s);
-  if (Number.isFinite(n) && n > 0) return Math.floor(n);
-
-  return 0;
-}
-
-function isValidEmail(email: any) {
-  const s = String(email || "").trim().toLowerCase();
-  if (!s) return false;
-  // 簡單有效性檢查即可
-  return s.includes("@") && s.includes(".");
-}
-
 // ✅ 取得 customer：優先 customer_id，不行就用 billing.email
 async function getCustomerFromOrder(order: any) {
   const authHeader = { Authorization: basicAuth() };
@@ -73,6 +50,7 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
+    // Woo webhook payload 通常就含 id，有時候是 {id:..} 有時候包在 resource
     const orderId = payload?.id || payload?.resource?.id;
     if (!orderId) return NextResponse.json({ ok: true });
 
@@ -105,14 +83,15 @@ export async function POST(req: Request) {
     }
 
     const customerId = Number(customer.id);
-    const cMeta: any[] = Array.isArray(customer.meta_data) ? customer.meta_data : [];
+    const cMeta: any[] = Array.isArray(customer.meta_data)
+      ? customer.meta_data
+      : [];
 
-    // ✅ 這裡改：支援 UF14 / 14 / number
-    const referredByRaw = cMeta.find((m) => m.key === "uf_referred_by")?.value;
-    const referredBy = parseReferrerId(referredByRaw);
-
+    const referredBy = Number(
+      cMeta.find((m) => m.key === "uf_referred_by")?.value || 0
+    );
     if (!referredBy) {
-      console.log("[order-referral] order not referred", orderId, referredByRaw);
+      console.log("[order-referral] order not referred", orderId);
       return NextResponse.json({ ok: true });
     }
 
@@ -131,18 +110,21 @@ export async function POST(req: Request) {
     );
     const allOrders = (await allRes.json()) as any[];
     const validOrders = Array.isArray(allOrders)
-      ? allOrders.filter((o) => ["processing", "completed"].includes(String(o.status)))
+      ? allOrders.filter((o) =>
+          ["processing", "completed"].includes(String(o.status))
+        )
       : [];
 
     const isFirstValidOrder =
-      validOrders.length === 1 && Number(validOrders[0].id) === Number(orderId);
+      validOrders.length === 1 &&
+      Number(validOrders[0].id) === Number(orderId);
 
     if (!isFirstValidOrder) {
       console.log("[order-referral] not first valid order", customerId);
       return NextResponse.json({ ok: true });
     }
 
-    // 4) 撈推薦人（Ambassador）
+    // 4) 撈推薦人 meta，避免同訂單重發
     const aRes = await fetch(`${BASE}/wp-json/wc/v3/customers/${referredBy}`, {
       headers: authHeader,
       cache: "no-store",
@@ -153,24 +135,17 @@ export async function POST(req: Request) {
     }
 
     const ambassador = await aRes.json();
-    const aMeta: any[] = Array.isArray(ambassador.meta_data) ? ambassador.meta_data : [];
+    const aMeta: any[] = Array.isArray(ambassador.meta_data)
+      ? ambassador.meta_data
+      : [];
 
-    const rewardedListMeta = aMeta.find((m) => m.key === "uf_ref_rewarded_orders")?.value;
+    const rewardedListMeta = aMeta.find(
+      (m) => m.key === "uf_ref_rewarded_orders"
+    )?.value;
     const rewardedOrders = parseRewardedList(rewardedListMeta);
 
     if (rewardedOrders.includes(Number(orderId))) {
       console.log("[order-referral] order already rewarded", orderId);
-      return NextResponse.json({ ok: true });
-    }
-
-    // ✅ 最關鍵：確保推薦人 email 存在，避免建出「不限人可用」coupon
-    const ambassadorEmail = String(ambassador?.email || "").trim().toLowerCase();
-    if (!isValidEmail(ambassadorEmail)) {
-      console.log("[order-referral] ambassador email missing/invalid, skip create coupon", {
-        referredBy,
-        ambassadorEmail,
-        ambassadorId: ambassador?.id,
-      });
       return NextResponse.json({ ok: true });
     }
 
@@ -200,15 +175,13 @@ export async function POST(req: Request) {
         individual_use: true,
         usage_limit: 1,
         usage_limit_per_user: 1,
-        // ✅ 只綁推薦人 email，且一定有效
-        email_restrictions: [ambassadorEmail],
+        email_restrictions: [ambassador.email],
         date_expires: expires.toISOString(),
         description: "金牌大使推薦首單回饋 200 元",
         meta_data: [
           { key: "uf_ref_ambassador_coupon", value: "1" },
           { key: "uf_referred_order_id", value: String(orderId) },
           { key: "uf_referred_customer_id", value: String(customerId) },
-          { key: "uf_referrer_customer_id", value: String(referredBy) },
         ],
       }),
     });
@@ -228,7 +201,12 @@ export async function POST(req: Request) {
       method: "PUT",
       headers: { ...authHeader, "Content-Type": "application/json" },
       body: JSON.stringify({
-        meta_data: [{ key: "uf_ref_rewarded_orders", value: JSON.stringify(rewardedOrders) }],
+        meta_data: [
+          {
+            key: "uf_ref_rewarded_orders",
+            value: JSON.stringify(rewardedOrders),
+          },
+        ],
       }),
     });
 
