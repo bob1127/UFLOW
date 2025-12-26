@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
-// 強制宣告為動態路由，因為使用了 headers() 獲取 Cookie
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -26,7 +25,8 @@ async function fetchProfileWithSameCookies() {
 }
 
 function isExpired(coupon: any) {
-  const expiresStr: string | null = coupon?.date_expires || coupon?.date_expires_gmt || null;
+  const expiresStr: string | null =
+    coupon?.date_expires || coupon?.date_expires_gmt || null;
   if (!expiresStr) return false;
   const exp = new Date(expiresStr);
   if (Number.isNaN(exp.getTime())) return false;
@@ -41,13 +41,33 @@ function pickKind(codeRaw: string, coupon: any) {
   if (code.startsWith("UFAMB-")) return "ref_ambassador_200";
 
   const meta: any[] = Array.isArray(coupon?.meta_data) ? coupon.meta_data : [];
-  if (meta.some((m) => m.key === "uf_ref_friend_coupon" && String(m.value) === "1")) {
+  if (
+    meta.some(
+      (m) => m.key === "uf_ref_friend_coupon" && String(m.value) === "1"
+    )
+  ) {
     return "ref_friend_50";
   }
-  if (meta.some((m) => m.key === "uf_ref_ambassador_coupon" && String(m.value) === "1")) {
+  if (
+    meta.some(
+      (m) => m.key === "uf_ref_ambassador_coupon" && String(m.value) === "1"
+    )
+  ) {
     return "ref_ambassador_200";
   }
   return "other";
+}
+
+function isSharedCoupon(coupon: any) {
+  const meta: any[] = Array.isArray(coupon?.meta_data) ? coupon.meta_data : [];
+  return meta.some((m) => m.key === "uflow_is_shared" && String(m.value) === "1");
+}
+
+function normalizeEmailRestrictions(coupon: any) {
+  const emails: string[] = Array.isArray(coupon?.email_restrictions)
+    ? coupon.email_restrictions.map((e: any) => String(e).toLowerCase().trim()).filter(Boolean)
+    : [];
+  return emails;
 }
 
 export async function GET() {
@@ -57,7 +77,10 @@ export async function GET() {
       return NextResponse.json({ ok: true, available: [] });
     }
 
-    const customerEmail: string = String(profile.customer.email || "").toLowerCase();
+    const customerEmail: string = String(profile.customer.email || "")
+      .toLowerCase()
+      .trim();
+
     if (!customerEmail) {
       return NextResponse.json({ ok: true, available: [] });
     }
@@ -76,10 +99,28 @@ export async function GET() {
 
     const mine = arr.filter((c) => {
       if (isExpired(c)) return false;
-      const emails: string[] = Array.isArray(c.email_restrictions)
-        ? c.email_restrictions.map((e: any) => String(e).toLowerCase())
-        : [];
-      if (emails.length === 0) return true;
+
+      const code = String(c.code || "");
+      const kind = pickKind(code, c);
+
+      const emails = normalizeEmailRestrictions(c);
+      const shared = isSharedCoupon(c);
+
+      // ✅ 1) 推薦券：一定要 email_restrictions 命中本人，不然不顯示（避免發錯人/被盜用）
+      if (kind === "ref_friend_50" || kind === "ref_ambassador_200") {
+        if (emails.length === 0) return false;
+        return emails.includes(customerEmail);
+      }
+
+      // ✅ 2) 共享券（升等/生日）：允許 emails 空，但必須標記 shared
+      if ((kind === "upgrade" || kind === "birthday") && shared) {
+        return true;
+      }
+
+      // ✅ 3) 其他券：保守處理
+      // - 有 email_restrictions：要命中本人
+      // - 沒有 email_restrictions：不顯示（避免任何人都看到可用購物金）
+      if (emails.length === 0) return false;
       return emails.includes(customerEmail);
     });
 
