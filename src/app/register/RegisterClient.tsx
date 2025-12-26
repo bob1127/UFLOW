@@ -1,7 +1,7 @@
 // src/app/register/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -13,6 +13,18 @@ function getCallbackUrl(nextPath: string) {
   return /^https?:\/\//i.test(path)
     ? path
     : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+// ✅ 存推薦碼到 cookie，讓 OAuth 跳轉也不會丟
+function setRefCookie(ref: string) {
+  if (typeof window === "undefined") return;
+  const v = (ref || "").trim();
+  if (!v) return;
+
+  // 30 天，SameSite=Lax 可在 OAuth 來回時保留
+  document.cookie = `uf_ref=${encodeURIComponent(v)}; Path=/; Max-Age=${
+    60 * 60 * 24 * 30
+  }; SameSite=Lax`;
 }
 
 export default function RegisterPage() {
@@ -34,6 +46,11 @@ export default function RegisterPage() {
 
   const [registered, setRegistered] = useState(false);
 
+  // ✅ 一進頁面就把 ref 存起來（避免點 Google 後 ref 消失）
+  useEffect(() => {
+    if (ref) setRefCookie(ref);
+  }, [ref]);
+
   async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (loading || googleLoading || fbLoading) return;
@@ -41,11 +58,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // ✅ 確保帳密註冊時也把 ref 寫入 cookie（之後你後端也可用 cookie）
+      if (ref) setRefCookie(ref);
+
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, password, ref }), // ✅ 帶 ref
       });
+
       const data = await res.json();
       if (res.ok) {
         setRegistered(true);
@@ -63,10 +84,14 @@ export default function RegisterPage() {
     if (loading || googleLoading || fbLoading) return;
     setError("");
     setGoogleLoading(true);
+
     try {
-      // ⚠️ Google/FB 註冊目前不會走 /api/auth/register
-      // 若你要完整支援推薦碼，需在 NextAuth callback 讀 cookie/ref
-      await signIn("google", { callbackUrl: getCallbackUrl(next) });
+      // ✅ 重要：按下 Google 前再寫一次 cookie，確保不會被丟
+      if (ref) setRefCookie(ref);
+
+      await signIn("google", {
+        callbackUrl: getCallbackUrl(next),
+      });
     } finally {
       setTimeout(() => setGoogleLoading(false), 1200);
     }
@@ -76,8 +101,14 @@ export default function RegisterPage() {
     if (loading || googleLoading || fbLoading) return;
     setError("");
     setFbLoading(true);
+
     try {
-      await signIn("facebook", { callbackUrl: getCallbackUrl(next) });
+      // ✅ 重要：按下 Facebook 前再寫一次 cookie
+      if (ref) setRefCookie(ref);
+
+      await signIn("facebook", {
+        callbackUrl: getCallbackUrl(next),
+      });
     } finally {
       setTimeout(() => setFbLoading(false), 1200);
     }
