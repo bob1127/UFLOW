@@ -300,24 +300,56 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0;
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!validate()) return;
-    // 這裡可串支付：Stripe/藍新/LINE Pay...
-    // Demo：把訂單資料存到 sessionStorage，導向 thank-you
-    const order = {
-      id: `VNM${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-      items,
-      pricing,
-      contact,
-      addr,
-      shipMethod,
-      payMethod,
-      createdAt: Date.now(),
-    };
+
     try {
-      sessionStorage.setItem("last_order", JSON.stringify(order));
-    } catch {}
-    router.push("/thank-you");
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((it) => ({
+            wcProductId: it.id, // ⚠️ 若你實際是 WC ID，請改成數字 ID
+            qty: it.qty,
+            price: it.price,
+            title: it.title,
+          })),
+          contact: {
+            email: contact.email,
+          },
+          addr: {
+            firstName: addr.firstName,
+            lastName: addr.lastName,
+            line1: `${addr.city}${addr.line1}`,
+            phone: addr.phone,
+          },
+          shipMethod,
+          payMethod,
+          total: pricing.total, // ✅ 關鍵：唯一金額來源
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        alert(data.message || "建立訂單失敗");
+        return;
+      }
+
+      // 綠界會回傳一段 html form（你後端已經做好）
+      if (data.html) {
+        const div = document.createElement("div");
+        div.innerHTML = data.html;
+        document.body.appendChild(div);
+        document.getElementById("_form_ecpay")?.submit();
+        return;
+      }
+
+      // fallback
+      router.push(`/thank-you?orderId=${data.orderId}`);
+    } catch (err) {
+      alert("連線失敗，請稍後再試");
+    }
   };
 
   return (

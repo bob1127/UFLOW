@@ -17,6 +17,23 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+function makeBarsFromString(str, count = 28) {
+  // 用字串轉出穩定的 pseudo-random bar pattern（不是真 EAN，但長得像條碼）
+  const s = String(str || "");
+  let seed = 0;
+  for (let i = 0; i < s.length; i++) seed = (seed * 31 + s.charCodeAt(i)) >>> 0;
+
+  const bars = [];
+  for (let i = 0; i < count; i++) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const w = seed % 3 === 0 ? 2 : 1; // 1 or 2
+    const h = 34 + (seed % 10); // 34~43
+    const gap = seed % 4 === 0 ? 2 : 1;
+    bars.push({ w, h, gap });
+  }
+  return bars;
+}
+
 /* ================== 工具函數 ================== */
 const currency = (n) =>
   `NT$${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString("zh-TW")}`;
@@ -92,7 +109,7 @@ function calcPricing(
   };
 }
 
-/* ================== 折價券 UI ================== */
+/* ================== 折價券 UI（改成 CodePen 同款結構 + 內嵌 style） ================== */
 function CouponPicker({
   title = "可用折價券",
   subtitle,
@@ -103,59 +120,336 @@ function CouponPicker({
   loading,
   emptyText = "目前沒有可用折價券",
 }) {
+  const fmtValid = (c) => {
+    // 你若沒 expires，就固定顯示「TAP TO APPLY」比較像你目前 UI
+    if (!c?.expires) return "TAP TO APPLY";
+    try {
+      const d = new Date(c.expires);
+      return `VALID UNTIL ${d
+        .toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        })
+        .toUpperCase()}`;
+    } catch {
+      return "TAP TO APPLY";
+    }
+  };
+
+  const toLeftText = (displayName) => {
+    // displayName: "升等禮 - NT$100" -> 取左邊 "升等禮"
+    const parts = String(displayName || "").split("-");
+    return (parts[0] || "ENJOY YOUR GIFT").trim();
+  };
+
+  const toMainText = (c, displayName) => {
+    // 主標：固定金額券 -> 用 NT$100 / NT$150
+    const amt = Number(c?.amount) || 0;
+    return amt ? `NT$${amt}` : (displayName || "").toUpperCase();
+  };
+
   return (
     <div className="mb-6">
-      <div className="flex items-start justify-between mb-2">
+      {/* ✅ 內嵌樣式：只作用在這個 CouponPicker */}
+      <style jsx>{`
+        .cp-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+        .cp-title {
+          font-size: 14px;
+          font-weight: 900;
+          color: #111;
+          letter-spacing: 0.02em;
+        }
+        .cp-subtitle {
+          font-size: 11px;
+          color: #9ca3af;
+          margin-top: 2px;
+        }
+        .cp-clear {
+          font-size: 12px;
+          font-weight: 900;
+          color: #6b7280;
+          text-decoration: underline;
+          text-underline-offset: 4px;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+        }
+        .cp-clear:hover {
+          color: #111;
+        }
+
+        .cp-grid {
+          display: grid;
+          gap: 12px;
+        }
+
+        /* ======= Coupon Ticket (CodePen-like) ======= */
+        .couponBtn {
+          border: 0;
+          padding: 0;
+          background: transparent;
+          text-align: left;
+          cursor: pointer;
+        }
+        .coupon {
+          width: 100%;
+          height: 120px;
+          border-radius: 14px;
+          overflow: hidden;
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          text-transform: uppercase;
+          filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.08));
+        }
+
+        /* 左右切口 */
+        .coupon::before,
+        .coupon::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          width: 50%;
+          height: 100%;
+          z-index: -1;
+        }
+        .coupon::before {
+          left: 0;
+          background-image: radial-gradient(
+            circle at 0 50%,
+            transparent 22px,
+            var(--coupon-left, #f7d25f) 23px
+          );
+        }
+        .coupon::after {
+          right: 0;
+          background-image: radial-gradient(
+            circle at 100% 50%,
+            transparent 22px,
+            var(--coupon-left, #f7d25f) 23px
+          );
+        }
+
+        .coupon > div {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .left {
+          width: 20%;
+          background: var(--coupon-left, #f7d25f);
+          border-right: 2px dashed rgba(0, 0, 0, 0.18);
+          position: relative;
+        }
+        .left .leftText {
+          transform: rotate(-90deg);
+          white-space: nowrap;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          font-size: 11px;
+          color: rgba(0, 0, 0, 0.9);
+        }
+
+        .center {
+          flex-grow: 1;
+          background: var(--coupon-left, #f7d25f);
+          text-align: center;
+          padding: 10px 10px;
+        }
+
+        .mainLine {
+          display: inline-block;
+          background: #000;
+          color: var(--coupon-left, #f7d25f);
+          padding: 2px 12px;
+          font-weight: 900;
+          font-size: 22px;
+          border-radius: 0;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+        .subLine {
+          margin-top: 6px;
+          font-weight: 900;
+          font-size: 22px;
+          letter-spacing: 0.04em;
+          color: #000;
+        }
+        .smallLine {
+          margin-top: 4px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.22em;
+          color: rgba(0, 0, 0, 0.7);
+        }
+
+        .right {
+          width: 118px;
+          background: #fff;
+          position: relative;
+        }
+
+        .right::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(
+            circle at 100% 50%,
+            transparent 22px,
+            #fff 23px
+          );
+          z-index: 0;
+        }
+
+        .barcodeWrap {
+          position: relative;
+          z-index: 1;
+          transform: rotate(-90deg);
+          display: flex;
+          align-items: flex-end;
+          gap: 2px;
+        }
+
+        .codeText {
+          position: absolute;
+          right: 10px;
+          bottom: 10px;
+          z-index: 2;
+          transform: rotate(-90deg);
+          transform-origin: right bottom;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.28em;
+          color: rgba(0, 0, 0, 0.65);
+          white-space: nowrap;
+        }
+
+        .appliedBadge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: #000;
+          color: #fff;
+          font-size: 11px;
+          font-weight: 900;
+          padding: 4px 10px;
+          border-radius: 999px;
+          z-index: 5;
+        }
+
+        .couponBtn:active .coupon {
+          transform: scale(0.995);
+        }
+        .couponBtn:hover .coupon {
+          filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.1));
+        }
+
+        .coupon.isActive {
+          outline: 2px solid #000;
+          outline-offset: 2px;
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="cp-header">
         <div>
-          <p className="text-sm font-bold text-gray-900">{title}</p>
-          {subtitle ? (
-            <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>
-          ) : null}
+          <div className="cp-title">{title}</div>
+          {subtitle ? <div className="cp-subtitle">{subtitle}</div> : null}
         </div>
 
         {applied ? (
-          <button
-            type="button"
-            onClick={onClear}
-            className="text-xs font-black text-gray-500 hover:text-black underline underline-offset-4"
-          >
+          <button type="button" className="cp-clear" onClick={onClear}>
             取消套用
           </button>
         ) : null}
       </div>
 
+      {/* Body */}
       {loading ? (
         <div className="text-xs text-gray-400">讀取中…</div>
       ) : coupons.length === 0 ? (
         <div className="text-xs text-gray-400">{emptyText}</div>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="cp-grid">
           {coupons.map((c) => {
             const isActive =
               String(applied?.code || "").toLowerCase() ===
               String(c.code || "").toLowerCase();
 
             const displayName = c.title || couponTitleByKindOrCode(c);
+            const leftText = toLeftText(displayName);
+            const mainText = toMainText(c, displayName);
+            const validText = fmtValid(c);
+
+            const bars = makeBarsFromString(c.code, 26);
 
             return (
               <button
-                type="button"
                 key={c.code}
+                type="button"
+                className="couponBtn"
                 onClick={() => onApply(c)}
-                className={`px-3 py-2 rounded-xl border text-xs font-black transition ${
-                  isActive
-                    ? "border-black bg-black text-white"
-                    : "border-gray-200 bg-white hover:border-black"
-                }`}
                 title={displayName}
               >
-                <span className="uppercase tracking-wider">{displayName}</span>
+                <div
+                  className={`coupon ${isActive ? "isActive" : ""}`}
+                  style={{ "--coupon-left": "#F7D25F" }}
+                >
+                  <div className="left">
+                    <div className="leftText">{leftText}</div>
+                  </div>
+
+                  <div className="center">
+                    <div>
+                      <div className="mainLine">{mainText}</div>
+                      <div className="subLine">COUPON</div>
+                      <div className="smallLine">{validText}</div>
+                      <div
+                        className="smallLine"
+                        style={{ letterSpacing: "0.18em" }}
+                      >
+                        {isActive ? "APPLIED" : "TAP TO APPLY"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="right">
+                    <div className="barcodeWrap" style={{ marginTop: 6 }}>
+                      {bars.map((b, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            width: `${b.w}px`,
+                            height: `${36 + (i % 9)}px`,
+                            background: "#000",
+                            display: "inline-block",
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="codeText">
+                      {String(c.code || "").toUpperCase()}
+                    </div>
+                  </div>
+
+                  {isActive ? (
+                    <div className="appliedBadge">APPLIED</div>
+                  ) : null}
+                </div>
               </button>
             );
           })}
         </div>
       )}
 
+      {/* Applied summary */}
       {applied ? (
         <div className="mt-3 text-xs text-gray-500">
           已套用：
@@ -421,6 +715,7 @@ function CheckoutStep({
         storeName,
         storeAddr: storeAddr || "",
       }));
+      // 回來後把 query 清掉
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [searchParams, setShipMethod, setAddr]);
@@ -842,8 +1137,9 @@ function CartContent() {
   const [shipMethod, setShipMethod] = useState("000");
   const [payMethod, setPayMethod] = useState("card");
 
-  // 讀取購物車 & step
+  // ✅ 讀取購物車 & step + 還原結帳表單（修正：門市回跳後資料被清空）
   useEffect(() => {
+    // items
     const raw = sessionStorage.getItem("cart_items");
     if (raw) {
       try {
@@ -853,19 +1149,55 @@ function CartContent() {
       }
     }
 
+    // step：優先網址，其次 session
     const s = searchParams.get("step");
+    const savedStep = sessionStorage.getItem("checkout_step");
     if (s) setStep(parseInt(s, 10));
+    else if (savedStep) setStep(parseInt(savedStep, 10));
 
-    const saved = sessionStorage.getItem("cart_coupon");
-    if (saved) {
+    // coupon
+    const savedCoupon = sessionStorage.getItem("cart_coupon");
+    if (savedCoupon) {
       try {
-        const parsed = JSON.parse(saved);
+        const parsed = JSON.parse(savedCoupon);
         if (parsed?.code) setAppliedCoupon(parsed);
       } catch {}
     }
 
+    // ✅ restore contact / addr / ship / pay
+    const savedContact = sessionStorage.getItem("checkout_contact");
+    if (savedContact) {
+      try {
+        setContact(JSON.parse(savedContact));
+      } catch {}
+    }
+
+    const savedAddr = sessionStorage.getItem("checkout_addr");
+    if (savedAddr) {
+      try {
+        setAddr(JSON.parse(savedAddr));
+      } catch {}
+    }
+
+    const savedShip = sessionStorage.getItem("checkout_shipMethod");
+    if (savedShip) setShipMethod(savedShip);
+
+    const savedPay = sessionStorage.getItem("checkout_payMethod");
+    if (savedPay) setPayMethod(savedPay);
+
     setItemsLoaded(true);
   }, [searchParams]);
+
+  // ✅ 持久化：結帳表單/步驟（避免門市回跳後被清空）
+  useEffect(() => {
+    if (!itemsLoaded) return;
+
+    sessionStorage.setItem("checkout_contact", JSON.stringify(contact));
+    sessionStorage.setItem("checkout_addr", JSON.stringify(addr));
+    sessionStorage.setItem("checkout_shipMethod", shipMethod);
+    sessionStorage.setItem("checkout_payMethod", payMethod);
+    sessionStorage.setItem("checkout_step", String(step));
+  }, [itemsLoaded, contact, addr, shipMethod, payMethod, step]);
 
   // 讀取可用折價券 & 推薦折扣金（同一支 API 拿回來後分流）
   useEffect(() => {
@@ -987,11 +1319,7 @@ function CartContent() {
     const discount = appliedCoupon?.amount || 0;
 
     setPricing(
-      calcPricing(
-        items,
-        { shippingBase: 80, freeShipThreshold: 1800 },
-        discount
-      )
+      calcPricing(items, { shippingBase: 0, freeShipThreshold: 1800 }, discount)
     );
   }, [items, itemsLoaded, appliedCoupon]);
 
@@ -1009,7 +1337,28 @@ function CartContent() {
     setItems([]);
     sessionStorage.removeItem("cart_items");
     sessionStorage.removeItem("cart_coupon");
+
+    // ✅ 清掉結帳暫存
+    sessionStorage.removeItem("checkout_contact");
+    sessionStorage.removeItem("checkout_addr");
+    sessionStorage.removeItem("checkout_shipMethod");
+    sessionStorage.removeItem("checkout_payMethod");
+    sessionStorage.removeItem("checkout_step");
+
     setAppliedCoupon(null);
+    setContact({ email: "" });
+    setAddr({
+      firstName: "",
+      lastName: "",
+      line1: "",
+      phone: "",
+      storeId: "",
+      storeName: "",
+      storeAddr: "",
+    });
+    setShipMethod("000");
+    setPayMethod("card");
+    setStep(1);
   };
 
   const applyCoupon = (c) => {
