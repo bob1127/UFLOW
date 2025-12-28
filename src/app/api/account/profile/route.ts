@@ -8,13 +8,21 @@ import { authOptions } from "@/lib/auth-options";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const BASE = process.env.WC_API_BASE || "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+const BASE =
+  process.env.WC_API_BASE || "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 
 function basicAuth() {
   if (!CK || !CS) return undefined;
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
+}
+
+function parseAdminEmails() {
+  return String(process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 /* ========= 會員分級邏輯 ========= */
@@ -53,26 +61,62 @@ function buildMembershipPayload(totalSpent12m: number) {
   }
 
   switch (tierName) {
-    case "銅貴賓": discountLabel = "消費享 95 折"; birthdayCredit = 50; break;
-    case "銀貴賓": discountLabel = "消費享 9 折"; birthdayCredit = 80; break;
-    case "金貴賓": discountLabel = "消費享 88 折"; birthdayCredit = 100; upgradeGift = 50; break;
-    case "VIP 貴賓": discountLabel = "消費享 85 折"; birthdayCredit = 150; upgradeGift = 100; break;
-    case "VVIP 貴賓": discountLabel = "專屬 VIP 優惠"; birthdayCredit = 200; upgradeGift = 150; break;
+    case "銅貴賓":
+      discountLabel = "消費享 95 折";
+      birthdayCredit = 50;
+      break;
+    case "銀貴賓":
+      discountLabel = "消費享 9 折";
+      birthdayCredit = 80;
+      break;
+    case "金貴賓":
+      discountLabel = "消費享 88 折";
+      birthdayCredit = 100;
+      upgradeGift = 50;
+      break;
+    case "VIP 貴賓":
+      discountLabel = "消費享 85 折";
+      birthdayCredit = 150;
+      upgradeGift = 100;
+      break;
+    case "VVIP 貴賓":
+      discountLabel = "專屬 VIP 優惠";
+      birthdayCredit = 200;
+      upgradeGift = 150;
+      break;
   }
 
-  return { tierName, totalSpent12m, discountLabel, upgradeGift, birthdayCredit, nextTierName, nextNeedAmount };
+  return {
+    tierName,
+    totalSpent12m,
+    discountLabel,
+    upgradeGift,
+    birthdayCredit,
+    nextTierName,
+    nextNeedAmount,
+  };
 }
 
 export async function GET() {
   const noCache = { "Cache-Control": "no-store, no-cache, must-revalidate" };
+
   try {
     const auth = basicAuth();
     if (!auth) {
-      return NextResponse.json({ loggedIn: false, customer: null, membership: null, message: "WooCommerce API 尚未設定" }, { status: 500, headers: noCache });
+      return NextResponse.json(
+        {
+          loggedIn: false,
+          customer: null,
+          membership: null,
+          message: "WooCommerce API 尚未設定",
+        },
+        { status: 500, headers: noCache }
+      );
     }
 
     const session = await getServerSession(authOptions);
     const cookieStore = cookies();
+
     let email: string | null = session?.user?.email || null;
 
     if (!email) {
@@ -80,6 +124,7 @@ export async function GET() {
       if (emailCookie?.value) email = emailCookie.value;
     }
 
+    // fallback: if has jwt cookie, try WP users/me
     if (!email) {
       const jwt = cookieStore.get("jwt")?.value;
       if (jwt) {
@@ -92,55 +137,111 @@ export async function GET() {
             const me = await meRes.json();
             if (me?.email) email = me.email;
           }
-        } catch (e) { console.error("users/me error", e); }
+        } catch (e) {
+          console.error("users/me error", e);
+        }
       }
     }
 
-    if (!email) return NextResponse.json({ loggedIn: false, customer: null, membership: null }, { headers: noCache });
+    if (!email) {
+      return NextResponse.json(
+        { loggedIn: false, customer: null, membership: null, isAdmin: false },
+        { headers: noCache }
+      );
+    }
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // ✅ admin 判斷（白名單）
+    const adminEmails = parseAdminEmails();
+    const isAdmin = adminEmails.includes(normalizedEmail);
+
+    // ===== Fetch WC customer by email
     let customer: any = null;
-    const custRes = await fetch(`${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(normalizedEmail)}`, {
-      headers: { Authorization: auth },
-      cache: "no-store",
-    });
+    const custRes = await fetch(
+      `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(
+        normalizedEmail
+      )}`,
+      {
+        headers: { Authorization: auth },
+        cache: "no-store",
+      }
+    );
 
     if (custRes.ok) {
       const custArr = await custRes.json();
-      customer = Array.isArray(custArr) && custArr.length > 0 ? custArr[0] : null;
+      customer =
+        Array.isArray(custArr) && custArr.length > 0 ? custArr[0] : null;
     }
 
+    // ===== calculate spent in last 12 months
     let totalSpent12m = 0;
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
     const afterIso = twelveMonthsAgo.toISOString();
 
     let ordersForCalc: any[] = [];
+
     if (customer?.id) {
-      const oRes = await fetch(`${BASE}/wp-json/wc/v3/orders?customer=${customer.id}&status=processing,completed&per_page=100&after=${encodeURIComponent(afterIso)}`, {
-        headers: { Authorization: auth },
-        cache: "no-store",
-      });
+      const oRes = await fetch(
+        `${BASE}/wp-json/wc/v3/orders?customer=${customer.id}&status=processing,completed&per_page=100&after=${encodeURIComponent(
+          afterIso
+        )}`,
+        {
+          headers: { Authorization: auth },
+          cache: "no-store",
+        }
+      );
       if (oRes.ok) ordersForCalc = await oRes.json();
     }
 
     if (ordersForCalc.length === 0 && normalizedEmail) {
-      const oRes = await fetch(`${BASE}/wp-json/wc/v3/orders?per_page=100&after=${encodeURIComponent(afterIso)}&search=${encodeURIComponent(normalizedEmail)}`, {
-        headers: { Authorization: auth },
-        cache: "no-store",
-      });
+      const oRes = await fetch(
+        `${BASE}/wp-json/wc/v3/orders?per_page=100&after=${encodeURIComponent(
+          afterIso
+        )}&search=${encodeURIComponent(normalizedEmail)}`,
+        {
+          headers: { Authorization: auth },
+          cache: "no-store",
+        }
+      );
       if (oRes.ok) {
         const all = await oRes.json();
-        ordersForCalc = all.filter((o: any) => o?.billing?.email?.toLowerCase() === normalizedEmail && (o.status === "processing" || o.status === "completed"));
+        ordersForCalc = all.filter(
+          (o: any) =>
+            o?.billing?.email?.toLowerCase() === normalizedEmail &&
+            (o.status === "processing" || o.status === "completed")
+        );
       }
     }
 
-    totalSpent12m = ordersForCalc.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
-    const membership = buildMembershipPayload(totalSpent12m);
-    const customerPayload = customer?.id ? { id: customer.id, email: customer.email, first_name: customer.first_name, last_name: customer.last_name, username: customer.username } : { email: normalizedEmail };
+    totalSpent12m = ordersForCalc.reduce(
+      (sum, o) => sum + (parseFloat(o.total) || 0),
+      0
+    );
 
-    return NextResponse.json({ loggedIn: true, customer: customerPayload, membership }, { headers: noCache });
+    const membership = buildMembershipPayload(totalSpent12m);
+
+    const customerPayload = customer?.id
+      ? {
+          id: customer.id,
+          email: customer.email,
+          first_name: customer.first_name,
+          last_name: customer.last_name,
+          username: customer.username,
+        }
+      : { email: normalizedEmail };
+
+    // ✅ 回傳 isAdmin 給前端
+    return NextResponse.json(
+      { loggedIn: true, customer: customerPayload, membership, isAdmin },
+      { headers: noCache }
+    );
   } catch (e) {
-    return NextResponse.json({ loggedIn: false, message: "系統錯誤" }, { status: 500, headers: noCache });
+    console.error("/api/account/profile error:", e);
+    return NextResponse.json(
+      { loggedIn: false, message: "系統錯誤", isAdmin: false },
+      { status: 500, headers: noCache }
+    );
   }
 }

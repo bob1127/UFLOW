@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import {
@@ -19,7 +19,46 @@ import {
 
 /* ================== 工具函數 ================== */
 const currency = (n) =>
-  `NT$${(Math.round(n * 100) / 100).toLocaleString("zh-TW")}`;
+  `NT$${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString("zh-TW")}`;
+
+function isUpgradeCode(code) {
+  return String(code || "")
+    .toLowerCase()
+    .startsWith("ufup-");
+}
+function isBirthdayCode(code) {
+  return String(code || "")
+    .toLowerCase()
+    .startsWith("ufbd-");
+}
+function isReferralAmbCode(code) {
+  return String(code || "")
+    .toLowerCase()
+    .startsWith("ufamb-");
+}
+function isReferralFriendCode(code) {
+  return String(code || "")
+    .toLowerCase()
+    .startsWith("uffrd-");
+}
+
+function couponTitleByKindOrCode(c) {
+  const code = String(c?.code || "");
+  const kind = String(c?.kind || "").toLowerCase();
+  const amount = Number(c?.amount) || 0;
+
+  if (kind === "upgrade" || isUpgradeCode(code))
+    return `升等禮 - ${currency(amount)}`;
+  if (kind === "birthday" || isBirthdayCode(code))
+    return `生日禮金 - ${currency(amount)}`;
+
+  if (kind === "ref_ambassador_200" || isReferralAmbCode(code))
+    return `推薦折扣金 - ${currency(amount)}`;
+  if (kind === "ref_friend_50" || isReferralFriendCode(code))
+    return `推薦折扣金 - ${currency(amount)}`;
+
+  return `${code.toUpperCase()} - ${currency(amount)}`;
+}
 
 /**
  * 折價券：固定金額折抵
@@ -30,7 +69,10 @@ function calcPricing(
   { shippingBase = 80, freeShipThreshold = 1800 },
   discount = 0
 ) {
-  const subtotal = items.reduce((s, it) => s + it.price * it.qty, 0);
+  const subtotal = items.reduce(
+    (s, it) => s + (Number(it.price) || 0) * (Number(it.qty) || 0),
+    0
+  );
   const safeDiscount = Math.min(Math.max(Number(discount) || 0, 0), subtotal);
   const discountedSubtotal = Math.max(0, subtotal - safeDiscount);
 
@@ -51,13 +93,29 @@ function calcPricing(
 }
 
 /* ================== 折價券 UI ================== */
-function CouponPicker({ coupons, applied, onApply, onClear, loading }) {
+function CouponPicker({
+  title = "可用折價券",
+  subtitle,
+  coupons,
+  applied,
+  onApply,
+  onClear,
+  loading,
+  emptyText = "目前沒有可用折價券",
+}) {
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-bold text-gray-900">可用折價券</p>
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="text-sm font-bold text-gray-900">{title}</p>
+          {subtitle ? (
+            <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>
+          ) : null}
+        </div>
+
         {applied ? (
           <button
+            type="button"
             onClick={onClear}
             className="text-xs font-black text-gray-500 hover:text-black underline underline-offset-4"
           >
@@ -67,16 +125,21 @@ function CouponPicker({ coupons, applied, onApply, onClear, loading }) {
       </div>
 
       {loading ? (
-        <div className="text-xs text-gray-400">讀取折價券中…</div>
+        <div className="text-xs text-gray-400">讀取中…</div>
       ) : coupons.length === 0 ? (
-        <div className="text-xs text-gray-400">目前沒有可用折價券</div>
+        <div className="text-xs text-gray-400">{emptyText}</div>
       ) : (
         <div className="flex flex-wrap gap-2">
           {coupons.map((c) => {
             const isActive =
-              applied?.code?.toLowerCase() === c.code.toLowerCase();
+              String(applied?.code || "").toLowerCase() ===
+              String(c.code || "").toLowerCase();
+
+            const displayName = c.title || couponTitleByKindOrCode(c);
+
             return (
               <button
+                type="button"
                 key={c.code}
                 onClick={() => onApply(c)}
                 className={`px-3 py-2 rounded-xl border text-xs font-black transition ${
@@ -84,10 +147,9 @@ function CouponPicker({ coupons, applied, onApply, onClear, loading }) {
                     ? "border-black bg-black text-white"
                     : "border-gray-200 bg-white hover:border-black"
                 }`}
-                title={c.label || c.code}
+                title={displayName}
               >
-                <span className="uppercase tracking-wider">{c.code}</span>
-                <span className="ml-2 opacity-90">- {currency(c.amount)}</span>
+                <span className="uppercase tracking-wider">{displayName}</span>
               </button>
             );
           })}
@@ -98,8 +160,10 @@ function CouponPicker({ coupons, applied, onApply, onClear, loading }) {
         <div className="mt-3 text-xs text-gray-500">
           已套用：
           <span className="font-black text-gray-900">
-            {applied.code}
-          </span> 折抵{" "}
+            {" "}
+            {applied.title || applied.code}
+          </span>{" "}
+          折抵{" "}
           <span className="font-black text-gray-900">
             {currency(applied.amount)}
           </span>
@@ -136,8 +200,16 @@ function CartStep({
   onRemove,
   onNext,
   pricing,
+
+  // 一般折價券
   coupons,
   couponLoading,
+
+  // 推薦折扣金
+  referralCoupons,
+  referralLoading,
+
+  // 套用狀態（共用）
   appliedCoupon,
   onApplyCoupon,
   onClearCoupon,
@@ -185,6 +257,7 @@ function CartStep({
                       {it.title}
                     </h3>
                     <button
+                      type="button"
                       onClick={() => onRemove(it.id)}
                       className="text-gray-300 hover:text-red-500 transition"
                     >
@@ -199,6 +272,7 @@ function CartStep({
                 <div className="flex justify-between items-end">
                   <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                     <button
+                      type="button"
                       className="px-3 py-2 hover:bg-gray-50 transition"
                       onClick={() => onUpdateQty(it.id, it.qty - 1)}
                     >
@@ -208,6 +282,7 @@ function CartStep({
                       {it.qty}
                     </span>
                     <button
+                      type="button"
                       className="px-3 py-2 hover:bg-gray-50 transition"
                       onClick={() => onUpdateQty(it.id, it.qty + 1)}
                     >
@@ -227,13 +302,28 @@ function CartStep({
 
       <aside className="lg:col-span-4">
         <div className="bg-gray-50 rounded-3xl p-8 sticky top-24 border border-gray-100">
-          {/* ✅ 折價券區塊：放在金額計算上方 */}
+          {/* ✅ 可用折價券 */}
           <CouponPicker
+            title="可用折價券"
+            subtitle="升等禮 / 生日禮金"
             coupons={coupons}
             applied={appliedCoupon}
             onApply={onApplyCoupon}
             onClear={onClearCoupon}
             loading={couponLoading}
+            emptyText="目前沒有可用折價券"
+          />
+
+          {/* ✅ 推薦折扣金（新增） */}
+          <CouponPicker
+            title="推薦折扣金"
+            subtitle="推薦回饋 / 註冊購物金"
+            coupons={referralCoupons}
+            applied={appliedCoupon}
+            onApply={onApplyCoupon}
+            onClear={onClearCoupon}
+            loading={referralLoading}
+            emptyText="目前沒有可用推薦折扣金"
           />
 
           <h2 className="text-lg font-bold mb-6">訂單小計</h2>
@@ -276,6 +366,7 @@ function CartStep({
           </div>
 
           <button
+            type="button"
             onClick={onNext}
             className="w-full py-4 bg-black text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-900 transition active:scale-95 shadow-xl shadow-black/10"
           >
@@ -301,8 +392,13 @@ function CheckoutStep({
   setPayMethod,
   onPrev,
   onClearCart,
+
   coupons,
   couponLoading,
+
+  referralCoupons,
+  referralLoading,
+
   appliedCoupon,
   onApplyCoupon,
   onClearCoupon,
@@ -311,7 +407,6 @@ function CheckoutStep({
   const [errors, setErrors] = useState({});
   const searchParams = useSearchParams();
 
-  // 接收 ezShip 地圖回傳
   useEffect(() => {
     const storeName = searchParams.get("storeName");
     const storeId = searchParams.get("storeId");
@@ -330,7 +425,6 @@ function CheckoutStep({
     }
   }, [searchParams, setShipMethod, setAddr]);
 
-  // ezShip 地圖調用函數 (用於全家/萊爾富/OK)
   const openEzShipMap = () => {
     const form = document.createElement("form");
     form.method = "POST";
@@ -385,13 +479,9 @@ function CheckoutStep({
           addr,
           shipMethod,
           payMethod,
-
-          // ✅ 先把折價券資訊也帶上（後端你之後要接 Woo 折扣可直接用）
           coupon: appliedCoupon
             ? { code: appliedCoupon.code, amount: appliedCoupon.amount }
             : null,
-
-          // total 仍傳你目前顯示的 total（含折扣，不含/含運費由你的 pricing 決定）
           total: pricing.total,
         }),
       });
@@ -404,10 +494,8 @@ function CheckoutStep({
         return;
       }
 
-      // ✅ 訂單成功就先清空
       onClearCart();
 
-      // ✅ 有 html 才跳綠界
       if (data.html) {
         const div = document.createElement("div");
         div.innerHTML = data.html;
@@ -416,7 +504,6 @@ function CheckoutStep({
         return;
       }
 
-      // ✅ localhost / dev：直接到感謝頁
       window.location.href = `/thank-you?orderId=${data.orderId}`;
     } catch (err) {
       setIsSubmitting(false);
@@ -458,6 +545,7 @@ function CheckoutStep({
 
           <div className="grid sm:grid-cols-3 gap-3 mb-8">
             <button
+              type="button"
               onClick={() => {
                 setShipMethod("000");
                 setAddr({ ...addr, line1: "" });
@@ -473,6 +561,7 @@ function CheckoutStep({
             </button>
 
             <button
+              type="button"
               onClick={openEzShipMap}
               className={`flex flex-col p-4 border-2 rounded-2xl text-left transition-all hover:border-black ${
                 shipMethod === "CVS"
@@ -485,6 +574,7 @@ function CheckoutStep({
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 setShipMethod("711");
                 setAddr({ ...addr, line1: "" });
@@ -600,6 +690,7 @@ function CheckoutStep({
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-gray-100">
           <button
+            type="button"
             onClick={onPrev}
             className="text-sm font-bold flex items-center gap-2 text-gray-400 hover:text-black transition group"
           >
@@ -608,6 +699,7 @@ function CheckoutStep({
           </button>
 
           <button
+            type="button"
             onClick={submit}
             disabled={isSubmitting}
             className="w-full sm:w-auto px-12 py-4 bg-black text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-black/20 transition-all active:scale-95 disabled:opacity-50"
@@ -619,13 +711,28 @@ function CheckoutStep({
 
       <aside className="w-full lg:w-[380px]">
         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm lg:sticky lg:top-24">
-          {/* ✅ Step2 右側也給折價券（使用同一套 state） */}
+          {/* ✅ 右側：可用折價券 */}
           <CouponPicker
+            title="可用折價券"
+            subtitle="升等禮 / 生日禮金"
             coupons={coupons}
             applied={appliedCoupon}
             onApply={onApplyCoupon}
             onClear={onClearCoupon}
             loading={couponLoading}
+            emptyText="目前沒有可用折價券"
+          />
+
+          {/* ✅ 右側：推薦折扣金（新增） */}
+          <CouponPicker
+            title="推薦折扣金"
+            subtitle="推薦回饋 / 註冊購物金"
+            coupons={referralCoupons}
+            applied={appliedCoupon}
+            onApply={onApplyCoupon}
+            onClear={onClearCoupon}
+            loading={referralLoading}
+            emptyText="目前沒有可用推薦折扣金"
           />
 
           <h3 className="font-bold mb-6 flex items-center gap-2">
@@ -701,9 +808,15 @@ function CartContent() {
   const [itemsLoaded, setItemsLoaded] = useState(false);
   const [step, setStep] = useState(1);
 
-  // ✅ 折價券
+  // ✅ 一般折價券
   const [couponLoading, setCouponLoading] = useState(false);
-  const [coupons, setCoupons] = useState([]); // [{code, amount, label}]
+  const [coupons, setCoupons] = useState([]); // [{code, amount, label|title, kind}]
+
+  // ✅ 推薦折扣金
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralCoupons, setReferralCoupons] = useState([]);
+
+  // ✅ 共用套用狀態（一次只能套用一張）
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const [pricing, setPricing] = useState({
@@ -732,26 +845,34 @@ function CartContent() {
   // 讀取購物車 & step
   useEffect(() => {
     const raw = sessionStorage.getItem("cart_items");
-    if (raw) setItems(JSON.parse(raw));
+    if (raw) {
+      try {
+        setItems(JSON.parse(raw));
+      } catch {
+        setItems([]);
+      }
+    }
 
     const s = searchParams.get("step");
     if (s) setStep(parseInt(s, 10));
 
-    // 讀取已套用折價券（可選）
     const saved = sessionStorage.getItem("cart_coupon");
     if (saved) {
       try {
-        setAppliedCoupon(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed?.code) setAppliedCoupon(parsed);
       } catch {}
     }
 
     setItemsLoaded(true);
   }, [searchParams]);
 
-  // 讀取可用折價券（有登入才會回來；沒登入就 fallback）
+  // 讀取可用折價券 & 推薦折扣金（同一支 API 拿回來後分流）
   useEffect(() => {
-    const loadCoupons = async () => {
+    const loadAllCoupons = async () => {
       setCouponLoading(true);
+      setReferralLoading(true);
+
       try {
         const res = await fetch("/api/account/coupons/available", {
           cache: "no-store",
@@ -759,57 +880,98 @@ function CartContent() {
         });
         const data = await res.json();
 
-        // 你指定的兩個 code
-        const wanted = ["ufup-2025", "ufbd-12"];
+        const arr =
+          res.ok && data?.ok && Array.isArray(data.available)
+            ? data.available
+            : [];
 
-        let list = [];
+        // 一般券 wanted
+        const wantedNormal = ["ufup-2025", "ufbd-12"];
 
-        if (res.ok && data?.ok && Array.isArray(data.available)) {
-          list = data.available
-            .filter(
-              (c) => c?.code && wanted.includes(String(c.code).toLowerCase())
-            )
-            .map((c) => ({
-              code: c.code,
-              amount: Number(c.amount) || 0,
-              label:
-                c.kind === "upgrade"
-                  ? "升等禮"
-                  : c.kind === "birthday"
-                  ? "生日購物金"
-                  : "",
-            }));
-        }
+        const normal = arr
+          .filter(
+            (c) =>
+              c?.code && wantedNormal.includes(String(c.code).toLowerCase())
+          )
+          .map((c) => ({
+            code: c.code,
+            amount: Number(c.amount) || 0,
+            kind: c.kind || "",
+            title: couponTitleByKindOrCode(c),
+          }));
 
-        // fallback：如果 API 拿不到（未登入/尚未領取等），仍顯示可點（你可自行調整）
-        if (!list.length) {
-          list = [
-            { code: "ufup-2025", amount: 100, label: "升等禮" },
-            { code: "ufbd-12", amount: 150, label: "生日購物金" },
-          ];
-        }
+        const referral = arr
+          .filter((c) => {
+            const code = String(c?.code || "").toLowerCase();
+            const kind = String(c?.kind || "").toLowerCase();
+            return (
+              code.startsWith("ufamb-") ||
+              code.startsWith("uffrd-") ||
+              kind === "ref_ambassador_200" ||
+              kind === "ref_friend_50"
+            );
+          })
+          .map((c) => ({
+            code: c.code,
+            amount: Number(c.amount) || 0,
+            kind: c.kind || "",
+            title: couponTitleByKindOrCode(c),
+          }));
 
-        setCoupons(list);
+        // fallback：一般券你原本維持（避免未登入時空白）
+        const finalNormal =
+          normal.length > 0
+            ? normal
+            : [
+                {
+                  code: "ufup-2025",
+                  amount: 100,
+                  kind: "upgrade",
+                  title: `升等禮 - ${currency(100)}`,
+                },
+                {
+                  code: "ufbd-12",
+                  amount: 150,
+                  kind: "birthday",
+                  title: `生日禮金 - ${currency(150)}`,
+                },
+              ];
 
-        // 如果之前套用的券不在 list，就取消
+        setCoupons(finalNormal);
+        setReferralCoupons(referral); // 推薦折扣金不做假資料，避免亂顯示
+
+        // 如果已套用券不在「兩群任何一群」裡，就取消
         setAppliedCoupon((prev) => {
-          if (!prev) return prev;
-          const ok = list.some(
-            (c) => c.code.toLowerCase() === prev.code.toLowerCase()
-          );
+          if (!prev?.code) return null;
+          const code = String(prev.code).toLowerCase();
+          const ok =
+            finalNormal.some((c) => String(c.code).toLowerCase() === code) ||
+            referral.some((c) => String(c.code).toLowerCase() === code);
           return ok ? prev : null;
         });
       } catch {
         setCoupons([
-          { code: "ufup-2025", amount: 100, label: "升等禮" },
-          { code: "ufbd-12", amount: 150, label: "生日購物金" },
+          {
+            code: "ufup-2025",
+            amount: 100,
+            kind: "upgrade",
+            title: `升等禮 - ${currency(100)}`,
+          },
+          {
+            code: "ufbd-12",
+            amount: 150,
+            kind: "birthday",
+            title: `生日禮金 - ${currency(150)}`,
+          },
         ]);
+        setReferralCoupons([]);
       } finally {
         setCouponLoading(false);
+        setReferralLoading(false);
       }
     };
 
-    loadCoupons();
+    loadAllCoupons();
   }, []);
 
   // pricing recalculation
@@ -823,6 +985,7 @@ function CartContent() {
     );
 
     const discount = appliedCoupon?.amount || 0;
+
     setPricing(
       calcPricing(
         items,
@@ -850,11 +1013,12 @@ function CartContent() {
   };
 
   const applyCoupon = (c) => {
-    if (!c) return;
+    if (!c?.code) return;
     setAppliedCoupon({
       code: c.code,
       amount: Number(c.amount) || 0,
-      label: c.label || "",
+      kind: c.kind || "",
+      title: c.title || couponTitleByKindOrCode(c),
     });
   };
 
@@ -913,6 +1077,8 @@ function CartContent() {
                 pricing={pricing}
                 coupons={coupons}
                 couponLoading={couponLoading}
+                referralCoupons={referralCoupons}
+                referralLoading={referralLoading}
                 appliedCoupon={appliedCoupon}
                 onApplyCoupon={applyCoupon}
                 onClearCoupon={clearCoupon}
@@ -933,6 +1099,8 @@ function CartContent() {
                 pricing={pricing}
                 coupons={coupons}
                 couponLoading={couponLoading}
+                referralCoupons={referralCoupons}
+                referralLoading={referralLoading}
                 appliedCoupon={appliedCoupon}
                 onApplyCoupon={applyCoupon}
                 onClearCoupon={clearCoupon}

@@ -89,7 +89,7 @@ export default function RootLayout({
       `}</style>
 
       <html lang="zh-Hant">
-        <body className="min-h-screen bg-white text-slate-900">
+        <body className="min-h-screen bg-white  text-slate-900">
           {/* 換頁自動捲回頂部 */}
           <ScrollToTopOnNav />
 
