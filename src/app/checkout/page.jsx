@@ -4,15 +4,27 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+/**
+ * ✅ 你要「自動開立發票」成功，前端這頁最重要是：
+ * 1) /api/checkout 一定要收到 email / total / 姓名 / 電話 / 地址（讓後端寫入 Woo 訂單 billing/shipping）
+ * 2) 後端建立綠界金流時，要把 CustomField1/2/3 填好（orderId / email / total）
+ *
+ * 這份我已把 submit payload 改成「Woo 能直接用」的結構（billing/shipping + line_items）
+ * 後端 /api/checkout 只要照 payload 建 WC order 就會更穩。
+ */
+
 /* ====== 假資料（可改成 cartStore 實際資料） ====== */
 const INIT_ITEMS = [
   {
+    // ⚠️ 建議你改成 WooCommerce 的「產品數字 ID」
+    // 例如：productId: 123
+    productId: 0,
     id: "airflex-pants-gray-l",
     title: "AirFlex™ 機能柔韌訓練長褲（鐵灰）",
     variant: "L",
     img: "https://images.unsplash.com/photo-1596755094514-f87e3eaf8d15?q=80&w=600&auto=format&fit=crop",
-    price: 1038, // 活動價
-    compareAt: 1180, // 原價
+    price: 1038,
+    compareAt: 1180,
     qty: 2,
   },
 ];
@@ -300,43 +312,102 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0;
   };
 
+  // ✅ 新增：避免重複點擊
+  const [submitting, setSubmitting] = useState(false);
+
   const submit = async () => {
+    if (submitting) return;
     if (!validate()) return;
 
+    setSubmitting(true);
     try {
+      // ✅ 這裡把地址拆成 Woo 常用欄位，後端建 WC order 可以直接塞 billing/shipping
+      const billing = {
+        first_name: addr.firstName,
+        last_name: addr.lastName,
+        email: contact.email,
+        phone: addr.phone,
+        country: addr.country === "台灣" ? "TW" : addr.country,
+        state: "", // 台灣可留空或填縣市
+        city: addr.city,
+        address_1: addr.line1,
+        address_2: addr.line2,
+        postcode: addr.zip,
+      };
+
+      // 你是出貨用，同 billing（或你要做不同收件人再分開）
+      const shipping = {
+        first_name: addr.firstName,
+        last_name: addr.lastName,
+        country: addr.country === "台灣" ? "TW" : addr.country,
+        state: "",
+        city: addr.city,
+        address_1: addr.line1,
+        address_2: addr.line2,
+        postcode: addr.zip,
+      };
+
+      // ✅ line_items 建議長這樣（Woo）
+      // ⚠️ 若你沒有 Woo productId，先用 name/price 讓後端自建也行，但最穩是 product_id
+      const line_items = items.map((it) => ({
+        product_id: Number(it.productId || 0), // ✅ 後端若需要可檢查 0 就用自建商品/或改走 custom line item
+        name: it.title,
+        quantity: Number(it.qty || 1),
+        // 下面兩個是給你後端比對用（Woo REST 其實也能用 price，但不同版本可能限制）
+        _client_price: Number(it.price || 0),
+        _client_sku: it.id,
+        meta_data: it.variant ? [{ key: "variant", value: it.variant }] : [],
+      }));
+
+      // ✅ 送到 /api/checkout 的 payload（你後端要用的關鍵資料都在這）
+      const payload = {
+        // 訂單資料
+        currency: "TWD",
+        payment_method: payMethod, // "card" | "linepay"（你後端要轉成 ECPay 的 PaymentType/ChoosePayment）
+        shipping_method: shipMethod, // "000" etc.
+
+        // Woo 需要的資料
+        billing,
+        shipping,
+        line_items,
+
+        // 金額（你後端可用 Woo 計算，也可用這裡作為核對/CustomField3）
+        pricing: {
+          subtotal: pricing.subtotal,
+          shipping: pricing.shipping,
+          discount: pricing.discount,
+          total: pricing.total,
+        },
+
+        // 折扣碼（後端要真的套用才有用；這裡先傳過去備用）
+        coupon_code: code.trim() || "",
+
+        // 你原本的資料（保留，避免你後端已經在用）
+        contact: { email: contact.email },
+        addr: {
+          firstName: addr.firstName,
+          lastName: addr.lastName,
+          line1: `${addr.city}${addr.line1}`, // 若你後端曾用這個字段，也保留
+          phone: addr.phone,
+        },
+        total: pricing.total, // ✅ 關鍵：後端建綠界 CustomField3 可以用這個
+      };
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((it) => ({
-            wcProductId: it.id, // ⚠️ 若你實際是 WC ID，請改成數字 ID
-            qty: it.qty,
-            price: it.price,
-            title: it.title,
-          })),
-          contact: {
-            email: contact.email,
-          },
-          addr: {
-            firstName: addr.firstName,
-            lastName: addr.lastName,
-            line1: `${addr.city}${addr.line1}`,
-            phone: addr.phone,
-          },
-          shipMethod,
-          payMethod,
-          total: pricing.total, // ✅ 關鍵：唯一金額來源
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.ok) {
         alert(data.message || "建立訂單失敗");
+        setSubmitting(false);
         return;
       }
 
-      // 綠界會回傳一段 html form（你後端已經做好）
+      // ✅ 綠界回傳 HTML form：直接 submit
       if (data.html) {
         const div = document.createElement("div");
         div.innerHTML = data.html;
@@ -349,6 +420,7 @@ export default function CheckoutPage() {
       router.push(`/thank-you?orderId=${data.orderId}`);
     } catch (err) {
       alert("連線失敗，請稍後再試");
+      setSubmitting(false);
     }
   };
 
@@ -583,23 +655,28 @@ export default function CheckoutPage() {
                     </div>
                   }
                 >
-                  {/* 這裡接 Stripe/藍新；先放示意欄位 */}
                   <div className="grid sm:grid-cols-2 gap-3 pt-2">
                     <input
                       className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
                       placeholder="卡號 •••• •••• •••• ••••"
+                      disabled
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <input
                         className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
                         placeholder="MM/YY"
+                        disabled
                       />
                       <input
                         className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
                         placeholder="CVC"
+                        disabled
                       />
                     </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    你目前是走綠界金流：這裡先當示意欄位（實際會跳綠界付款頁）。
+                  </p>
                 </RadioRow>
 
                 <RadioRow
@@ -624,9 +701,14 @@ export default function CheckoutPage() {
               </a>
               <button
                 onClick={submit}
-                className="px-6 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900"
+                disabled={submitting}
+                className={`px-6 py-3 rounded-lg font-semibold ${
+                  submitting
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-black text-white hover:bg-gray-900"
+                }`}
               >
-                立即付款
+                {submitting ? "送出中…" : "立即付款"}
               </button>
             </div>
           </section>
