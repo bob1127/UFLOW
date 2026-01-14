@@ -141,7 +141,7 @@ export default function SwiperCardAbout({
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           {" "}
           <img
-            src="https://coralclub.ru//upload/iblock/7b7/x6c6j3dyu69ud3j02yov2bc0sa21nm5d.webp"
+            src="/images/三種01.png"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"
@@ -150,7 +150,7 @@ export default function SwiperCardAbout({
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           {" "}
           <img
-            src="https://coralclub.ru/upload/iblock/e85/ameu7xmokj1uukk6tku730wel589vyc5.webp"
+            src="/images/粉003.png"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"
@@ -159,7 +159,7 @@ export default function SwiperCardAbout({
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           {" "}
           <img
-            src="https://coralclub.ru/upload/iblock/f88/db6jz3es5u618aa7io8loqk0ex87znvw.webp"
+            src="/images/粉紅0091.png"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"

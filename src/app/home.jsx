@@ -3,17 +3,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "next-view-transitions";
 import Carousel from "../components/FactaryCarousel/index";
-
+import MainScrollCard from "../components/MainScrollCard";
 // import { AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import dynamic from "next/dynamic";
-const Slider = dynamic(
-  () => import("../components/SwiperCarousel/SwiperCardAbout"),
-  {
-    ssr: false,
-  }
-);
+
 const FeatureCarousel = dynamic(
   () => import("../components/EmblaCarouselTravel/index"),
   {
@@ -173,10 +168,8 @@ export default function Home() {
 
   return (
     <ReactLenis root>
-      <div className="bg-[#FFFAF4]">
-        <div className="pt-6">
-          <Slider ratio="16/9" autoplayDelay={4500} speed={1400} />
-        </div>
+      <div className="">
+        <MainScrollCard />
         <section className="section-main-products xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="flex flex-col lg:flex-row">
             {/* 左側文字區 */}
@@ -531,11 +524,11 @@ export default function Home() {
                   <div className="image-container relative w-full h-full overflow-hidden">
                     <div className="img-zoom absolute inset-0 will-change-transform">
                       <Image
-                        src="https://coralclub.ru/images/main/image4.jpg"
+                        src="/images/DSCF7624.JPG"
                         alt="About Image 1"
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 60vw, 50vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 2024px) 60vw, 50vw"
                         priority={false}
                       />
                     </div>
