@@ -219,9 +219,9 @@ export default function Home() {
                 {/* Card 1 */}
                 <div className="group p-6 lg:p-8">
                   <Link href="/products/14">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <div className="relative aspect-[4/4] w-full overflow-hidden">
                       <Image
-                        src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
+                        src="/images/GABA鎂鎂香蜂草.png"
                         alt="img"
                         placeholder="empty"
                         className="object-cover group-hover:scale-90 duration-200"
@@ -249,34 +249,39 @@ export default function Home() {
                       </svg>
                     </div>
                   </Link>
-
                   <div className="info mt-3 p-4">
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500 px-4 w-auto text-[13px] py-1 whitespace-nowrap">
                         熱銷產品
                       </span>
+                      <br></br>
                       <div className="flex text-[15px] justify-center whitespace-nowrap">
-                        NT,400$
+                        原價 $1580/盒
+                      </div>
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
+                        115新春會員價 NT$1230/盒
                       </div>
                     </div>
 
                     <br />
                     <b className="text-lg sm:text-xl tracking-widest">
-                      穀胱甘肽
+                      GABA鎂鎂香蜂草
                     </b>
-                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                      防禦紫外線傷害、抑制黑色素生成，並有助於淡
-                      化色斑、提亮膚色。
-                    </p>
+                    <div className="mt-3">
+                      <b>科學調配 </b>
+                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
+                        足量攝取 能量代謝新配方
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Card 2 */}
                 <div className="group p-6 lg:p-8">
                   <Link href="/products/14">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <div className="relative aspect-[4/4] w-full overflow-hidden">
                       <Image
-                        src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
+                        src="/images/00912.png"
                         alt="img"
                         placeholder="empty"
                         className="object-cover group-hover:scale-90 duration-200"
@@ -304,34 +309,39 @@ export default function Home() {
                       </svg>
                     </div>
                   </Link>
-
                   <div className="info mt-3 p-4">
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-[20px] border ml-[-2px] border-gray-500 text-gray-500 px-4 w-auto text-[13px] py-1 whitespace-nowrap">
                         熱銷產品
                       </span>
+                      <br></br>
                       <div className="flex text-[15px] justify-center whitespace-nowrap">
-                        NT,400$
+                        原價 $2380/盒
+                      </div>
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
+                        115新春會員價 NT$1880/盒
                       </div>
                     </div>
 
                     <br />
                     <b className="text-lg sm:text-xl tracking-widest">
-                      穀胱甘肽
+                      肽晶芙蓉
                     </b>
-                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                      防禦紫外線傷害、抑制黑色素生成，並有助於淡
-                      化色斑、提亮膚色。
-                    </p>
+                    <div className="mt-3">
+                      <b>科學調配 </b>
+                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
+                        足量攝取 喚回芙蓉貴婦肌
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Card 3 */}
                 <div className="group p-6 lg:p-8">
                   <Link href="/products/14">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <div className="relative aspect-[4/4] w-full overflow-hidden">
                       <Image
-                        src="/images/78f5a2cdd76c7a7dd092a19eabcd753d.jpg"
+                        src="/images/維他菌-合生元.png"
                         alt="img"
                         placeholder="empty"
                         className="object-cover group-hover:scale-90 duration-200"
@@ -366,18 +376,24 @@ export default function Home() {
                         熱銷產品
                       </span>
                       <div className="flex text-[15px] justify-center whitespace-nowrap">
-                        NT,400$
+                        原價 $1680/盒
+                      </div>
+                      <div className="flex text-[15px] justify-center whitespace-nowrap">
+                        115新春會員價 NT$1300/盒
                       </div>
                     </div>
 
                     <br />
                     <b className="text-lg sm:text-xl tracking-widest">
-                      穀胱甘肽
+                      維他菌-合生元
                     </b>
-                    <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                      防禦紫外線傷害、抑制黑色素生成，並有助於淡
-                      化色斑、提亮膚色。
-                    </p>
+                    <div className="mt-3">
+                      <b>台灣專利功能菌種配方保衛健康</b>
+                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
+                        合生元 (Synbiotics) 將益生菌與益生元結合，提升益生菌存活
+                        添加專利益萃質®維護細菌叢健康幫助消化
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

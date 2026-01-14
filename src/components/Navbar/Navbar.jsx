@@ -454,17 +454,17 @@ export default function App() {
     {
       title: "鎂鎂香蜂草",
       href: "/products/14",
-      imageUrl: "/images/products/sample.png",
+      imageUrl: "/images/GABA鎂鎂香蜂草.png",
     },
     {
       title: "維他菌合生元",
       href: "/products/14",
-      imageUrl: "/images/products/sample.png",
+      imageUrl: "/images/維他菌-合生元.png",
     },
     {
       title: "冰晶芙蓉",
       href: "/products/14",
-      imageUrl: "/images/products/sample.png",
+      imageUrl: "/images/00912.png",
     },
   ];
 

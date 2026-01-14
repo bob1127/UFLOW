@@ -135,22 +135,26 @@ export default function Home() {
                 <div className="absolute top-20 right-10 text-4xl font-bold text-white -rotate-6 md:block hidden">
                   能量代謝！{" "}
                 </div>
-                <div className="absolute top-20 right-10 text-4xl font-bold text-white -rotate-6 md:block hidden">
-                  能量代謝！{" "}
+                <div className="absolute top-[-50px] w-[260px]  left-[43%] text-4xl font-bold text-white -rotate-6 md:block hidden">
+                  <img
+                    src="/images/新配方.png"
+                    className="w-full h-full object-cover"
+                    alt="Rusk"
+                  />
                 </div>
               </div>
 
               <div className="md:col-span-5 flex flex-col justify-center relative z-20">
-                <div className="bg-white/90 p-8 shadow-xl rotate-1 max-w-md mx-auto">
-                  <h2 className="text-5xl font-black mb-6 tracking-tighter text-[#242424]">
+                <div className="   max-w-md mx-auto">
+                  <h2 className="text-5xl font-black mb-6 tracking-tighter text-[#f2f2f2]">
                     GABA鎂鎂香蜂草
                   </h2>
-                  <p className="font-bold text-lg mb-4 leading-relaxed">
+                  <p className="font-normal  text-xl mb-4 text-[#f2f2f2] leading-relaxed">
                     科學調配 足量攝取 能 量代謝新方
                     <br />
                     日間補充提振精神 +夜間補充助眠 +壓力時刻可緩解焦慮。
                   </p>
-                  <button className="mt-6 border-2 border-[#d97706] text-[#d97706] px-6 py-2 rounded-full font-bold hover:bg-[#d97706] hover:text-white transition">
+                  <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#eddf40] hover:text-white transition">
                     VIEW MORE
                   </button>
                 </div>
@@ -162,7 +166,7 @@ export default function Home() {
           <CardWrapper
             index={1}
             totalCards={TOTAL_CARDS}
-            className="bg-[#a0cf76] text-white"
+            className="bg-[#6e9051] text-white"
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vh] h-[80vh] border-2 border-white/10 rounded-full pointer-events-none"></div>
 
@@ -185,19 +189,19 @@ export default function Home() {
               </div>
 
               <div className="flex-1 max-w-xl">
-                <div className="border-l-4 border-[#fbbf24] pl-6 md:pl-10 py-4">
+                <div className="  pl-6 md:pl-10 py-4">
                   <h3 className="text-[#fbbf24] font-bold tracking-widest mb-2">
-                    COOKIE
+                    合生元 (Synbiotics)
                   </h3>
                   <h2 className="text-4xl md:text-6xl font-bold mb-8 leading-tight">
-                    中間卡片
-                    <br />
-                    斜度加大
+                    維他菌合生元
                   </h2>
                   <p className="text-lg leading-loose text-gray-100">
-                    這張卡片的頂部被切掉了 150px。
+                    科學調配 足量攝取 舒暢滿點
                     <br />
-                    你可以看到它銳利地插入上一張黃色卡片的底部。
+                    台灣專利功能菌種配方保衛健康 合生元 (Synbiotics)
+                    將益生菌與益生元結合，提升益生菌存活
+                    添加專利益萃質®維護細菌叢健康幫助消化
                   </p>
                 </div>
               </div>
