@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateCheckMacValue, getEcpayDate } from "@/lib/ecpay";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 
@@ -7,39 +7,83 @@ const BASE = process.env.WC_API_BASE;
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 
-const SKIP_ECPAY_ON_LOCAL = process.env.SKIP_ECPAY_ON_LOCAL === "true";
+// ✅ 設為 false，強制在 Localhost 也能連線到綠界正式環境
+const SKIP_ECPAY_ON_LOCAL = false;
+
+// 務必確認 .env.local 內的設定是正式環境的
+const HASH_KEY = process.env.ECPAY_HASH_KEY;
+const HASH_IV = process.env.ECPAY_HASH_IV;
+const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
+// 正式環境網址
+const ECPAY_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5"; 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL; // http://localhost:3000
+
+// ==========================================
+// 1. 綠界專用輔助函式 (修正日期格式與加密)
+// ==========================================
+
+// ✅ 修正：綠界日期必須是 yyyy/MM/dd (斜線)，不能是橫線
+function getEcpayDate() {
+  const d = new Date();
+  const offset = d.getTimezoneOffset() * 60000;
+  const local = new Date(d.getTime() - offset + 8 * 3600000); // 轉 UTC+8
+  return local.toISOString()
+    .replace(/T/, " ")
+    .replace(/\..+/, "")
+    .replace(/-/g, "/"); // ⚠️ 關鍵修正：將 2023-01-01 改為 2023/01/01
+}
+
+// 綠界電子發票專用 Encode
+function ecpayEncode(text: string | number) {
+  if (text === undefined || text === null) return "";
+  // 1. 基本 URI 編碼
+  let encoded = encodeURIComponent(String(text));
+  // 2. 綠界特殊規則：空格轉 +
+  encoded = encoded.replace(/%20/g, "+");
+  return encoded;
+}
+
+/**
+ * 產生 CheckMacValue (SHA256)
+ * 修正了所有特殊符號的處理，確保通過綠界驗證
+ */
+function generateCheckMacValue(params: any) {
+  // 1. Key 排序
+  const keys = Object.keys(params).sort((a, b) => {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+  });
+
+  // 2. 串接
+  let raw = `HashKey=${HASH_KEY}`;
+  keys.forEach((k) => {
+    if (k === "CheckMacValue") return;
+    raw += `&${k}=${params[k]}`;
+  });
+  raw += `&HashIV=${HASH_IV}`;
+
+  // 3. URL Encode (綠界 .NET 兼容模式)
+  let encoded = encodeURIComponent(raw)
+    .replace(/%20/g, "+")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")
+    .replace(/!/g, "%21")
+    .replace(/\*/g, "%2a")
+    .replace(/'/g, "%27");
+
+  // 4. 小寫 -> SHA256 -> 大寫
+  encoded = encoded.toLowerCase();
+  const hash = crypto.createHash("sha256").update(encoded).digest("hex");
+  return hash.toUpperCase();
+}
+
+// ==========================================
+// 2. 主程式
+// ==========================================
 
 function basicAuth() {
   if (!CK || !CS) return undefined;
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
-
-type ReqBody = {
-  items: Array<{
-    wcProductId: number;
-    qty: number;
-    price: number;
-    title: string;
-  }>;
-  contact: { email: string };
-  addr: {
-    firstName: string;
-    lastName: string;
-    line1: string;
-    phone: string;
-    storeId?: string;
-    storeName?: string;
-    storeAddr?: string;
-  };
-  shipMethod: "000" | "CVS" | "711";
-  payMethod?: string;
-
-  // ✅ 由前端 pricing.total 傳入（含折扣後），讓金流/發票一致
-  total?: number;
-
-  // ✅ 已套用折價券（固定折抵）
-  coupon?: { code: string; amount: number } | null;
-};
 
 function escapeHtmlAttr(v: string) {
   return v
@@ -49,40 +93,41 @@ function escapeHtmlAttr(v: string) {
     .replace(/>/g, "&gt;");
 }
 
+type ReqBody = {
+  items: Array<{ wcProductId: number; qty: number; price: number; title: string }>;
+  contact: { email: string };
+  addr: { firstName: string; lastName: string; line1: string; phone: string };
+  shipMethod: "000" | "CVS" | "711";
+  payMethod?: string;
+  total?: number;
+  coupon?: { code: string; amount: number } | null;
+};
+
 export async function POST(req: Request) {
   try {
     const auth = basicAuth();
-    if (!auth) {
-      return NextResponse.json({ ok: false, message: "WooCommerce API key 未設定" }, { status: 500 });
-    }
-    if (!BASE) {
-      return NextResponse.json({ ok: false, message: "WC_API_BASE 未設定" }, { status: 500 });
+    if (!auth) return NextResponse.json({ ok: false, message: "API Key Error" }, { status: 500 });
+    
+    if (!MERCHANT_ID || !HASH_KEY || !HASH_IV) {
+      console.error("缺少綠界環境變數");
+      return NextResponse.json({ ok: false, message: "Server Config Error" }, { status: 500 });
     }
 
     const body = (await req.json()) as ReqBody;
     const { items, contact, addr, shipMethod, coupon } = body;
 
-    if (!items?.length) {
-      return NextResponse.json({ ok: false, message: "購物車為空" }, { status: 400 });
-    }
-    if (!contact?.email) {
-      return NextResponse.json({ ok: false, message: "缺少 email" }, { status: 400 });
-    }
+    if (!items?.length) return NextResponse.json({ ok: false, message: "Empty Cart" }, { status: 400 });
 
-    // 1) 清洗商品名稱（避免綠界 ItemName 規則問題）
+    // 1) 處理商品名稱 (給金流後台看)
     const cleanItemName =
       items
         .map((it) => (it.title || "").replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ""))
         .join("#")
         .slice(0, 150) || "Uflow_Product";
 
-    // 2) 地址
-    const finalAddress = addr?.line1 || "";
+    const tradeNo = `W${Date.now().toString().slice(-8)}`; 
 
-    // 3) 綠界交易編號（<= 20，英文數字）
-    const tradeNo = `W${Date.now().toString().slice(-8)}`;
-
-    // 4) 建立 WooCommerce 訂單
+    // 2) 建立 WC 訂單
     const wcOrderPayload: any = {
       payment_method: "ecpay",
       payment_method_title: "綠界科技 ECPay",
@@ -90,39 +135,20 @@ export async function POST(req: Request) {
       billing: {
         first_name: addr.lastName,
         last_name: addr.firstName,
-        address_1: finalAddress,
+        address_1: addr.line1,
         city: "Taipei",
-        postcode: "000",
         country: "TW",
         email: contact.email,
         phone: addr.phone,
-      },
-      shipping: {
-        first_name: addr.lastName,
-        last_name: addr.firstName,
-        address_1: finalAddress,
-        city: "Taipei",
-        postcode: "000",
-        country: "TW",
       },
       line_items: items.map((it) => ({
         product_id: it.wcProductId,
         quantity: it.qty,
       })),
-      shipping_lines: [
-        {
-          method_id: "flat_rate",
-          method_title: shipMethod === "000" ? "宅配寄送" : "超商取貨 (手動寄件)",
-          total: "0",
-        },
-      ],
       meta_data: [
         { key: "_ecpay_trade_no", value: tradeNo },
-        { key: "custom_shipping_label", value: shipMethod === "000" ? "Home" : "CVS" },
-        { key: "_invoice_email", value: contact.email }, // ✅ 開發票用
+        { key: "_invoice_email", value: contact.email },
         { key: "_coupon_code", value: coupon?.code || "" },
-        { key: "_coupon_amount", value: String(coupon?.amount || 0) },
-        ...(SKIP_ECPAY_ON_LOCAL ? [{ key: "_dev_skip_ecpay", value: "true" }] : []),
       ],
     };
 
@@ -133,67 +159,81 @@ export async function POST(req: Request) {
     });
 
     const wcData = await wcRes.json();
-    if (!wcRes.ok) throw new Error(wcData?.message || "WC 訂單建立失敗");
-
+    if (!wcRes.ok) throw new Error(wcData?.message || "Order Failed");
     const orderId = wcData.id;
 
-    // ✅ 金額以「前端 total」為主（含折扣後），確保金流/發票一致
+    // 3) 金額計算
     const totalFromClient = Number(body.total);
-    const totalFromWc = Math.round(parseFloat(wcData.total));
     const totalAmount = Number.isFinite(totalFromClient) && totalFromClient > 0
       ? Math.round(totalFromClient)
-      : totalFromWc;
+      : Math.round(parseFloat(wcData.total));
 
-    // ✅ localhost / dev：跳過綠界
     if (SKIP_ECPAY_ON_LOCAL) {
       return NextResponse.json({ ok: true, orderId, skippedEcpay: true });
     }
 
-    const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!NEXT_PUBLIC_BASE_URL) throw new Error("NEXT_PUBLIC_BASE_URL 未設定");
+    // ==========================================
+    // 4) 綠界 AIO 參數設定 (含電子發票)
+    // ==========================================
 
-    if (!process.env.ECPAY_MERCHANT_ID) throw new Error("ECPAY_MERCHANT_ID 未設定");
-    if (!process.env.ECPAY_HASH_KEY) throw new Error("ECPAY_HASH_KEY 未設定");
-    if (!process.env.ECPAY_HASH_IV) throw new Error("ECPAY_HASH_IV 未設定");
-    if (!process.env.ECPAY_API_URL) throw new Error("ECPAY_API_URL 未設定");
+    // ✅ 電子發票專用：先 Encode
+    // 注意：發票品項名稱建議固定，避免字元過長或特殊符號導致錯誤
+    const invItemName = ecpayEncode("網路商品一批"); 
+    const invItemWord = ecpayEncode("式");
+    const invCustomerEmail = ecpayEncode(contact.email); 
 
     const ecpayParams: any = {
-      MerchantID: process.env.ECPAY_MERCHANT_ID,
+      MerchantID: MERCHANT_ID,
       MerchantTradeNo: tradeNo,
-      MerchantTradeDate: getEcpayDate(),
+      MerchantTradeDate: getEcpayDate(), // ✅ 這裡現在是 yyyy/MM/dd 了
       PaymentType: "aio",
       TotalAmount: totalAmount,
-      TradeDesc: "Uflow_Purchase",
-      ItemName: cleanItemName,
-      ReturnURL: `${NEXT_PUBLIC_BASE_URL}/api/ecpay/callback`,
-      OrderResultURL: `${NEXT_PUBLIC_BASE_URL}/thank-you?orderId=${orderId}`,
+      TradeDesc: ecpayEncode("Uflow_Shop"), 
+      ItemName: cleanItemName, 
+      ReturnURL: `${BASE_URL}/api/ecpay/callback`,
+      OrderResultURL: `${BASE_URL}/thank-you?orderId=${orderId}`,
       ChoosePayment: "ALL",
-      EncryptType: "1",
-      CustomField1: orderId.toString(),       // ✅ callback 用
-      CustomField2: contact.email,            // ✅ 直接帶回來開發票用
-      CustomField3: String(totalAmount),      // ✅ 讓 callback 不用猜
+      EncryptType: "1", 
+      CustomField1: String(orderId),
+      CustomField2: contact.email,
+      CustomField3: String(totalAmount),
+
+      // --- ✅ 電子發票參數 (直接加在 AIO 參數裡即可，不用 AES) ---
+      InvoiceMark: "Y",                       
+      RelateNumber: tradeNo,                  
+      CustomerEmail: invCustomerEmail,        // 已 Encode
+      TaxType: "1",                           
+      CarruerType: "1",                       // 1=綠界會員載具
+      Donation: "0",                          
+      Print: "0",                             
+      InvoiceItemName: invItemName,           // 已 Encode
+      InvoiceItemCount: "1",
+      InvoiceItemWord: invItemWord,           // 已 Encode
+      InvoiceItemPrice: String(totalAmount),
+      InvoiceItemTaxType: "1",
+      DelayDay: "0",
+      InvType: "07",
     };
 
-    ecpayParams.CheckMacValue = generateCheckMacValue(
-      ecpayParams,
-      process.env.ECPAY_HASH_KEY!,
-      process.env.ECPAY_HASH_IV!
-    );
+    // ✅ 產生檢查碼 (包含所有發票參數)
+    ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams);
 
+    // 回傳 HTML Form
     const htmlForm = `
-      <form id="_form_ecpay" action="${escapeHtmlAttr(process.env.ECPAY_API_URL!)}" method="POST">
+      <form id="_form_ecpay" action="${escapeHtmlAttr(ECPAY_URL!)}" method="POST">
         ${Object.keys(ecpayParams)
           .map((key) => {
-            const val = ecpayParams[key] == null ? "" : String(ecpayParams[key]);
-            return `<input type="hidden" name="${escapeHtmlAttr(key)}" value="${escapeHtmlAttr(val)}" />`;
+            const val = ecpayParams[key];
+            return `<input type="hidden" name="${escapeHtmlAttr(key)}" value="${escapeHtmlAttr(String(val))}" />`;
           })
           .join("")}
       </form>
     `.trim();
 
     return NextResponse.json({ ok: true, orderId, html: htmlForm });
+
   } catch (e: any) {
     console.error("Checkout Error:", e);
-    return NextResponse.json({ ok: false, message: e?.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ ok: false, message: e.message }, { status: 500 });
   }
 }
