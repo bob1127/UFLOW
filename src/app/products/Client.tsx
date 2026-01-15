@@ -2,16 +2,17 @@
 "use client";
 
 import Image from "next/image";
-import { Link } from "next-view-transitions";
+import { Link } from "next-view-transitions"; // 若您沒有使用 View Transitions，可改用 "next/link"
 
-// 這裡定義一個與 WooCommerce 回傳資料相容的 Type
-// 注意：不要從 server-only 的檔案匯入 type
-type Product = {
+// 定義 Product Type
+// 確保後端回傳的資料包含這些欄位
+export type Product = {
   id: number;
-  slug: string;
+  slug: string; // 這是連結的關鍵
   name: string;
-  price: string; // Woo 回傳的價格是字串
-  sale_price?: string; // 用來判斷是否顯示標籤
+  price: string;
+  regular_price?: string;
+  sale_price?: string;
   images: { src: string; alt?: string }[];
 };
 
@@ -26,15 +27,15 @@ const COLORS = {
 };
 
 export default function Client({ items }: { items: Product[] }) {
-  // 安全取得第一張圖片，沒有就用預設圖
+  // 安全取得第一張圖片
   const firstImg = (p: Product) => p.images?.[0]?.src || "/placeholder.png";
 
-  // 判斷是否有特價 (沿用你原本的邏輯：有 sale_price 就顯示 NEW)
+  // 判斷是否有特價 (有 sale_price 且不為空)
   const isNew = (p: Product) => !!p.sale_price && p.sale_price !== "";
 
   return (
     <div className="bg-slate-50">
-      {/* HERO 橫幅 (維持不變) */}
+      {/* HERO 橫幅 */}
       <div
         className="w-full md:aspect-[1080/576] aspect-square xl:aspect-[1920/700] bg-center bg-cover bg-no-repeat"
         style={{
@@ -44,9 +45,9 @@ export default function Client({ items }: { items: Product[] }) {
       />
 
       <main className="mx-auto max-w-6xl px-4 py-16">
-        {/* 標題 + 說明 (維持不變) */}
+        {/* 標題 + 說明 */}
         <h1
-          className=" text-3xl  xl:text-5xl font-semibold tracking-wide text-[#111]"
+          className="text-3xl xl:text-5xl font-semibold tracking-wide text-[#111]"
           style={{ letterSpacing: ".02em" }}
         >
           熱銷產品
@@ -63,6 +64,8 @@ export default function Client({ items }: { items: Product[] }) {
           {items.map((p) => (
             <Link
               key={p.id}
+              // ✅ 修正連結：確保導向 /products/[slug]
+              // 這裡假設您的單一商品頁路徑是 app/products/[slug]/page.tsx
               href={`/products/${p.slug}`}
               className="group block"
             >
@@ -108,17 +111,22 @@ export default function Client({ items }: { items: Product[] }) {
                 </div>
               </div>
 
-              {/* 名稱 + 價格 (原本是規格) */}
+              {/* 名稱 + 價格 */}
               <div className="mt-4">
                 <div className="text-[18px] md:text-[20px] leading-7 text-[#111]">
                   “{p.name}”
                 </div>
-                {/* 這裡改為顯示價格，比顯示 22oz 更實用 */}
                 <div
-                  className="mt-1 text-sm font-medium"
+                  className="mt-1 text-sm font-medium flex items-center gap-2"
                   style={{ color: COLORS.metaText }}
                 >
-                  NT$ {p.price}
+                  {/* 若有特價，顯示原價刪除線 */}
+                  {isNew(p) && (
+                    <span className="line-through text-xs opacity-60">
+                      NT$ {p.regular_price || parseInt(p.price) * 1.2}
+                    </span>
+                  )}
+                  <span>NT$ {p.price}</span>
                 </div>
               </div>
             </Link>

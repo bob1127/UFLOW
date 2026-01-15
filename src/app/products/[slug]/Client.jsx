@@ -243,7 +243,7 @@ export default function ProductClient({ product }) {
                   <span className="text-sm font-bold text-slate-50">
                     選擇優惠方案
                   </span>
-                  <span className="text-xs font-medium text-slate-50 bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium   bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
                     2026 新春限定
                   </span>
                 </div>
@@ -413,112 +413,14 @@ export default function ProductClient({ product }) {
                   setOpenAccordion(openAccordion === "desc" ? "" : "desc")
                 }
               >
-                {/* --- 圖片內容整合開始 --- */}
-                <div className="space-y-5">
-                  {/* 合生元定義 */}
-                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                    <h4 className="font-bold text-amber-900 mb-2 text-base flex items-center gap-2">
-                      <span className="bg-amber-500 w-1.5 h-4 rounded-full"></span>
-                      合生元 (Synbiotics)
-                    </h4>
-                    <p className="text-amber-900/80 text-sm leading-relaxed">
-                      是益生菌與益生元、後生元結合，並添加提升益生菌存活的
-                      <span className="font-bold">專利益萃質®</span>
-                      ，維持細菌叢停留體內的續航力。
-                    </p>
-                  </div>
-
-                  {/* 四大專利菌株 */}
-                  <div>
-                    <h5 className="font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">
-                      四大專利菌株
-                    </h5>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      <li className="flex flex-col sm:flex-row sm:items-center">
-                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
-                        <span>
-                          植物乳桿菌{" "}
-                          <i className="font-serif text-gray-800">
-                            L. plantarum
-                          </i>{" "}
-                          LPL28
-                        </span>
-                      </li>
-                      <li className="flex flex-col sm:flex-row sm:items-center">
-                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
-                        <span>
-                          唾液乳桿菌{" "}
-                          <i className="font-serif text-gray-800">
-                            L. salivarius
-                          </i>{" "}
-                          AP-32
-                        </span>
-                      </li>
-                      <li className="flex flex-col sm:flex-row sm:items-center">
-                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
-                        <span>
-                          鼠李糖乳桿菌{" "}
-                          <i className="font-serif text-gray-800">
-                            L. rhamnosus
-                          </i>{" "}
-                          F-1
-                        </span>
-                      </li>
-                      <li className="flex flex-col sm:flex-row sm:items-center">
-                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
-                        <span>
-                          動物雙歧乳桿菌{" "}
-                          <i className="font-serif text-gray-800">
-                            B. animalis subsp. Lactis
-                          </i>{" "}
-                          CP-9
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* 成分Grid */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
-                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                      <h5 className="font-bold text-gray-900 mb-1">益生元</h5>
-                      <p className="text-gray-500 text-xs">
-                        異麥芽寡醣 + 難消化麥芽糊精
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                      <h5 className="font-bold text-gray-900 mb-1">
-                        後生元 & 益萃質®
-                      </h5>
-                      <p className="text-gray-500 text-xs">
-                        營養物質 + 益生元 + 益生菌 + 酵素 (Totipro®)
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                      <h5 className="font-bold text-gray-900 mb-1">漢方添加</h5>
-                      <p className="text-gray-500 text-xs">山楂、牛蒡、山藥</p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                      <h5 className="font-bold text-gray-900 mb-1">安心保證</h5>
-                      <p className="text-gray-500 text-xs">
-                        第三方實驗室五項檢驗合格
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 底部短敘述 */}
-                  <div className="pt-2 border-t border-gray-100">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: product.shortDescription,
-                      }}
-                    />
-                  </div>
-
-                  <p className="text-xs text-gray-400 text-center pt-2">
-                    ↓ 下滑查看更詳細圖文介紹 ↓
-                  </p>
-                </div>
-                {/* --- 內容結束 --- */}
+                {/* 改為直接渲染後台抓取的 HTML (product.shortDescription)
+                   您已經在後台貼入了對應的 HTML 代碼，這裡就會自動顯示排版
+                */}
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: product.shortDescription,
+                  }}
+                />
               </AccordionItem>
 
               <AccordionItem
