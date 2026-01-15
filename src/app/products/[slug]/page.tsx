@@ -21,7 +21,6 @@ export async function generateMetadata({
 }) {
   const p = await fetchProductBySlug(params.slug);
   const siteName = "UFLOW 保健食品官方網站";
-  const baseUrl = "https://www.kuankoshi.com";
 
   if (!p) {
     // ... (維持原樣)
@@ -60,6 +59,8 @@ export default async function ProductPage({
     images: [
       "https://d2w53g1q050m78.cloudfront.net/koredakecojp/uploads/images/pages/products/shakepack-3.jpg",
     ],
+    // 補上 fallback 的屬性欄位，避免型別錯誤
+    attributes: [],
   };
 
   let woo: Awaited<ReturnType<typeof fetchProductBySlug>> | null = null;
@@ -82,7 +83,8 @@ export default async function ProductPage({
           priceCurrency: "TWD", // 修正幣別為台幣
           price: Number(woo.price || 0),
           availability: "https://schema.org/InStock",
-          url: `https://www.kuankoshi.com/products/${woo.slug}`,
+          // 已移除舊的 kuankoshi 網址，改為相對路徑或僅保留路徑
+          url: `/products/${woo.slug}`,
         },
       }
     : {}; // Fallback LD 省略
@@ -110,6 +112,9 @@ export default async function ProductPage({
                 shortDescription: woo.short_description || "",
                 description: woo.description || "",
                 images: (woo.images || []).map((i) => i.src),
+
+                // ⭐ 關鍵修正：必須將 attributes 傳遞給前端，否則會一直顯示「載入規格中」
+                attributes: woo.attributes || [],
               }
             : fallback
         }

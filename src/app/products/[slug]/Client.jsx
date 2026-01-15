@@ -31,7 +31,7 @@ function AccordionItem({ title, children, isOpen, onClick }) {
       </button>
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-96 opacity-100 mb-4" : "max-h-0 opacity-0"
+          isOpen ? "max-h-[1200px] opacity-100 mb-4" : "max-h-0 opacity-0"
         }`}
       >
         <div className="text-sm text-gray-500 leading-relaxed">{children}</div>
@@ -54,23 +54,26 @@ export default function ProductClient({ product }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
 
+  // ─────────────────────────────────────────────────────────────
   // 狀態管理
+  // ─────────────────────────────────────────────────────────────
   const [flavor, setFlavor] = useState("");
   const [pkg, setPkg] = useState("");
   const [qty, setQty] = useState(1);
   const [showAdded, setShowAdded] = useState(false);
   const [tab, setTab] = useState("desc");
+  const [displayPrice, setDisplayPrice] = useState(Number(product.price || 0));
 
-  // ─────────────────────────────────────────────────────────────
-  // 修改處：將初始值從 "" 改為 "desc"，預設展開商品簡介
-  // ─────────────────────────────────────────────────────────────
+  // ★ 設定預設展開商品簡介 ("desc")
   const [openAccordion, setOpenAccordion] = useState("desc");
 
   // Lightbox 相關狀態
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [initialSlide, setInitialSlide] = useState(0);
 
-  // 資料解析
+  // ─────────────────────────────────────────────────────────────
+  // 資料解析：抓取屬性
+  // ─────────────────────────────────────────────────────────────
   const flavorOptions = useMemo(() => {
     if (!product.attributes) return [];
     const attr = product.attributes.find((a) =>
@@ -81,20 +84,43 @@ export default function ProductClient({ product }) {
 
   const pkgOptions = useMemo(() => {
     if (!product.attributes) return [];
+    // ★ 加入 "優惠方案" 作為抓取目標，對應您後台設定的屬性名稱
     const attr = product.attributes.find((a) =>
-      ["規格", "Size", "Package"].includes(a.name)
+      ["優惠方案", "規格", "Size", "Package"].includes(a.name)
     );
     return attr?.options || [];
   }, [product]);
 
+  // 初始值設定
   useEffect(() => {
     if (flavorOptions.length > 0 && !flavor) setFlavor(flavorOptions[0]);
     if (pkgOptions.length > 0 && !pkg) setPkg(pkgOptions[0]);
   }, [flavorOptions, pkgOptions, flavor, pkg]);
 
-  const currentPrice = Number(product.price || 0);
-  const originalPrice = Number(product.regularPrice || currentPrice);
-  const isOnSale = product.salePrice && currentPrice < originalPrice;
+  // ─────────────────────────────────────────────────────────────
+  // 價格連動邏輯 (根據選擇的方案更新顯示價格)
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!pkg) {
+      setDisplayPrice(Number(product.price || 0));
+      return;
+    }
+
+    // 簡單的關鍵字比對邏輯，對應您的新春價格表
+    let newPrice = Number(product.price || 0);
+
+    if (pkg.includes("1盒") || pkg.includes("新品")) {
+      newPrice = 1380;
+    } else if (pkg.includes("買三送一") || pkg.includes("4盒")) {
+      newPrice = 4140;
+    } else if (pkg.includes("6盒")) {
+      newPrice = 5940;
+    } else if (pkg.includes("12盒")) {
+      newPrice = 9600;
+    }
+
+    setDisplayPrice(newPrice);
+  }, [pkg, product.price]);
 
   const canBuy =
     (flavorOptions.length === 0 || flavor) && (pkgOptions.length === 0 || pkg);
@@ -111,7 +137,7 @@ export default function ProductClient({ product }) {
       id: product.id,
       wcProductId: product.id,
       name: `${product.name}｜${product.subname || ""}`,
-      price: currentPrice,
+      price: displayPrice, // 使用當前計算出的優惠價
       image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: qty,
@@ -181,36 +207,17 @@ export default function ProductClient({ product }) {
               右側：商品資訊 & 購買區
              ────────────────────────────────────────────────── */}
           <div className="w-full lg:w-2/5 flex flex-col p-4 sm:p-8 lg:sticky lg:top-24 lg:self-start h-fit">
-            {/* 評價星星 */}
-            <div className="flex items-center gap-1 mb-3">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <svg
-                  key={s}
-                  className="w-4 h-4 text-black fill-current"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-              <span className="text-xs text-gray-500 ml-1">(114 評論)</span>
-            </div>
-
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
               {product.name}
             </h1>
             <p className="text-gray-500 text-lg mb-4">{product.subname}</p>
 
-            <div className="text-2xl font-medium text-gray-900 mb-6 flex items-center gap-3">
-              NT$ {currentPrice.toLocaleString()}
-              {/* 只有當「正在特價」時，才顯示刪除線的原價 */}
-              {isOnSale && (
-                <span className="text-base text-gray-400 line-through">
-                  NT$ {originalPrice.toLocaleString()}
-                </span>
-              )}
+            {/* 顯示計算後的價格 */}
+            <div className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+              NT$ {displayPrice.toLocaleString()}
             </div>
 
-            <div className="flex items-center gap-2 mb-8 text-sm font-medium text-gray-600 bg-gray-50 w-fit px-3 py-1.5 rounded-md">
+            <div className="flex items-center gap-2 mb-6 text-sm font-medium text-gray-600 bg-gray-50 w-fit px-3 py-1.5 rounded-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -229,34 +236,94 @@ export default function ProductClient({ product }) {
               全館滿 NT$ 2,000 免運費
             </div>
 
-            {/* 1. 規格選擇 */}
-            {pkgOptions.length > 0 && (
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-900">
-                    選擇規格
-                  </label>
-                  <span className="text-xs text-gray-500">{pkg}</span>
+            {/* 1. 規格選擇 (優惠方案) */}
+            {pkgOptions.length > 0 ? (
+              <div className="mb-8 rounded-xl border border-rose-100 bg-rose-500 p-4">
+                <div className="mb-3 flex items-center justify-between border-b border-rose-100 pb-2">
+                  <span className="text-sm font-bold text-slate-50">
+                    選擇優惠方案
+                  </span>
+                  <span className="text-xs font-medium text-slate-50 bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
+                    2026 新春限定
+                  </span>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  {pkgOptions.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setPkg(opt)}
-                      className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${
-                        pkg === opt
-                          ? "bg-purple-100 border-purple-300 text-purple-900 shadow-sm"
-                          : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+
+                <div className="flex flex-col gap-2">
+                  {pkgOptions.map((opt) => {
+                    // 判斷是否選中
+                    const isSelected = pkg === opt;
+                    // 簡單的樣式判斷 (標記熱銷款)
+                    const isHot = opt.includes("買三送一");
+
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => setPkg(opt)}
+                        className={`relative flex items-center  justify-between p-3 rounded-lg border transition-all text-left ${
+                          isSelected
+                            ? "bg-white border-rose-500 shadow-md ring-1 ring-rose-500 z-10"
+                            : "bg-white/60 border-rose-100 hover:border-rose-300 hover:bg-white text-gray-600"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              isSelected ? "border-rose-500" : "border-gray-300"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="w-2 h-2 rounded-full bg-rose-500" />
+                            )}
+                          </div>
+                          <span
+                            className={`text-sm ${
+                              isSelected ? "font-bold text-gray-900" : ""
+                            }`}
+                          >
+                            {opt}
+                          </span>
+                          {isHot && (
+                            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                              熱銷
+                            </span>
+                          )}
+                        </div>
+                        {/* 根據選項名稱顯示對應價格提示 (UI顯示用) */}
+                        <div className="text-right">
+                          {opt.includes("1盒") && (
+                            <span className="text-sm font-medium">
+                              NT$ 1,380
+                            </span>
+                          )}
+                          {opt.includes("買三送一") && (
+                            <span className="text-sm font-bold text-rose-600">
+                              NT$ 4,140
+                            </span>
+                          )}
+                          {opt.includes("6盒") && (
+                            <span className="text-sm font-medium">
+                              NT$ 5,940
+                            </span>
+                          )}
+                          {opt.includes("12盒") && (
+                            <span className="text-sm font-medium">
+                              NT$ 9,600
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+            ) : (
+              /* 當後台尚未讀取到屬性時的備用顯示 (或除錯提示) */
+              <div className="p-4 bg-gray-50 text-gray-400 text-sm mb-6 rounded border border-gray-100">
+                載入規格中... (若持續顯示，請確認後台屬性名稱包含「優惠方案」)
               </div>
             )}
 
-            {/* 2. 口味選擇 */}
+            {/* 2. 口味選擇 (如果有) */}
             {flavorOptions.length > 0 && (
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-3">
@@ -328,10 +395,12 @@ export default function ProductClient({ product }) {
                 className={`flex-1 h-[52px] rounded-full text-white font-bold text-lg shadow-lg shadow-purple-200 transition-all active:scale-95 ${
                   !canBuy
                     ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] hover:brightness-110"
+                    : "bg-gradient-to-r from-[#f56060] to-[#fc2a2a] hover:brightness-110"
                 }`}
               >
-                加入購物車
+                {pkg
+                  ? `以 NT$ ${(displayPrice * qty).toLocaleString()} 購買`
+                  : "請選擇優惠方案"}
               </button>
             </div>
 
@@ -344,12 +413,112 @@ export default function ProductClient({ product }) {
                   setOpenAccordion(openAccordion === "desc" ? "" : "desc")
                 }
               >
-                <div
-                  dangerouslySetInnerHTML={{ __html: product.shortDescription }}
-                />
-                <p className="mt-2 text-xs text-gray-400">
-                  更詳細的圖文介紹請見下方。
-                </p>
+                {/* --- 圖片內容整合開始 --- */}
+                <div className="space-y-5">
+                  {/* 合生元定義 */}
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                    <h4 className="font-bold text-amber-900 mb-2 text-base flex items-center gap-2">
+                      <span className="bg-amber-500 w-1.5 h-4 rounded-full"></span>
+                      合生元 (Synbiotics)
+                    </h4>
+                    <p className="text-amber-900/80 text-sm leading-relaxed">
+                      是益生菌與益生元、後生元結合，並添加提升益生菌存活的
+                      <span className="font-bold">專利益萃質®</span>
+                      ，維持細菌叢停留體內的續航力。
+                    </p>
+                  </div>
+
+                  {/* 四大專利菌株 */}
+                  <div>
+                    <h5 className="font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">
+                      四大專利菌株
+                    </h5>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
+                        <span>
+                          植物乳桿菌{" "}
+                          <i className="font-serif text-gray-800">
+                            L. plantarum
+                          </i>{" "}
+                          LPL28
+                        </span>
+                      </li>
+                      <li className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
+                        <span>
+                          唾液乳桿菌{" "}
+                          <i className="font-serif text-gray-800">
+                            L. salivarius
+                          </i>{" "}
+                          AP-32
+                        </span>
+                      </li>
+                      <li className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
+                        <span>
+                          鼠李糖乳桿菌{" "}
+                          <i className="font-serif text-gray-800">
+                            L. rhamnosus
+                          </i>{" "}
+                          F-1
+                        </span>
+                      </li>
+                      <li className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 mt-1.5 sm:mt-0"></span>
+                        <span>
+                          動物雙歧乳桿菌{" "}
+                          <i className="font-serif text-gray-800">
+                            B. animalis subsp. Lactis
+                          </i>{" "}
+                          CP-9
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* 成分Grid */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
+                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                      <h5 className="font-bold text-gray-900 mb-1">益生元</h5>
+                      <p className="text-gray-500 text-xs">
+                        異麥芽寡醣 + 難消化麥芽糊精
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                      <h5 className="font-bold text-gray-900 mb-1">
+                        後生元 & 益萃質®
+                      </h5>
+                      <p className="text-gray-500 text-xs">
+                        營養物質 + 益生元 + 益生菌 + 酵素 (Totipro®)
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                      <h5 className="font-bold text-gray-900 mb-1">漢方添加</h5>
+                      <p className="text-gray-500 text-xs">山楂、牛蒡、山藥</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                      <h5 className="font-bold text-gray-900 mb-1">安心保證</h5>
+                      <p className="text-gray-500 text-xs">
+                        第三方實驗室五項檢驗合格
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 底部短敘述 */}
+                  <div className="pt-2 border-t border-gray-100">
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: product.shortDescription,
+                      }}
+                    />
+                  </div>
+
+                  <p className="text-xs text-gray-400 text-center pt-2">
+                    ↓ 下滑查看更詳細圖文介紹 ↓
+                  </p>
+                </div>
+                {/* --- 內容結束 --- */}
               </AccordionItem>
 
               <AccordionItem
@@ -380,7 +549,7 @@ export default function ProductClient({ product }) {
       </div>
 
       {/* ──────────────────────────────────────────────────
-          下方詳細說明區
+          下方詳細說明區 (保持完整未刪減)
          ────────────────────────────────────────────────── */}
       <div className="w-full bg-white mt-16 pt-10 pb-20 border-t border-gray-200">
         <div className="w-[95%] mx-auto px-4 lg:px-16">
@@ -406,7 +575,233 @@ export default function ProductClient({ product }) {
               購買須知
             </button>
           </div>
-
+          <div className="mx-auto max-w-[1300px]">
+            {/* ──────────────────────────────────────────────
+                這裡保留您原本所有的長篇圖文內容，完全未刪減
+                ──────────────────────────────────────────────
+             */}
+            <div className="flex ">
+              <Image
+                src="/images/維他菌合生元/001.png"
+                className="max-w-[350px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+              <div>
+                <h3 className="font-extrabold text-stone-800 text-[50px]">
+                  維他菌合生元
+                </h3>
+                <Image
+                  src="/images/維他菌合生元/維他菌合生元-01.png"
+                  className="max-w-[250px] w-full"
+                  alt=""
+                  width={1500}
+                  height={800}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <div className="flex flex-col justify-center items-center">
+              <p className="text-[22px]">
+                不是吃下一堆菌，而是要會{" "}
+                <span className="font-bold text-rose-500">選</span> 菌
+              </p>
+              <p className="text-[22px]">
+                真正對你影響的不是數量，而是{" "}
+                <span className="font-bold text-rose-500">
+                  菌株是否有目的性
+                </span>
+              </p>
+              <p className="text-[22px]">
+                <span className="font-bold text-[32px] text-stone-800">
+                  UFLOW
+                </span>{" "}
+                嚴格挑選{" "}
+                <span className="font-bold text-rose-500">
+                  4 株有功能分工的原廠菌株
+                </span>
+              </p>
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
+              【菌株】才是真正幫助保養的關鍵
+            </h3>
+            <ul className="pl-6">
+              <li className="text-stone-800 text-[20px] mt-3">
+                {" "}
+                <span className="font-bold ">
+                  Lactobacillus plantarum LPL28：
+                </span>{" "}
+                調整蠕動節奏，調節氣脹感
+              </li>
+              <li className="text-stone-800 text-[20px] mt-3">
+                {" "}
+                <span className="font-bold ">
+                  Lactobacillus salivarius AP-32：
+                </span>{" "}
+                協助抑制不良菌生長，支持消化道的菌相平衡
+              </li>
+              <li className="text-stone-800 text-[20px] mt-3">
+                {" "}
+                <span className="font-bold ">
+                  Lactobacillus rhamnosus F-1
+                </span>{" "}
+                協助消化道防護機制與平衡
+              </li>
+              <li className="text-stone-800 text-[20px] mt-3">
+                {" "}
+                <span className="font-bold ">
+                  Bifidobacterium animalis subsp. Lactis CP-9:
+                </span>{" "}
+                支持菌種經過消化道的耐受性與菌相穩定
+              </li>
+            </ul>
+            <div className="flex mt-5">
+              <div className="mx-3">
+                <Image
+                  src="/images/維他菌合生元/002.png"
+                  className="max-w-[350px] w-full"
+                  alt=""
+                  width={1500}
+                  height={800}
+                />
+              </div>
+              <div className="mx-3">
+                <Image
+                  src="/images/維他菌合生元/005.png"
+                  className="max-w-[250px] w-full"
+                  alt=""
+                  width={1500}
+                  height={800}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
+              單補益生菌，很多人吃了「沒感覺」， <br></br>原因不是菌不好，而是
+              <span className="text-rose-500"> 消化道環境不適合它留下來</span>
+            </h3>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/006.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
+              合生元 (Synbiotics) 是{" "}
+              <span className="text-rose-500"> 益生菌</span>與
+              <span className="text-rose-500"> 益生元</span>、
+              <span className="text-rose-500"> 後生元</span>結合，
+              <br></br> 並添加提升益生菌存活
+              <span className="text-rose-500"> 專利益萃質®</span>
+              <br></br>
+              <span className="text-rose-500"> 維持</span>細菌叢停留體內的{" "}
+              <span className="text-rose-500">續航力</span>
+            </h3>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/006.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            {" "}
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/text.png"
+                className="max-w-[200px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+            <div className="flex mt-5">
+              <div className="mx-3">
+                <Image
+                  src="/images/維他菌合生元/007.png"
+                  className="max-w-[550px] w-full"
+                  alt=""
+                  width={1500}
+                  height={800}
+                />
+              </div>
+              <div className="mx-3">
+                <Image
+                  src="/images/維他菌合生元/008.png"
+                  className="max-w-[550px] w-full"
+                  alt=""
+                  width={1500}
+                  height={800}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
+              漢方調理
+            </h3>
+            <h4 className=" lg:text-[24px] text-[20px] 2xl:text-[32px] font-bold text-stone-800">
+              UFLOW 維他菌合生元 於益生菌配方中搭配漢方提供<br></br>
+              更完整的營養補充設計，作為日常規律調理的輔助元素。
+            </h4>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/漢方溫和調理.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+          </div>
+          <div className="mx-auto max-w-[1300px] my-10">
+            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
+              採用專利三層包埋凍晶技術，
+            </h3>
+            <h4 className=" lg:text-[24px] text-[20px] 2xl:text-[32px] font-bold text-stone-800">
+              提升益生菌在儲存與消化道環境中的穩定與存活率。
+            </h4>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/專利技術.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/維他菌合生元.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+            <div className="mx-3">
+              <Image
+                src="/images/維他菌合生元/專利技術.png"
+                className="max-w-[850px] w-full"
+                alt=""
+                width={1500}
+                height={800}
+              />
+            </div>
+          </div>
           <div className="max-w-7xl w-full mx-auto">
             {tab === "desc" && (
               <div className="flex flex-col justify-center items-center gap-0">
