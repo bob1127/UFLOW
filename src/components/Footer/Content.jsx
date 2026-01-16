@@ -55,31 +55,31 @@ const Section2 = () => {
               <div className="text-3xl font-extrabold tracking-tight text-[#2b3742] mb-2">
                 UFLOW
               </div>
-              <h2 className="text-sm font-bold text-gray-900 tracking-wide">
+              <h2 className="text-lg font-bold text-slate-200 tracking-wide">
                 慶安有福有限公司
               </h2>
             </div>
 
             {/* 聯絡資訊 */}
             <div className="text-sm text-gray-600 space-y-2 leading-relaxed">
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">聯絡電話：</span>
+              <p className="flex items-center gap-2 text-gray-100">
+                <span className="font-medium text-gray-50">聯絡電話：</span>
                 <a
                   href="tel:0978138979"
-                  className="hover:text-blue-600 transition"
+                  className="hover:text-[#d1a044] transition"
                 >
                   0978-138-979
                 </a>
               </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">服務時間：</span>
+              <p className="flex items-center gap-2 text-gray-100">
+                <span className="font-medium text-gray-50">服務時間：</span>
                 <span>週一至週五 09:00 - 18:00</span>
               </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">電子信箱：</span>
+              <p className="flex items-center gap-2 text-gray-100">
+                <span className="font-medium text-gray-50">電子信箱：</span>
                 <a
                   href="mailto:uflowspace@gmail.com"
-                  className="hover:text-blue-600 transition"
+                  className="hover:text-[#d1a044] transition"
                 >
                   uflowspace@gmail.com
                 </a>
@@ -92,37 +92,37 @@ const Section2 = () => {
                 <li>
                   <Link
                     href="/products"
-                    className="hover:text-blue-600 transition relative group"
+                    className="hover:text-[#d1a044] transition relative group text-gray-200"
                   >
                     全系列商品
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#d1a044] transition-all group-hover:w-full"></span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/blog"
-                    className="hover:text-blue-600 transition relative group"
+                    className="hover:text-[#d1a044] transition relative group text-gray-200"
                   >
                     營養知識
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#d1a044] transition-all group-hover:w-full"></span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/about"
-                    className="hover:text-blue-600 transition relative group"
+                    className="hover:text-[#d1a044] transition relative group text-gray-200"
                   >
                     關於我們
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#d1a044] transition-all group-hover:w-full"></span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/cooperate"
-                    className="hover:text-blue-600 transition relative group"
+                    className="hover:text-[#d1a044] transition relative group text-gray-200"
                   >
                     合作資訊
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#d1a044] transition-all group-hover:w-full"></span>
                   </Link>
                 </li>
               </ul>
@@ -161,22 +161,22 @@ const Section2 = () => {
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-gray-200 pt-8 text-xs text-gray-500 sm:flex-row">
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             <li>
-              <Link href="/contact" className="hover:text-gray-900 transition">
+              <Link href="/contact" className="hover:text-gray-50 transition">
                 聯絡我們
               </Link>
             </li>
             <li>
-              <Link href="/privacy" className="hover:text-gray-900 transition">
+              <Link href="/privacy" className="hover:text-gray-50 transition">
                 隱私權政策
               </Link>
             </li>
             <li>
-              <Link href="/terms" className="hover:text-gray-900 transition">
+              <Link href="/terms" className="hover:text-gray-50 transition">
                 服務條款
               </Link>
             </li>
             <li>
-              <Link href="/returns" className="hover:text-gray-900 transition">
+              <Link href="/returns" className="hover:text-gray-50 transition">
                 退換貨說明
               </Link>
             </li>
@@ -189,7 +189,7 @@ const Section2 = () => {
               href="https://www.jeek-webdesign.com.tw"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-900 transition"
+              className="hover:text-gray-50 transition"
             >
               Design by 極客網頁設計
             </a>
