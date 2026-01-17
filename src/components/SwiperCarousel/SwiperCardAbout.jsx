@@ -101,7 +101,7 @@ export default function SwiperCardAbout({
   })();
 
   return (
-    <div className="w-[98%] mx-auto m-0 p-0">
+    <div className="w-full mx-auto m-0 p-0">
       {/* 斷點高度輔助（只有沒有 ratio 時才生效） */}
       {!ratioPadding && (
         <style jsx>{`

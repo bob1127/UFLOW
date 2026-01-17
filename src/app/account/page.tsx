@@ -876,7 +876,7 @@ export default function AccountPage() {
   /* ===================== Main Layout ===================== */
   return (
     <div className="min-h-[80vh] bg-slate-100 py-[100px] flex justify-center items-center">
-      <div className="  w-full max-w-[1180px]  ">
+      <div className="  w-[92%] mx-auto max-w-[1920px]  ">
         <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
           {/* Sidebar */}
           <aside className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -1312,7 +1312,7 @@ export default function AccountPage() {
                     )}
 
                     {!adminLoading && !adminError && (
-                      <div className="overflow-x-auto w-full max-w-[450px] sm:max-w-[700px] rounded-xl border bg-white shadow-sm">
+                      <div className="overflow-x-auto w-full max-w-[450px] sm:max-w-[700px] lg:max-w-[1920px] rounded-xl border bg-white shadow-sm">
                         <table className="w-full text-sm">
                           <thead className="bg-[#F58A9C] text-xs uppercase text-slate-500">
                             <tr>

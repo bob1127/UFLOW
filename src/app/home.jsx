@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Link } from "next-view-transitions";
 import Carousel from "../components/FactaryCarousel/index";
 import MainScrollCard from "../components/MainScrollCard";
-// import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import dynamic from "next/dynamic";
@@ -19,6 +19,7 @@ import { ReactLenis } from "@studio-freight/react-lenis";
 import Image from "next/image";
 import Marquee from "react-fast-marquee";
 // import { Link } from "lucide-react";
+
 gsap.registerPlugin(ScrollTrigger);
 const backgroundImage = "/images/S__23085150.png";
 const myLoader = ({ src, width, quality, placeholder }) => {
@@ -27,6 +28,17 @@ const myLoader = ({ src, width, quality, placeholder }) => {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ 新增控制彈窗顯示的狀態
+  const [showModal, setShowModal] = useState(false);
+
+  // ✅ 設定進入頁面後延遲 10 秒開啟彈窗
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowModal(true);
+    }, 10000); // 10000ms = 10秒
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const font = new FontFace(
@@ -47,6 +59,8 @@ export default function Home() {
         console.log("字體加載失敗:", error);
       });
   }, []);
+
+  // ... (省略 testimonials 資料，保持原樣) ...
   const testimonials = [
     {
       quote:
@@ -120,20 +134,19 @@ export default function Home() {
               },
               "-=0.5"
             )
-            // 4) 圖片做縮放：由 1.24 → 1.00（更長、更明顯）
             .fromTo(
               image.querySelector(".img-zoom"),
               {
-                scale: 1.84, // ← 起始放大一點
+                scale: 1.84,
                 willChange: "transform",
                 transformOrigin: "center center",
               },
               {
                 scale: 1,
-                duration: 2.5, // ← 時間拉長（原 1.6 → 2.4）
-                ease: "expo.out", // ← 更順暢的減速收尾
+                duration: 2.5,
+                ease: "expo.out",
               },
-              "<" // 與前一段同步開始
+              "<"
             );
         });
 
@@ -143,7 +156,7 @@ export default function Home() {
       return ctx;
     };
 
-    let ctx; // ← 這裡移除 : any
+    let ctx;
 
     const onTransitionComplete = () => {
       ctx = initGSAPAnimations();
@@ -169,8 +182,60 @@ export default function Home() {
   return (
     <ReactLenis root>
       <div className="">
+        
+        {/* ✅ 修改後的：右下角懸浮廣告影片區塊 (開始) */}
+        <AnimatePresence>
+          {showModal && (
+            <motion.div
+              // 動畫改為從右下角滑入
+              initial={{ opacity: 0, y: 100, x: 20 }}
+              animate={{ opacity: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, y: 100, x: 20 }}
+              transition={{ type: "tween", ease: "easeOut", duration: 0.5 }}
+              // 樣式修改：固定定位右下角、IG直式比例、無圓角、白邊框、陰影
+              className="fixed bottom-4 right-4 z-[9999] w-60 sm:w-72 md:w-80 aspect-[9/16] overflow-hidden border-4 border-white shadow-2xl bg-black"
+            >
+              {/* 關閉按鈕：樣式調整為適合深色背景的簡潔按鈕 */}
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-2 right-2 z-20 group bg-black/50 hover:bg-black text-white/80 hover:text-white rounded-full p-1.5 transition-all duration-300"
+                aria-label="Close video"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+
+              {/* 影片播放器 */}
+              <video
+                src="/video/UFLOW.mp4"
+                autoPlay
+                loop
+                muted // ⚠️ 必須靜音才能在大多數瀏覽器自動播放
+                playsInline
+                // 確保影片填滿容器並保持比例
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* ✅ 修改後的：右下角懸浮廣告影片區塊 (結束) */}
+
         <MainScrollCard />
-        <section className="section-main-products xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
+        
+        {/* ... (以下原本的 sections 程式碼保持不變，請確保完整複製) ... */}
+        <section className="section-main-products xl:w-[95%]  max-w-[1920px] sm:w-[90%] w-full mx-auto pt-20">
           <div className="flex flex-col lg:flex-row">
             {/* 左側文字區 */}
             <div className="text w-full lg:w-[30%] p-6 lg:p-10 flex flex-col justify-center">
@@ -411,23 +476,24 @@ export default function Home() {
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
-                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
-                      THE
+                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-4xl 2xl:text-5xl">
+                      肽晶芙蓉
                     </h2>
-                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
-                      MUG GARUD
+                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-4xl 2xl:text-5xl">
+                      國際原廠 專利足量
                     </h2>
                   </div>
                   <div className="w-full lg:w-1/2 mt-4 md:mt-0">
                     <p className="text-white tracking-widest leading-relaxed text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px]">
-                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。
+                      適用族群： 對美極度要求族群、 醫美後保養族群、
+                      髮質脆弱族群、 經常飲酒族群、 身體卡卡族群、 運動健身族群
                     </p>
                   </div>
                 </div>
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/78cfb4ed2959fd2d7884c0f3846e59df.jpg"
+                src="/images/粉色01.png"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -444,23 +510,25 @@ export default function Home() {
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
-                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
-                      THE
+                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-3xl 2xl:text-5xl">
+                      GABA 鎂鎂香蜂草
                     </h2>
-                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-5xl 2xl:text-7xl">
-                      MUG GARUD
+                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-3xl 2xl:text-5xl">
+                      國際原廠 專利足量
                     </h2>
                   </div>
                   <div className="w-full lg:w-1/2 mt-4 md:mt-0">
                     <p className="text-white tracking-widest leading-relaxed text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px]">
-                      歷經一年多的構思，我們終於實現了KOREDAKE商業化的艱鉅目標。這是一款營養均衡、注重美味的獨特蛋白質。我們希望人們每天都能喝到它，因此我們精心打造了天然的甜味和易於飲用的口味。
+                      適用族群： 高壓工作型態者、腦袋停不下來 作息與飲食不規律者
+                      調時差、長途搭機者 飲酒頻率較高者 睡眠品質不穩定者
+                      規律運動與健身族群
                     </p>
                   </div>
                 </div>
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/78cfb4ed2959fd2d7884c0f3846e59df.jpg"
+                src="/images/藍色.png"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -594,20 +662,16 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* 文字區 */}
             <div className="text max-w-xl md:max-w-[500px] pt-4 md:pt-0 pb-4 md:pb-0 md:pr-6">
-              {/* H1 品牌名稱 */}
               <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
                 UFLOW
               </h1>
-              {/* H2 核心標語：養分循環補給 [cite: 2] */}
               <h2 className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold">
                 養分循環補給
               </h2>
               <div className="mt-4 space-y-2">
-                {/* 第一段：強調效果與願景 [cite: 3, 4] */}
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
                   重返 17 歲的元氣，遠離惡體質。
                 </p>
-                {/* 第二段：強調產品特點（植萃、科學、專利）[cite: 7, 18, 19] */}
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
                   堅持「植萃天然」與「科學創新」。
                   我們選用國際大廠專利原料，以科學實證的足量配方，
