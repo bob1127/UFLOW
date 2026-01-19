@@ -90,11 +90,11 @@ export default function Home() {
         {/* Hero Section */}
         <section className="hero   relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/850] w-full p-0 z-0">
           <Slider ratio="16/9" autoplayDelay={4500} speed={1400} />
-          <div className="absolute top-0 left-0 w-full p-8 z-20 mix-blend-difference text-white">
+          {/* <div className="absolute top-0 left-0 w-full p-8 z-20 mix-blend-difference text-white">
             <h1 className="text-2xl font-bold tracking-widest">
               KIYOKA MORIMOTO
             </h1>
-          </div>
+          </div> */}
         </section>
   <section className="section-main-products xl:w-[95%]  max-w-[1920px] sm:w-[90%] w-full mx-auto pt-20">
           <div className="flex flex-col lg:flex-row">

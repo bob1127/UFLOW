@@ -126,6 +126,14 @@ export default function SwiperCardAbout({
             referrerPolicy="no-referrer"
           />
         </SwiperSlide>
+         <SwiperSlide className="overflow-hidden group relative duration-1000">
+          <img
+            src="/images/鎂鎂香蜂草/節奏管理，不必等臨界線失控--.png"
+            className="absolute inset-0 h-full w-full object-cover"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+        </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           <img
             src="/images/粉003.png"
