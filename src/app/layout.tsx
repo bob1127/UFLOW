@@ -102,7 +102,7 @@ export default function RootLayout({
           </div>
 
           {/* 頁面內容，預留 Navbar 高度（64px 自己可調） */}
-          <main className="min-h-screen pt-[64px]">{children}</main>
+          <main className="min-h-screen  ">{children}</main>
 
           {/* 購物車 Drawer */}
           <CartDrawer />

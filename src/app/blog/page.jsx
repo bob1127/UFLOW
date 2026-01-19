@@ -478,8 +478,8 @@ export default function ProjectListPage() {
               </div>
             </div>
           </div>
-          <div className="more-btn bg-slate-200 hover:bg-slate-900 duration-200 text-[20px] flex justify-center text-white py-6 ">
-            More Info
+          <div className="more-btn bg-[#f58a9c] hover:bg-[#dd6f81] duration-200 text-[20px] flex justify-center text-white py-6 ">
+             更多文章
           </div>
         </section>
         <section></section>

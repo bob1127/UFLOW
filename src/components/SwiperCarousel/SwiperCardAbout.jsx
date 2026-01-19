@@ -10,9 +10,9 @@ import "swiper/css/scrollbar";
 /**
  * @param {Object} props
  * @param {Array<{image:string, href?:string, title?:string, subtitle?:string, overlay?:boolean, alt?:string}>} props.banners
- * @param {string} [props.ratio] e.g. "16/9"、"4/3"（有給優先走比例盒）
- * @param {number|string} [props.height=600] 不用比例時的固定高度（px 或 '60vh'）
- * @param {{base?: number|string, md?: number|string, lg?: number|string, xl?: number|string}} [props.heights] 斷點高度覆寫
+ * @param {string} [props.ratio]
+ * @param {number|string} [props.height=600]
+ * @param {{base?: number|string, md?: number|string, lg?: number|string, xl?: number|string}} [props.heights]
  * @param {number} [props.autoplayDelay=5000]
  * @param {number} [props.speed=1200]
  * @param {boolean} [props.loop=true]
@@ -21,35 +21,10 @@ import "swiper/css/scrollbar";
  * @param {string} [props.paginationColor='#fff']
  */
 export default function SwiperCardAbout({
-  banners = [
-    {
-      image:
-        "https://coralclub.ru//upload/iblock/7b7/x6c6j3dyu69ud3j02yov2bc0sa21nm5d.webp",
-      href: "/KuankoshiProjectInner",
-      title: "Project-01",
-      subtitle: "View More",
-      overlay: true,
-    },
-    {
-      image:
-        "https://coralclub.ru//upload/iblock/7b7/x6c6j3dyu69ud3j02yov2bc0sa21nm5d.webp",
-      href: "/KuankoshiProjectInner",
-      title: "Project-02",
-      subtitle: "View More",
-      overlay: true,
-    },
-    {
-      image:
-        "https://coralclub.ru//upload/iblock/7b7/x6c6j3dyu69ud3j02yov2bc0sa21nm5d.webp",
-      href: "/KuankoshiProjectInner",
-      title: "Project-03",
-      subtitle: "View More",
-      overlay: true,
-    },
-  ],
-  ratio, // ex: "16/9"
+  banners = [], // 預設值保持原樣或傳入
+  ratio,
   height = 600,
-  heights, // ex: { base: 420, md: 540, lg: 640 }
+  heights,
   autoplayDelay = 5000,
   speed = 1200,
   loop = true,
@@ -64,7 +39,7 @@ export default function SwiperCardAbout({
       "cubic-bezier(0.645, 0.045, 0.355, 1)",
   };
 
-  // 比例盒 paddingTop %
+  // 比例盒 paddingTop % (雖然你有寫但原本 className 寫死 aspect 所以這段可能沒用到，保留邏輯)
   const ratioPadding = (() => {
     if (!ratio) return null;
     const [w, h] = String(ratio).split("/").map(Number);
@@ -72,7 +47,7 @@ export default function SwiperCardAbout({
     return `${(h / w) * 100}%`;
   })();
 
-  // 斷點高度（無 ratio 時使用）
+  // 斷點高度變數 (保留邏輯)
   const fixedHeightVars = (() => {
     if (ratioPadding) return {};
     const baseH =
@@ -102,7 +77,6 @@ export default function SwiperCardAbout({
 
   return (
     <div className="w-full mx-auto m-0 p-0">
-      {/* 斷點高度輔助（只有沒有 ratio 時才生效） */}
       {!ratioPadding && (
         <style jsx>{`
           .banner-fixed-height {
@@ -135,20 +109,24 @@ export default function SwiperCardAbout({
         centeredSlides={centeredSlides}
         slidesPerView={slidesPerView}
         pagination={{ clickable: true }}
-        className=" border  relative aspect-[4/3] md:aspect-[16/9] xl:aspect-[16/7] overflow-hidden"
+        /**
+         * 修改重點：
+         * 1. 移除 aspect-[16/9]
+         * 2. 加入 md:aspect-[1920/700] (桌機版依照 1920x700 比例)
+         * 3. 手機版維持 aspect-[4/3] 或是 aspect-square，以免手機上看圖片變太細長
+         */
+        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/850] overflow-hidden"
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          {" "}
           <img
-            src="/images/三種01.png"
+            src="/images/肽晶芙蓉/重返17歲の元氣-850.png"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"
           />
         </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          {" "}
           <img
             src="/images/粉003.png"
             className="absolute inset-0 h-full w-full object-cover"
@@ -157,7 +135,6 @@ export default function SwiperCardAbout({
           />
         </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          {" "}
           <img
             src="/images/粉紅0091.png"
             className="absolute inset-0 h-full w-full object-cover"

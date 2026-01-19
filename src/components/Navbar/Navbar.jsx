@@ -75,21 +75,27 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   );
 }
 
-/** 簡潔購物車 Icon（含數量徽章） */
-function CartButton({ count = 0, onClick }) {
+/** * 簡潔購物車 Icon（含數量徽章）
+ * 修改：接收 isScrolled 參數，根據狀態切換背景與圖示顏色 
+ */
+function CartButton({ count = 0, onClick, isScrolled }) {
   return (
     <Link
       href="/cart"
       type="button"
       onClick={onClick}
       aria-label={`購物車，內有 ${count} 件商品`}
-      className="relative inline-flex h-10 w-10 items-center justify-center bg-white/90 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors duration-300 ${
+        isScrolled
+          ? "bg-white/90 hover:bg-white text-slate-800" // 滾動後：白底深色字
+          : "bg-transparent hover:bg-white/20 text-white" // 置頂時：透明底白色字
+      }`}
     >
       <svg
         width="20"
         height="20"
         viewBox="0 0 24 24"
-        className="text-slate-800"
+        className="currentColor" // 移除 text-slate-800，改用 currentColor 繼承父層顏色
       >
         <path
           d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
@@ -381,8 +387,10 @@ export default function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
-
   const [cartCount, setCartCount] = useState(2);
+
+  // 1. 滾動偵測狀態
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -423,6 +431,20 @@ export default function App() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [refreshAuth]);
+
+  // 2. 監聽滾動事件
+  useEffect(() => {
+    const handleScroll = () => {
+      // 只要滾動超過 10px 就視為 scrolled
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    // 初始化檢查
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && closeMenu();
@@ -468,8 +490,6 @@ export default function App() {
     },
   ];
 
-  // --- 唯一的修改在此處 ---
-  // 更新 navLinks 陣列以匹配桌面版導覽列
   const navLinks = [
     { label: "首頁", href: "/" },
     { label: "品牌資訊", href: "/brand" },
@@ -485,19 +505,54 @@ export default function App() {
     refreshAuth();
   }, [pathname, refreshAuth]);
 
+  /**
+   * 根據滾動狀態設定導覽列文字顏色
+   * 滾動後：深灰色 (#575656)
+   * 置頂時：白色 (text-white)
+   */
+  const navTextColor = isScrolled
+    ? "text-[#575656]"
+    : "text-white hover:text-white/80 drop-shadow-sm";
+
   return (
-    <div className="sticky top-0 z-[1000] w-full">
-      {/* Header */}
-      <div className="top-navbar py-1 bg-slate-50 ">
-        <div className=" w-[87%] mx-auto grid grid-cols-2">
-          <div className="text-[13px] text-slate-500 font-light tracking-widest">
+    // 3. 外層容器：根據 isScrolled 切換背景（白底 / 透明）
+    <div
+      className={`sticky top-0 z-[1000] w-full transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/95 shadow-sm backdrop-blur-md"
+          : "bg-transparent shadow-none"
+      }`}
+    >
+      {/* Header Top Bar */}
+      {/* 4. 修改 Top Bar: 滾動時淺灰底/深色字；置頂時透明底/白字 */}
+      <div
+        className={`top-navbar py-1 transition-colors duration-300 ${
+          isScrolled
+            ? "bg-slate-50 text-slate-500"
+            : "bg-transparent text-white/90"
+        }`}
+      >
+        <div className="w-[87%] mx-auto grid grid-cols-2">
+          <div className="text-[13px] font-light tracking-widest transition-colors duration-300">
             保健食品｜UFLOW
           </div>
         </div>
       </div>
-      <div className="bg-white">
-        <div className="h-[.5px] w-[87%] bg-gray-200 mx-auto "></div>
-        <div className="mx-auto flex py-4 w-[90%] items-center px-4">
+
+      {/* Main Navbar */}
+      <div
+        className={`transition-colors duration-300 ${
+          isScrolled ? "bg-white" : "bg-transparent"
+        }`}
+      >
+        {/* Divider - 滾動後才顯示分隔線 */}
+        <div
+          className={`h-[.5px] w-[87%] bg-gray-200 mx-auto transition-opacity duration-300 ${
+            isScrolled ? "opacity-100" : "opacity-0"
+          }`}
+        ></div>
+
+        <div className="mx-auto flex py-2 w-[90%] items-center px-4">
           {/* Left │ 漢堡 + 熱銷產品 */}
           <div className="flex w-[40%] justify-start items-center gap-2">
             <MenuToggleButton
@@ -506,6 +561,7 @@ export default function App() {
               className="h-10 w-10 md:hidden"
               buttonRef={openerRef}
             />
+            {/* 熱銷產品按鈕 - 保持白色底比較顯眼 */}
             <button
               type="button"
               onClick={toggleMenu}
@@ -514,48 +570,43 @@ export default function App() {
               熱銷產品
             </button>
 
+            {/* 5. 將所有導覽連結加上 navTextColor 變數，實現顏色切換 */}
             <Link
               href="/brand"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               品牌資訊
             </Link>
             <Link
               href="/products"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               熱銷產品
             </Link>
-            {/* <Link
-              href="/admin/members"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
-            >
-              客戶分析(暫時)
-            </Link> */}
             <Link
               href="/blog"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               保健知識
             </Link>
 
             <Link
               href="/cooperate"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               與我們合作
             </Link>
 
             <Link
               href="/about"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               關於我們
             </Link>
 
             <Link
               href="/contact"
-              className="text-[14px] mx-3 text-[#575656] tracking-wider font-semibold hidden md:inline-block"
+              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
             >
               聯絡我們
             </Link>
@@ -564,19 +615,34 @@ export default function App() {
           {/* Logo */}
           <div className="flex w-[20%] justify-center">
             <Link href="/" className="text-3xl tracking-wider font-normal">
-              <img src="/images/logo-04.png" className="w-[70px]" alt="LOGO" />
+              {/* 6. Logo 處理：如果是黑色 Logo，置頂時(!isScrolled)加濾鏡變白 
+                     如果是彩色或白色 Logo，可以移除 brightness-0 invert 
+              */}
+              <img
+                src="/images/logo-04.png"
+                className={`w-[70px] transition-all duration-300 ${
+                  !isScrolled ? "brightness-0 invert" : ""
+                }`}
+                alt="LOGO"
+              />
             </Link>
           </div>
 
           {/* Right │ 購物車 + 會員 */}
           <div className="flex w-[40%] items-center justify-end gap-2">
-            <CartButton count={cartCount} onClick={openCart} />
+            {/* 傳入 isScrolled 以控制右側圖示樣式 */}
+            <CartButton
+              count={cartCount}
+              onClick={openCart}
+              isScrolled={isScrolled}
+            />
             <div className="hidden md:block">
               <UserMenu
                 isLoggedIn={isLoggedIn}
                 user={user}
                 onLogin={handleLogin}
                 onLogout={handleLogout}
+                isScrolled={isScrolled}
               />
             </div>
           </div>
@@ -696,8 +762,10 @@ export default function App() {
   );
 }
 
-/** 會員按鈕：桌面版（不論登入與否都可展開下拉選單） */
-function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
+/** * 會員按鈕：桌面版
+ * 修改：接收 isScrolled 參數，根據狀態切換背景與文字顏色
+ */
+function UserMenu({ isLoggedIn, user, onLogin, onLogout, isScrolled }) {
   const [open, setOpen] = useState(false);
 
   const initials =
@@ -731,7 +799,11 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex h-10 items-center gap-2 bg-white px-2.5 pl-2 pr-3 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className={`inline-flex h-10 items-center gap-2 rounded-full px-2.5 pl-2 pr-3 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors duration-300 ${
+          isScrolled
+            ? "bg-white hover:bg-gray-50" // 滾動後：白底
+            : "bg-transparent hover:bg-white/20" // 置頂時：透明底
+        }`}
       >
         {isLoggedIn && user?.avatarUrl ? (
           <img
@@ -745,14 +817,20 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
           </span>
         )}
 
-        <span className="hidden text-sm text-slate-700 sm:inline">會員</span>
+        <span
+          className={`hidden text-sm sm:inline transition-colors duration-300 ${
+            isScrolled ? "text-slate-700" : "text-white"
+          }`}
+        >
+          會員
+        </span>
 
         <svg
           width="16"
           height="16"
           viewBox="0 0 24 24"
-          className={`text-slate-500 transition-transform ${
-            open ? "rotate-180" : ""
+          className={`transition-all duration-300 ${open ? "rotate-180" : ""} ${
+            isScrolled ? "text-slate-500" : "text-white"
           }`}
         >
           <path
