@@ -136,7 +136,7 @@ export default function SwiperCardAbout({
         </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           <img
-            src="/images/粉003.png"
+            src="/images/維他菌合生元/維他菌合生元-1.png"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"
