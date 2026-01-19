@@ -24,14 +24,14 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: "https://uflow-theta.vercel.app",
+    url: "https://www.uflow.space",
     siteName: "UFLOW",
     title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
     description:
       "嚴選原料、無多餘添加，並通過第三方檢驗的功能性保健食品。從視力、腸道、關節到睡眠，UFLOW 讓日常補給更有效率。",
     images: [
       {
-        url: "https://uflow-theta.vercel.app/images/img-1.jpg",
+        url: "https://www.uflow.space/images/肽晶芙蓉/重返17歲の元氣-850.png",
         width: 1200,
         height: 630,
         alt: "UFLOW 功能性保健食品品牌形象",
@@ -39,7 +39,7 @@ export const metadata = {
     ],
   },
   alternates: {
-    canonical: "https://uflow-theta.vercel.app",
+    canonical: "https://www.uflow.space",
   },
 };
 

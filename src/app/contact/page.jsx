@@ -24,14 +24,14 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: "https://uflow-theta.vercel.app/about",
+    url: "https://www.uflow.space/about",
     siteName: "UFLOW 功能性保健食品",
     title: "關於 UFLOW｜科學實證保健食品品牌｜研發理念、第三方檢驗與永續承諾",
     description:
       "我們相信每一份補給都應該有根據、能感受、且對地球友善。了解 UFLOW 的品牌故事、研發流程與品質保證。",
     images: [
       {
-        url: "https://uflow-theta.vercel.app/images/og/about-og.jpg",
+        url: "https://www.uflow.space/images/og/about-og.jpg",
         width: 1200,
         height: 630,
         alt: "UFLOW 品牌形象與研發理念封面",
@@ -39,7 +39,7 @@ export const metadata = {
     ],
   },
   alternates: {
-    canonical: "https://uflow-theta.vercel.app/about",
+    canonical: "https://www.uflow.space/about",
   },
 };
 
