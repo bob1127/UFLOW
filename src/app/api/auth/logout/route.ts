@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 const isProd = process.env.NODE_ENV === "production";
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
-// 簡化的 Cookie 選項型別（夠用就好）
 type CookieOpts = {
   httpOnly?: boolean;
   sameSite?: "lax" | "strict" | "none";
@@ -20,8 +19,8 @@ function clearOpts(): CookieOpts {
     sameSite: "lax",
     secure: isProd,
     path: "/",
-    domain: COOKIE_DOMAIN,
-    maxAge: 0, // 刪除 cookie
+    domain: COOKIE_DOMAIN, // 注意：如果你的 auth_token 寫入時沒指定 domain，這裡有指定可能會清不掉，若有問題可暫時拿掉這行
+    maxAge: 0,
   };
 }
 
@@ -32,9 +31,10 @@ export async function POST() {
   );
 
   // 1) 你的自家 JWT cookies
-  const customCookies = ["jwt", "user_email", "user_name"];
+  // ✅ 修改這裡：加上 "auth_token"
+  const customCookies = ["jwt", "user_email", "user_name", "auth_token"];
 
-  // 2) NextAuth 相關 cookies（不同情境名子不一，全部清）
+  // 2) NextAuth 相關 cookies
   const nextAuthCookies = [
     "next-auth.session-token",
     "__Secure-next-auth.session-token",
@@ -45,7 +45,12 @@ export async function POST() {
   ];
 
   for (const name of [...customCookies, ...nextAuthCookies]) {
-    res.cookies.set(name, "", clearOpts());
+    // 針對 auth_token，為了保險起見，我們用最乾淨的方式清（不帶 domain），避免因為 domain 設定不同而清不掉
+    if (name === "auth_token") {
+      res.cookies.set(name, "", { path: "/", maxAge: 0 });
+    } else {
+      res.cookies.set(name, "", clearOpts());
+    }
   }
 
   return res;
