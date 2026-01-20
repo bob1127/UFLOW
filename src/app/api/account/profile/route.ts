@@ -2,9 +2,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { cookies } from "next/headers";
+import jwt from "jsonwebtoken"; // ✅ 新增：用來解密 auth_token
 import { authOptions } from "@/lib/auth-options";
 
-// 強制宣告為動態路由，因為使用了 cookies() 與 getServerSession()
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -12,6 +12,8 @@ const BASE =
   process.env.WC_API_BASE || "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
+// ✅ 新增：必須跟登入/註冊時用的加密鑰匙一樣
+const JWT_SECRET = process.env.RESET_TOKEN_SECRET || process.env.JWT_SECRET || "secret";
 
 function basicAuth() {
   if (!CK || !CS) return undefined;
@@ -25,7 +27,7 @@ function parseAdminEmails() {
     .filter(Boolean);
 }
 
-/* ========= 會員分級邏輯 ========= */
+/* ========= 會員分級邏輯 (保持不變) ========= */
 function calcTier(totalSpent: number) {
   if (totalSpent >= 35000) return "VVIP 貴賓";
   if (totalSpent >= 10000) return "VIP 貴賓";
@@ -103,14 +105,11 @@ export async function GET() {
   try {
     const auth = basicAuth();
     if (!auth) {
+      // 容錯：如果沒設 WC KEY，還是回傳未登入狀態，不要直接 500
+      console.error("WooCommerce API keys missing");
       return NextResponse.json(
-        {
-          loggedIn: false,
-          customer: null,
-          membership: null,
-          message: "WooCommerce API 尚未設定",
-        },
-        { status: 500, headers: noCache }
+        { loggedIn: false, customer: null, membership: null },
+        { headers: noCache }
       );
     }
 
@@ -119,18 +118,35 @@ export async function GET() {
 
     let email: string | null = session?.user?.email || null;
 
+    // 1. 檢查舊的 user_email cookie
     if (!email) {
       const emailCookie = cookieStore.get("user_email");
       if (emailCookie?.value) email = emailCookie.value;
     }
 
-    // fallback: if has jwt cookie, try WP users/me
+    // 2. ✅ 新增：檢查 auth_token (LINE/一般登入用的)
     if (!email) {
-      const jwt = cookieStore.get("jwt")?.value;
-      if (jwt) {
+      const authToken = cookieStore.get("auth_token")?.value;
+      if (authToken) {
+        try {
+          // 解密 Token 取得 email
+          const decoded = jwt.verify(authToken, JWT_SECRET) as any;
+          if (decoded?.email) {
+            email = decoded.email;
+          }
+        } catch (e) {
+          console.error("auth_token verify failed:", e);
+        }
+      }
+    }
+
+    // 3. 檢查舊的 jwt cookie (WordPress User)
+    if (!email) {
+      const jwtVal = cookieStore.get("jwt")?.value;
+      if (jwtVal) {
         try {
           const meRes = await fetch(`${BASE}/wp-json/wp/v2/users/me`, {
-            headers: { Authorization: `Bearer ${jwt}` },
+            headers: { Authorization: `Bearer ${jwtVal}` },
             cache: "no-store",
           });
           if (meRes.ok) {
@@ -143,6 +159,7 @@ export async function GET() {
       }
     }
 
+    // 如果所有方法都找不到 email，就是未登入
     if (!email) {
       return NextResponse.json(
         { loggedIn: false, customer: null, membership: null, isAdmin: false },
@@ -151,17 +168,13 @@ export async function GET() {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-
-    // ✅ admin 判斷（白名單）
     const adminEmails = parseAdminEmails();
     const isAdmin = adminEmails.includes(normalizedEmail);
 
     // ===== Fetch WC customer by email
     let customer: any = null;
     const custRes = await fetch(
-      `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(
-        normalizedEmail
-      )}`,
+      `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(normalizedEmail)}`,
       {
         headers: { Authorization: auth },
         cache: "no-store",
@@ -170,11 +183,10 @@ export async function GET() {
 
     if (custRes.ok) {
       const custArr = await custRes.json();
-      customer =
-        Array.isArray(custArr) && custArr.length > 0 ? custArr[0] : null;
+      customer = Array.isArray(custArr) && custArr.length > 0 ? custArr[0] : null;
     }
 
-    // ===== calculate spent in last 12 months
+    // ===== Calculate spent in last 12 months
     let totalSpent12m = 0;
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
@@ -184,9 +196,7 @@ export async function GET() {
 
     if (customer?.id) {
       const oRes = await fetch(
-        `${BASE}/wp-json/wc/v3/orders?customer=${customer.id}&status=processing,completed&per_page=100&after=${encodeURIComponent(
-          afterIso
-        )}`,
+        `${BASE}/wp-json/wc/v3/orders?customer=${customer.id}&status=processing,completed&per_page=100&after=${encodeURIComponent(afterIso)}`,
         {
           headers: { Authorization: auth },
           cache: "no-store",
@@ -195,11 +205,10 @@ export async function GET() {
       if (oRes.ok) ordersForCalc = await oRes.json();
     }
 
+    // Fallback: 如果用 ID 查不到，用 Email 搜搜看 (有些 guest checkout 訂單)
     if (ordersForCalc.length === 0 && normalizedEmail) {
       const oRes = await fetch(
-        `${BASE}/wp-json/wc/v3/orders?per_page=100&after=${encodeURIComponent(
-          afterIso
-        )}&search=${encodeURIComponent(normalizedEmail)}`,
+        `${BASE}/wp-json/wc/v3/orders?per_page=100&after=${encodeURIComponent(afterIso)}&search=${encodeURIComponent(normalizedEmail)}`,
         {
           headers: { Authorization: auth },
           cache: "no-store",
@@ -224,15 +233,15 @@ export async function GET() {
 
     const customerPayload = customer?.id
       ? {
-          id: customer.id,
-          email: customer.email,
-          first_name: customer.first_name,
-          last_name: customer.last_name,
-          username: customer.username,
-        }
+        id: customer.id,
+        email: customer.email,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        username: customer.username,
+        avatar_url: customer.avatar_url, // 如果有的話
+      }
       : { email: normalizedEmail };
 
-    // ✅ 回傳 isAdmin 給前端
     return NextResponse.json(
       { loggedIn: true, customer: customerPayload, membership, isAdmin },
       { headers: noCache }
