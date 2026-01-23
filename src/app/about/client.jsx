@@ -206,65 +206,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 4. 專家團隊  */}
-      <section className="py-24 container mx-auto px-6">
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <span className="text-blue-600 font-bold tracking-wider text-sm uppercase block mb-2">
-            PROFESSIONAL TEAM
-          </span>
-          <h2 className="text-3xl font-bold">UFLOW 專家一致推薦</h2>
-          <p className="mt-4 text-gray-500 max-w-2xl mx-auto">
-            我們的產品由醫師、營養師、藥師等專業人士共同研發與推薦，結合醫學專業與營養科學，給您最安心的選擇。
-          </p>
-        </motion.div>
-
-        {/* 專家 Grid - 模擬 PDF P.8 的排版 */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {teamMembers.map((member, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="flex flex-col items-center group"
-            >
-              <div className="w-full aspect-[3/4] relative rounded-xl overflow-hidden mb-4 bg-gray-100">
-                {/* 預設佔位圖，請換成真實照片 */}
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500  "
-                />
-              </div>
-              <h4 className="font-bold text-lg">{member.name}</h4>
-              <span className="text-sm text-gray-500">{member.title}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* 底部信任標章文字 [cite: 37-39] */}
-        <div className="mt-16 flex flex-wrap justify-center gap-4 md:gap-12 border-t border-gray-100 pt-12">
-          {["國際原料廠商", "生醫產業碩博士團隊", "台灣專業檢驗機構認證"].map(
-            (text, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 text-gray-600 font-medium"
-              >
-                <ShieldCheck className="w-5 h-5 text-gray-400" />
-                {text}
-              </div>
-            )
-          )}
-        </div>
-      </section>
-
+      
       {/* 5. CTA 區塊 */}
       <section className="py-20 bg-[#2b3742] text-white text-center">
         <div className="container mx-auto px-6">
