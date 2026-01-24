@@ -71,16 +71,16 @@ const TextParallaxContentExample = () => {
         {/* 第一段：產品 + 文案 */}
         <section className=" relative overflow-hidden flex flex-col justify-center items-center">
           <div className="txt absolute right-[8%] top-[25%] -translate-x-1/2 flex flex-col justify-center items-center z-40 max-w-[550px]">
-            <h2 className="text-5xl font-bold">GABA 鎂鎂香蜂草</h2>
+            <h2 className="text-5xl font-bold text-stone-50 ">GABA 鎂鎂香蜂草</h2>
             <div className="mt-5">
-              <h3 className="text-2xl font-normal my-2">
+              <h3 className="text-2xl text-stone-50 font-normal my-2">
                 舒壓好眠．能量代謝的科學新方
               </h3>
-              <h3 className="text-2xl font-normal my-2">
+              <h3 className="text-2xl text-stone-50  font-normal my-2">
                 專利GABA x 速可包覆鎂 x 法國香蜂草
               </h3>
             </div>
-            <p className="leading-relaxed tracking-wider mt-4">
+            <p className="leading-relaxed text-stone-50  tracking-wider mt-4">
               針對生活步調緊湊、壓力大與睡眠品質不佳的現代人設計 。嚴選韓國專利
               GABAEX® (500mg) 作為情緒煞車，搭配義大利 SideMag® 速可包覆鎂
               (200mg)，利用 Sucrosomial® 專利技術提升吸收率達 300%
@@ -98,7 +98,7 @@ const TextParallaxContentExample = () => {
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3">純天然成分</b>
+                <b className="mt-3 text-stone-50 ">純天然成分</b>
               </div>
               <div className="flex flex-col mr-10 items-center">
                 <Image
@@ -110,7 +110,7 @@ const TextParallaxContentExample = () => {
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3">純天然成分</b>
+                <b className="mt-3 text-stone-50 ">純天然成分</b>
               </div>
               <div
                 data-aos="fadeUp"
@@ -125,15 +125,15 @@ const TextParallaxContentExample = () => {
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3">純天然成分</b>
+                <b className="mt-3 text-stone-50 ">純天然成分</b>
               </div>
             </div>
-            <div className="h-[3px] bg-[#333] w-full rounded-full" />
+            <div className="h-[3px] bg-[#ebebeb] w-full rounded-full" />
             <div className="flex justify-between mt-2">
-              <span className="text-[13px] tracking-widest">
+              <span className="text-[13px] text-stone-50  tracking-widest">
                 經過國家級的驗證，專業醫生的背書
               </span>
-              <span className="text-[13px] tracking-widest">
+              <span className="text-[13px] text-stone-50  tracking-widest">
                 經過國家級的驗證，專業醫生的背書
               </span>
             </div>
@@ -141,10 +141,10 @@ const TextParallaxContentExample = () => {
 
           <div className="img mt-8">
             <ParallaxImage
-              src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineGlass-BZwf8QOd.png"
+              src="/images/鎂鎂香峰草-0331.jpg"
               alt=""
               fill
-              className="object-contain"
+              className="object-contain "
             />
           </div>
         </section>

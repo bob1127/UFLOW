@@ -264,7 +264,7 @@ export default function Home() {
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/粉色01.png"
+                src="/images/DSCF7865.jpg"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -299,7 +299,7 @@ export default function Home() {
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/藍色.png"
+                src="/images/鎂鎂香峰草-01.jpg"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -379,7 +379,7 @@ export default function Home() {
                   <div className="image-container relative w-full h-full overflow-hidden">
                     <div className="img-zoom absolute inset-0 will-change-transform">
                       <Image
-                        src="/images/DSCF7624.JPG"
+                        src="/images/DSCF7777.jpg"
                         alt="About Image 1"
                         fill
                         className="object-cover"

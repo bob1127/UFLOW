@@ -21,7 +21,7 @@ const Example = () => {
       </FlyoutLink>
       <FlyoutLink href="#" FlyoutContent={PricingContent}>
         <span className="font-bold text-[1.05rem] text-black px-4">
-          伴手禮/文創特色
+         伴手禮/文創特色
         </span>
       </FlyoutLink>
       <FlyoutLink href="#" FlyoutContent={PricingContent}>
