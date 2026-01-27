@@ -4,7 +4,13 @@ import { Link } from "next-view-transitions";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 
-/** 同顆按鈕：漢堡 ⇄ X 流暢變形（Framer Motion） */
+// ============================================================================
+// 子組件區塊
+// ============================================================================
+
+/** * 漢堡選單按鈕 
+ * 風格：深色線條 (適配白底)
+ */
 function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   const spring = { type: "spring", stiffness: 260, damping: 20 };
   return (
@@ -15,16 +21,16 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
       aria-label={open ? "關閉選單" : "開啟選單"}
       aria-expanded={open}
       whileTap={{ scale: 0.95 }}
-      className={`inline-flex items-center justify-center rounded-full border border-gray-200 bg-white/90 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors ${className}`}
+      className={`inline-flex items-center justify-center focus:outline-none transition-colors ${className}`}
     >
       <motion.svg
-        width="22"
-        height="22"
+        width="28"
+        height="28"
         viewBox="0 0 24 24"
         aria-hidden="true"
         initial={false}
         animate={open ? "open" : "closed"}
-        className="text-slate-800"
+        className="text-slate-900"
       >
         <motion.line
           x1="3"
@@ -32,8 +38,8 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
           x2="21"
           y2="6"
           stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
+          strokeWidth="2"
+          strokeLinecap="square"
           variants={{
             closed: { translateY: 0, rotate: 0, x1: 3, x2: 21 },
             open: { translateY: 6, rotate: 45, x1: 5, x2: 19 },
@@ -47,8 +53,8 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
           x2="21"
           y2="12"
           stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
+          strokeWidth="2"
+          strokeLinecap="square"
           variants={{
             closed: { opacity: 1, x1: 3, x2: 21 },
             open: { opacity: 0, x1: 12, x2: 12 },
@@ -61,8 +67,8 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
           x2="21"
           y2="18"
           stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
+          strokeWidth="2"
+          strokeLinecap="square"
           variants={{
             closed: { translateY: 0, rotate: 0, x1: 3, x2: 21 },
             open: { translateY: -6, rotate: -45, x1: 5, x2: 19 },
@@ -75,33 +81,28 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   );
 }
 
-/** * 簡潔購物車 Icon（含數量徽章）
- * 修改：接收 isScrolled 參數，根據狀態切換背景與圖示顏色 
+/** * 購物車按鈕 
+ * 風格：深色 Icon (適配白底)
  */
-function CartButton({ count = 0, onClick, isScrolled }) {
+function CartButton({ count = 0, onClick }) {
   return (
     <Link
       href="/cart"
       type="button"
       onClick={onClick}
-      aria-label={`購物車，內有 ${count} 件商品`}
-      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors duration-300 ${
-        isScrolled
-          ? "bg-white/90 hover:bg-white text-slate-800" // 滾動後：白底深色字
-          : "bg-transparent hover:bg-white/20 text-white" // 置頂時：透明底白色字
-      }`}
+      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-800 hover:bg-slate-100 transition-colors"
     >
       <svg
-        width="20"
-        height="20"
+        width="22"
+        height="22"
         viewBox="0 0 24 24"
-        className="currentColor" // 移除 text-slate-800，改用 currentColor 繼承父層顏色
+        className="currentColor"
       >
         <path
           d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.6"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -112,11 +113,10 @@ function CartButton({ count = 0, onClick, isScrolled }) {
         {count > 0 && (
           <motion.span
             key="badge"
-            initial={{ scale: 0, opacity: 0, y: -4 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0, opacity: 0, y: -4 }}
-            transition={{ type: "spring", stiffness: 320, damping: 18 }}
-            className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-rose-500 px-1.5 text-center text-[11px] font-semibold leading-5 text-white shadow-sm"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-rose-600 px-1.5 text-center text-[10px] font-bold leading-5 text-white shadow-sm"
           >
             {count > 99 ? "99+" : count}
           </motion.span>
@@ -126,7 +126,9 @@ function CartButton({ count = 0, onClick, isScrolled }) {
   );
 }
 
-/** Mobile Drawer（<= md） */
+/** * 手機版側邊選單 (Mobile Drawer)
+ * 顯示於 md (768px) 以下
+ */
 function MobileDrawer({
   open,
   onClose,
@@ -135,7 +137,6 @@ function MobileDrawer({
   onLogin,
   onLogout,
   navLinks = [],
-  hotItems = [],
   cartCount = 0,
 }) {
   const panelRef = useRef(null);
@@ -153,6 +154,7 @@ function MobileDrawer({
     <AnimatePresence>
       {open && (
         <>
+          {/* 背景遮罩 */}
           <motion.div
             key="mb-overlay"
             className="fixed inset-0 z-[1199] bg-black/40 backdrop-blur-sm md:hidden"
@@ -163,13 +165,11 @@ function MobileDrawer({
             onClick={onClose}
           />
 
+          {/* 側邊欄本體 */}
           <motion.aside
             key="mb-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-label="主選單"
             ref={panelRef}
-            className="fixed left-0 top-0 z-[1200] flex h-full w-[100%] max-w-sm flex-col bg-white shadow-2xl md:hidden"
+            className="fixed left-0 top-0 z-[1200] flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl md:hidden"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
@@ -177,203 +177,69 @@ function MobileDrawer({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b px-4 py-3 bg-white">
-              <div className="flex items-center gap-2">
-                <img
-                  src="/images/logo-04.png"
-                  alt="LOGO"
-                  className="h-7 w-auto"
-                />
-                <span className="text-sm text-slate-500">保健食品｜UFLOW</span>
-              </div>
+            <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
+              <img
+                src="/images/logo-04.png"
+                alt="LOGO"
+                className="h-8 w-auto"
+              />
               <MenuToggleButton open onClick={onClose} className="h-9 w-9" />
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Search */}
-              <div className="px-4 py-3 border-b">
-                <label className="sr-only" htmlFor="mb-search">
-                  搜尋
-                </label>
-                <div className="flex items-center rounded-xl border px-3 py-2">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    className="mr-2 text-slate-500"
-                  >
-                    <path
-                      d="M21 21l-4.3-4.3M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <input
-                    id="mb-search"
-                    className="w-full bg-transparent text-[15px] outline-none placeholder:text-slate-400"
-                    placeholder="搜尋商品/內容…"
-                  />
-                </div>
-              </div>
-
-              {/* Nav links */}
-              <nav className="px-2 py-2">
+            <div className="flex-1 overflow-y-auto py-2">
+              <nav className="px-2">
                 {navLinks.map((it) => (
                   <Link
                     key={it.href}
                     href={it.href}
                     onClick={onClose}
-                    className="block rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                    className="block rounded-lg px-4 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
                   >
                     {it.label}
                   </Link>
                 ))}
               </nav>
 
-              {/* 購物車與會員區塊 */}
-              <div className="mx-4 my-2 border-t border-slate-200" />
-              <nav className="px-2 py-1">
+              {/* Mobile Cart/Account Links */}
+              <div className="mt-4 px-2 border-t pt-4">
                 <Link
                   href="/cart"
                   onClick={onClose}
-                  className="flex items-center justify-between rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      className="text-slate-700"
-                    >
-                      <path
-                        d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle cx="9" cy="20" r="1.5" fill="currentColor" />
-                      <circle cx="17" cy="20" r="1.5" fill="currentColor" />
-                    </svg>
-                    <span>購物車</span>
-                  </div>
-                  {cartCount > 0 && (
-                    <span className="min-w-[20px] rounded-full bg-rose-500 px-2 py-0.5 text-center text-xs font-semibold leading-none text-white">
-                      {cartCount > 99 ? "99+" : cartCount}
-                    </span>
-                  )}
+                  <span className="font-medium text-slate-800">
+                    購物車 ({cartCount})
+                  </span>
                 </Link>
                 <Link
-                  href="/account"
+                  href={isLoggedIn ? "/account" : "/login"}
                   onClick={onClose}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-lg"
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    className="text-slate-700"
-                  >
-                    <path
-                      d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 9a7 7 0 0 0-14 0"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span>會員資訊</span>
+                  <span className="font-medium text-slate-800">
+                    {isLoggedIn ? "會員中心" : "登入/註冊"}
+                  </span>
                 </Link>
-                <Link
-                  href="/benefits"
-                  onClick={onClose}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    className="text-slate-700"
-                  >
-                    <path
-                      d="M12 3l2.09 4.24L19 8l-3.5 3.4L16.18 17 12 14.8 7.82 17 9 11.4 5 8l4.91-.76L12 3z"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>會員福利</span>
-                </Link>
-              </nav>
-
-              {/* Hot items（簡版） */}
-              {hotItems?.length > 0 && (
-                <div className="px-4 pt-3 pb-3">
-                  <h3 className="px-1 pb-2 text-sm font-semibold tracking-wide text-slate-500">
-                    熱銷產品
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {hotItems.slice(0, 6).map((it) => (
-                      <Link
-                        key={it.title}
-                        href={it.href}
-                        onClick={onClose}
-                        className="group overflow-hidden rounded-lg border"
-                      >
-                        <div className="aspect-[4/3] overflow-hidden">
-                          <img
-                            src={it.imageUrl}
-                            alt={it.title}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="p-2">
-                          <p className="line-clamp-2 text-xs font-medium text-slate-800">
-                            {it.title}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Account actions (Footer) */}
-            <div className="mt-auto border-t px-4 py-3">
-              {isLoggedIn ? (
+            {/* Login Status Footer */}
+            {isLoggedIn && (
+              <div className="border-t p-4 bg-slate-50">
                 <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-800">
-                      {user?.name || "會員"}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {user?.email || "member@example.com"}
-                    </p>
-                  </div>
+                  <span className="text-sm text-slate-600 truncate">
+                    {user?.name}
+                  </span>
                   <button
                     onClick={onLogout}
-                    className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-100"
+                    className="text-sm text-rose-500 font-medium"
                   >
                     登出
                   </button>
                 </div>
-              ) : (
-                <button
-                  onClick={onLogin}
-                  className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
-                >
-                  會員登入
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </motion.aside>
         </>
       )}
@@ -381,20 +247,96 @@ function MobileDrawer({
   );
 }
 
+/** * 桌面版會員選單 (User Menu)
+ */
+function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group"
+      >
+        <span className="text-[13px] font-bold tracking-wide">
+          {isLoggedIn ? user.name || "會員" : "會員登入"}
+        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          className={`transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          }`}
+        >
+          <path
+            d="M6 9l6 6 6-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="absolute right-0 top-full mt-3 w-48 rounded-lg border border-slate-100 bg-white shadow-xl z-[1500] p-1"
+            onMouseLeave={() => setOpen(false)}
+          >
+            {!isLoggedIn ? (
+              <button
+                onClick={onLogin}
+                className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-50 rounded-md font-medium text-slate-700"
+              >
+                登入 / 註冊
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/account"
+                  className="block px-4 py-2 text-sm hover:bg-slate-50 rounded-md font-medium text-slate-700"
+                >
+                  我的帳戶
+                </Link>
+                <button
+                  onClick={onLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-md font-medium"
+                >
+                  登出
+                </button>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ============================================================================
+// 主應用程式組件
+// ============================================================================
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const openerRef = useRef(null);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
   const [cartCount, setCartCount] = useState(2);
-
-  // 1. 滾動偵測狀態
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
+  // 1. Auth 邏輯 (保持您的原始邏輯)
   const refreshAuth = useCallback(async () => {
     try {
       const r = await fetch("/api/account/profile", {
@@ -422,35 +364,21 @@ export default function App() {
 
   useEffect(() => {
     refreshAuth();
-    const onFocus = () => refreshAuth();
-    const onVis = () => document.visibilityState === "visible" && refreshAuth();
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [refreshAuth]);
+  }, [pathname, refreshAuth]);
 
-  // 2. 監聽滾動事件
+  // 2. 滾動偵測 (用於陰影切換)
   useEffect(() => {
-    const handleScroll = () => {
-      // 只要滾動超過 10px 就視為 scrolled
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
-    // 初始化檢查
     handleScroll();
-
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 3. 鎖定捲軸 (當選單開啟時)
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && closeMenu();
     window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = menuOpen ? "hidden" : "";
-    if (!menuOpen && openerRef.current) openerRef.current.focus?.();
     return () => {
       window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
@@ -469,8 +397,6 @@ export default function App() {
       window.location.reload();
     }
   };
-
-  const openCart = () => {};
 
   const hotItems = [
     {
@@ -491,165 +417,156 @@ export default function App() {
   ];
 
   const navLinks = [
-    { label: "首頁", href: "/" },
+    { label: "關於我們", href: "/about" },
     { label: "品牌資訊", href: "/brand" },
     { label: "熱銷產品", href: "/products" },
-    { label: "客戶分析(暫時)", href: "/admin/members" },
     { label: "保健知識", href: "/blog" },
-    { label: "關於我們", href: "/about" },
     { label: "聯絡我們", href: "/contact" },
   ];
 
-  const pathname = usePathname();
-  useEffect(() => {
-    refreshAuth();
-  }, [pathname, refreshAuth]);
-
-  /**
-   * 根據滾動狀態設定導覽列文字顏色
-   * 滾動後：深灰色 (#575656)
-   * 置頂時：白色 (text-white)
-   */
-  const navTextColor = isScrolled
-    ? "text-[#575656]"
-    : "text-white hover:text-white/80 drop-shadow-sm";
-
   return (
-    // 3. 外層容器：根據 isScrolled 切換背景（白底 / 透明）
-    <div
-      className={`sticky top-0 z-[1000] w-full transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/95 shadow-sm backdrop-blur-md"
-          : "bg-transparent shadow-none"
-      }`}
-    >
-      {/* Header Top Bar */}
-      {/* 4. 修改 Top Bar: 滾動時淺灰底/深色字；置頂時透明底/白字 */}
-      <div
-        className={`top-navbar py-1 transition-colors duration-300 ${
-          isScrolled
-            ? "bg-slate-50 text-slate-500"
-            : "bg-transparent text-white/90"
+    <>
+      {/* Navbar Container 
+        風格：常駐白底，滾動時陰影加深
+      */}
+      <header
+        className={`sticky top-0 z-[1000] w-full bg-white transition-shadow duration-300 ${
+          isScrolled ? "shadow-md" : "shadow-sm"
         }`}
       >
-        <div className="w-[87%] mx-auto grid grid-cols-2">
-          <div className="text-[13px] font-light tracking-widest transition-colors duration-300">
-            保健食品｜UFLOW
+        <div className="mx-auto flex w-full justify-between px-4 lg:px-8">
+          
+          {/* ====== 左側：LOGO ====== */}
+          <div className="flex items-center py-4">
+            <Link href="/" className="flex items-center gap-3 group">
+              {/* Logo 圖片 */}
+              <div className="relative">
+                <img
+                  src="/images/logo-04.png"
+                  className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                  alt="UFLOW LOGO"
+                />
+              </div>
+              {/* 文字 Logo (模擬 LOGOS 樣式) */}
+              <div className="hidden xl:block">
+                <p className="text-xl font-bold tracking-widest text-slate-900 leading-none">
+                  UFLOW
+                </p>
+                <p className="text-[10px] tracking-[0.2em] text-slate-500 font-serif mt-1">
+                  Enjoy Healthy Life!
+                </p>
+              </div>
+            </Link>
           </div>
-        </div>
-      </div>
 
-      {/* Main Navbar */}
-      <div
-        className={`transition-colors duration-300 ${
-          isScrolled ? "bg-white" : "bg-transparent"
-        }`}
-      >
-        {/* Divider - 滾動後才顯示分隔線 */}
-        <div
-          className={`h-[.5px] w-[87%] bg-gray-200 mx-auto transition-opacity duration-300 ${
-            isScrolled ? "opacity-100" : "opacity-0"
-          }`}
-        ></div>
+          {/* ====== 右側 (Desktop)：雙層結構 ====== */}
+          <div className="hidden md:flex flex-col items-end justify-center py-2">
+            
+            {/* --- 第一排 (Row 1): 上方工具列 + 黃色 CTA --- */}
+            <div className="flex items-center gap-6 mb-3">
+              {/* 聯絡我們 */}
+              <Link
+                href="/contact"
+                className="text-[12px] font-bold text-slate-600 hover:text-black flex items-center gap-1 transition-colors"
+              >
+                聯絡我們
+                <span className="text-[10px]">▼</span>
+              </Link>
 
-        <div className="mx-auto flex py-2 w-[90%] items-center px-4">
-          {/* Left │ 漢堡 + 熱銷產品 */}
-          <div className="flex w-[40%] justify-start items-center gap-2">
+              {/* 品牌家族 */}
+              <div className="flex items-center gap-1 border border-slate-300 rounded-full px-3 py-1 bg-white">
+                <span className="text-[14px]">∞</span>
+                <span className="text-[11px] font-bold text-slate-700">
+                  UFLOW FAMILY
+                </span>
+              </div>
+
+              {/* 🌟 黃色 ONLINE SHOP 按鈕 */}
+              <Link
+                href="/products"
+                className="bg-[#FCD800] hover:bg-[#ffe033] text-black h-[46px] px-8 flex items-center justify-center gap-3 transition-colors relative group overflow-hidden"
+                // 使用 clip-path 模擬一點設計感 (可選)
+                style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }} 
+              >
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[15px] font-extrabold tracking-wider">
+                    ONLINE SHOP
+                  </span>
+                  <span className="text-[10px] font-medium tracking-wide">
+                    熱銷產品情報
+                  </span>
+                </div>
+                {/* 箭頭 Icon */}
+                <div className="bg-white rounded-full w-6 h-6 flex items-center justify-center group-hover:translate-x-1 transition-transform shadow-sm">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </div>
+              </Link>
+            </div>
+
+            {/* --- 第二排 (Row 2): 導覽連結 + 功能按鈕 --- */}
+            <div className="flex items-center gap-8">
+              {/* 導覽連結 */}
+              <nav className="flex items-center">
+                {navLinks.map((link, idx) => (
+                  <React.Fragment key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-[14px] font-bold text-slate-800 hover:text-slate-500 tracking-wider transition-colors px-2 relative group"
+                    >
+                      {link.label}
+                      <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-slate-800 transition-all duration-300 group-hover:w-full"></span>
+                    </Link>
+                    {/* 分隔線 (除了最後一個) */}
+                    {idx !== navLinks.length - 1 && (
+                      <div className="w-[1px] h-3 bg-slate-300 mx-3"></div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </nav>
+
+              {/* 功能區塊 (會員/購物車/漢堡) */}
+              <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
+                <UserMenu
+                  isLoggedIn={isLoggedIn}
+                  user={user}
+                  onLogin={handleLogin}
+                  onLogout={handleLogout}
+                />
+                <CartButton count={cartCount} />
+                <MenuToggleButton
+                  open={menuOpen}
+                  onClick={toggleMenu}
+                  buttonRef={openerRef}
+                  className="ml-2"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ====== Mobile View (md 以下顯示) ====== */}
+          <div className="flex md:hidden items-center gap-3">
+            <CartButton count={cartCount} />
             <MenuToggleButton
               open={menuOpen}
               onClick={toggleMenu}
-              className="h-10 w-10 md:hidden"
               buttonRef={openerRef}
             />
-            {/* 熱銷產品按鈕 - 保持白色底比較顯眼 */}
-            <button
-              type="button"
-              onClick={toggleMenu}
-              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 hidden md:inline-flex"
-            >
-              熱銷產品
-            </button>
-
-            {/* 5. 將所有導覽連結加上 navTextColor 變數，實現顏色切換 */}
-            <Link
-              href="/brand"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              品牌資訊
-            </Link>
-            <Link
-              href="/products"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              熱銷產品
-            </Link>
-            <Link
-              href="/blog"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              保健知識
-            </Link>
-
-            <Link
-              href="/cooperate"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              與我們合作
-            </Link>
-
-            <Link
-              href="/about"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              關於我們
-            </Link>
-
-            <Link
-              href="/contact"
-              className={`text-[14px] mx-3 tracking-wider font-semibold hidden md:inline-block transition-colors duration-300 ${navTextColor}`}
-            >
-              聯絡我們
-            </Link>
-          </div>
-
-          {/* Logo */}
-          <div className="flex w-[20%] justify-center">
-            <Link href="/" className="text-3xl tracking-wider font-normal">
-              {/* 6. Logo 處理：如果是黑色 Logo，置頂時(!isScrolled)加濾鏡變白 
-                     如果是彩色或白色 Logo，可以移除 brightness-0 invert 
-              */}
-              <img
-                src="/images/logo-04.png"
-                className={`w-[70px] transition-all duration-300 ${
-                  !isScrolled ? "brightness-0 invert" : ""
-                }`}
-                alt="LOGO"
-              />
-            </Link>
-          </div>
-
-          {/* Right │ 購物車 + 會員 */}
-          <div className="flex w-[40%] items-center justify-end gap-2">
-            {/* 傳入 isScrolled 以控制右側圖示樣式 */}
-            <CartButton
-              count={cartCount}
-              onClick={openCart}
-              isScrolled={isScrolled}
-            />
-            <div className="hidden md:block">
-              <UserMenu
-                isLoggedIn={isLoggedIn}
-                user={user}
-                onLogin={handleLogin}
-                onLogout={handleLogout}
-                isScrolled={isScrolled}
-              />
-            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ====== 行動版 Drawer（<= md） ====== */}
+      {/* ====== 手機版側邊選單 ====== */}
       <MobileDrawer
         open={menuOpen}
         onClose={closeMenu}
@@ -658,14 +575,14 @@ export default function App() {
         onLogin={handleLogin}
         onLogout={handleLogout}
         navLinks={navLinks}
-        hotItems={hotItems}
         cartCount={cartCount}
       />
 
-      {/* ====== 桌面版 Fullscreen 85vh 面板（>= md） ====== */}
+      {/* ====== Desktop 全螢幕 Mega Menu (從您原始代碼復原) ====== */}
       <AnimatePresence>
         {menuOpen && (
           <>
+            {/* 桌面版遮罩 */}
             <motion.div
               key="overlay"
               className="fixed inset-0 z-[1199] bg-black/40 backdrop-blur-sm hidden md:block"
@@ -675,314 +592,121 @@ export default function App() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={closeMenu}
             />
+            {/* 桌面版下滑面板 */}
             <motion.section
               id="full-mega"
               role="dialog"
               aria-modal="true"
-              className="fixed left-0 top-0 z-[1200] hidden h-[85vh] w-full bg-white md:block"
+              className="fixed left-0 top-0 z-[1200] hidden h-[85vh] w-full bg-white md:block shadow-2xl"
               initial={{ clipPath: "inset(0 0 100% 0)" }}
               animate={{ clipPath: "inset(0 0 0% 0)" }}
               exit={{ clipPath: "inset(0 0 100% 0)" }}
               transition={{ duration: 0.38, ease: [0.2, 0.8, 0.2, 1] }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b px-5 py-4 md:px-8 bg-white">
+              {/* Mega Menu Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b px-8 py-5 bg-white">
                 <div>
-                  <h2 className="text-lg font-semibold tracking-wide">
-                    熱銷產品
+                  <h2 className="text-xl font-bold tracking-wide text-slate-900">
+                    全站導覽
                   </h2>
-                  <p className="mt-0.5 text-sm text-slate-500">UFLOW</p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    探索 UFLOW 的所有商品與服務
+                  </p>
                 </div>
                 <MenuToggleButton
                   open={menuOpen}
                   onClick={closeMenu}
-                  className="h-10 w-10"
+                  className="h-12 w-12"
                 />
               </div>
 
-              <div className="mx-auto h-[calc(85vh-68px)] max-w-[1200px] overflow-y-auto px-5 pb-10 pt-6 md:px-8">
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {hotItems.map((it, i) => (
-                    <motion.div
-                      key={it.title}
-                      initial={{ y: 8, opacity: 0 }}
-                      animate={{
-                        y: 0,
-                        opacity: 1,
-                        transition: { delay: 0.08 + i * 0.04, duration: 0.28 },
-                      }}
-                    >
-                      <Link
-                        href={it.href}
-                        onClick={closeMenu}
-                        className="group block h-full overflow-hidden rounded-lg border border-slate-200 bg-white transition-shadow hover:shadow-lg"
+              {/* Mega Menu Content */}
+              <div className="mx-auto h-[calc(85vh-88px)] max-w-[1200px] overflow-y-auto px-8 pb-10 pt-8">
+                
+                {/* 區塊 1: 熱銷推薦 */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-lg font-bold text-slate-800 border-l-4 border-[#FCD800] pl-3">
+                    熱銷產品推薦
+                  </h3>
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {hotItems.map((it, i) => (
+                      <motion.div
+                        key={it.title}
+                        initial={{ y: 8, opacity: 0 }}
+                        animate={{
+                          y: 0,
+                          opacity: 1,
+                          transition: { delay: 0.1 + i * 0.05, duration: 0.3 },
+                        }}
                       >
-                        <div className="aspect-[4/3] overflow-hidden ">
-                          <img
-                            src={it.imageUrl}
-                            alt={it.title}
-                            className="h-full w-full object-contain transition-transform duration-300 ease-in-out group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-start justify-between">
-                            <span className="text-[15px] font-medium text-slate-800 group-hover:text-slate-900">
-                              {it.title}
-                            </span>
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              className="text-slate-400 transition-colors group-hover:text-slate-600"
-                            >
-                              <path
-                                d="M9 18l6-6-6-6"
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                        <Link
+                          href={it.href}
+                          onClick={closeMenu}
+                          className="group block h-full overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-lg hover:border-slate-200"
+                        >
+                          <div className="aspect-[16/9] w-full overflow-hidden bg-gray-50">
+                            <img
+                              src={it.imageUrl}
+                              alt={it.title}
+                              className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                            />
                           </div>
-                          <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                            人氣商品快速導覽，一鍵前往詳細頁面。
-                          </p>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
+                          <div className="p-4">
+                            <div className="flex items-start justify-between">
+                              <span className="text-[16px] font-bold text-slate-900 group-hover:text-[#D4B200] transition-colors">
+                                {it.title}
+                              </span>
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                className="text-slate-300 transition-colors group-hover:text-[#FCD800]"
+                              >
+                                <path
+                                  d="M9 18l6-6-6-6"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+                            <p className="mt-2 line-clamp-2 text-sm text-slate-500">
+                              人氣商品快速導覽，一鍵前往詳細頁面。
+                            </p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* 區塊 2: 快速連結列表 (範例) */}
+                <div className="grid grid-cols-4 gap-8 pt-6 border-t border-slate-100">
+                    <div>
+                        <h4 className="font-bold text-slate-900 mb-3">關於我們</h4>
+                        <ul className="space-y-2 text-sm text-slate-600">
+                            <li><Link href="/brand" onClick={closeMenu} className="hover:text-black">品牌故事</Link></li>
+                            <li><Link href="/team" onClick={closeMenu} className="hover:text-black">經營團隊</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-slate-900 mb-3">客戶服務</h4>
+                        <ul className="space-y-2 text-sm text-slate-600">
+                            <li><Link href="/qa" onClick={closeMenu} className="hover:text-black">常見問題</Link></li>
+                            <li><Link href="/shipping" onClick={closeMenu} className="hover:text-black">運送政策</Link></li>
+                        </ul>
+                    </div>
+                     {/* 更多連結... */}
+                </div>
+
               </div>
             </motion.section>
           </>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-/** * 會員按鈕：桌面版
- * 修改：接收 isScrolled 參數，根據狀態切換背景與文字顏色
- */
-function UserMenu({ isLoggedIn, user, onLogin, onLogout, isScrolled }) {
-  const [open, setOpen] = useState(false);
-
-  const initials =
-    user?.name
-      ?.trim()
-      ?.split(/\s+/)
-      ?.map((w) => w[0])
-      .join("")
-      .slice(0, 2)
-      ?.toUpperCase() || "U";
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const handleRegister = () => {
-    window.location.href = "/register";
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className={`inline-flex h-10 items-center gap-2 rounded-full px-2.5 pl-2 pr-3 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors duration-300 ${
-          isScrolled
-            ? "bg-white hover:bg-gray-50" // 滾動後：白底
-            : "bg-transparent hover:bg-white/20" // 置頂時：透明底
-        }`}
-      >
-        {isLoggedIn && user?.avatarUrl ? (
-          <img
-            src={user.avatarUrl}
-            alt={user.name || "會員"}
-            className="h-7 w-7 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-[11px] font-semibold tracking-wide text-white">
-            {initials}
-          </span>
-        )}
-
-        <span
-          className={`hidden text-sm sm:inline transition-colors duration-300 ${
-            isScrolled ? "text-slate-700" : "text-white"
-          }`}
-        >
-          會員
-        </span>
-
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          className={`transition-all duration-300 ${open ? "rotate-180" : ""} ${
-            isScrolled ? "text-slate-500" : "text-white"
-          }`}
-        >
-          <path
-            d="M6 9l6 6 6-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="user-menu"
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 4, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute right-0 z-[1600] mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
-            onMouseLeave={() => setOpen(false)}
-          >
-            <div className="px-4 py-3">
-              <p className="text-[13px] text-slate-500">
-                {isLoggedIn ? "已登入會員" : "尚未登入"}
-              </p>
-              <p className="truncate text-sm font-medium text-slate-800">
-                {isLoggedIn
-                  ? user?.email || "member@example.com"
-                  : "登入即可享有會員權益"}
-              </p>
-            </div>
-
-            <div className="border-t border-slate-200" />
-
-            <nav className="p-1">
-              <Link
-                href="/benefits"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => setOpen(false)}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path
-                    d="M12 3l2.09 4.24L19 8l-3.5 3.4L16.18 17 12 14.8 7.82 17 9 11.4 5 8l4.91-.76L12 3z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                會員福利
-              </Link>
-
-              <Link
-                href="/account"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => setOpen(false)}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path
-                    d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 9a7 7 0 0 0-14 0"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                會員資訊
-              </Link>
-
-              <div className="my-1 border-t border-slate-200" />
-
-              {!isLoggedIn && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      onLogin();
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path
-                        d="M10 7v-2a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2M14 12H3m0 0 3-3m-3 3 3 3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    登入
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      handleRegister();
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-indigo-600 hover:bg-indigo-50"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path
-                        d="M12 5v14M5 12h14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    註冊
-                  </button>
-                </>
-              )}
-
-              {isLoggedIn && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    onLogout();
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    className="text-rose-600"
-                  >
-                    <path
-                      d="M10 7v-2a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2M14 12H3m0 0 3-3m-3 3 3 3"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  登出
-                </button>
-              )}
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    </>
   );
 }
