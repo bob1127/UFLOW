@@ -3,16 +3,10 @@ import Content from "./Content";
 
 export default function Footer() {
   return (
-    <div
-      id="dark-section"
-      className="relative h-[500px] sm:h-[500px] lg:h-[440px]"
-      style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
-    >
-      <div className="relative  h-[calc(100vh+500px)] sm:h-[calc(100vh+500px)] lg:h-[calc(100vh+440px)] -top-[100vh]">
-        <div className=" h-[500px] sm:h-[800px] bottom-0 sticky top-[calc(100vh-500px)]  sm:top-[calc(100vh-800px)]">
-          <Content />
-        </div>
-      </div>
+    // 移除所有 sticky, h-[...], clipPath 等複雜設定
+    // 改為標準的相對定位容器，讓高度由內容 (Content) 自動撐開
+    <div className="relative w-full z-10 bg-[#EDEEEF]">
+      <Content />
     </div>
   );
 }
