@@ -50,6 +50,9 @@ const FLAVOR_COLORS = [
 ];
 
 export default function ProductClient({ product }) {
+  // 🔍 [Debug] 1. 檢查最源頭傳進來的商品資料
+  console.log("🚀 [Debug] ProductClient 收到商品資料:", product);
+
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
@@ -79,6 +82,8 @@ export default function ProductClient({ product }) {
     const attr = product.attributes.find((a) =>
       ["口味", "Flavor", "Flavors"].includes(a.name)
     );
+    // 🔍 [Debug] 2. 檢查口味選項
+    console.log("🍦 [Debug] 解析出的口味選項:", attr?.options || []);
     return attr?.options || [];
   }, [product]);
 
@@ -88,19 +93,30 @@ export default function ProductClient({ product }) {
     const attr = product.attributes.find((a) =>
       ["優惠方案", "規格", "Size", "Package"].includes(a.name)
     );
+    // 🔍 [Debug] 3. 檢查規格選項
+    console.log("📦 [Debug] 解析出的優惠方案選項:", attr?.options || []);
     return attr?.options || [];
   }, [product]);
 
   // 初始值設定
   useEffect(() => {
-    if (flavorOptions.length > 0 && !flavor) setFlavor(flavorOptions[0]);
-    if (pkgOptions.length > 0 && !pkg) setPkg(pkgOptions[0]);
+    if (flavorOptions.length > 0 && !flavor) {
+      console.log("🔄 [Debug] 自動預設口味:", flavorOptions[0]);
+      setFlavor(flavorOptions[0]);
+    }
+    if (pkgOptions.length > 0 && !pkg) {
+      console.log("🔄 [Debug] 自動預設規格:", pkgOptions[0]);
+      setPkg(pkgOptions[0]);
+    }
   }, [flavorOptions, pkgOptions, flavor, pkg]);
 
   // ─────────────────────────────────────────────────────────────
   // 價格連動邏輯 (根據選擇的方案更新顯示價格)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    // 🔍 [Debug] 4. 開始計算價格，目前的 pkg 是什麼？
+    console.log("💰 [Debug] 觸發價格計算，當前選中規格(pkg):", pkg);
+
     if (!pkg) {
       setDisplayPrice(Number(product.price || 0));
       return;
@@ -111,12 +127,18 @@ export default function ProductClient({ product }) {
 
     if (pkg.includes("1盒") || pkg.includes("新品")) {
       newPrice = 1380;
+      console.log("✅ [Debug] 匹配到 1盒/新品，價格設為:", newPrice);
     } else if (pkg.includes("買三送一") || pkg.includes("4盒")) {
       newPrice = 4140;
+      console.log("✅ [Debug] 匹配到 買三送一/4盒，價格設為:", newPrice);
     } else if (pkg.includes("6盒")) {
       newPrice = 5940;
+      console.log("✅ [Debug] 匹配到 6盒，價格設為:", newPrice);
     } else if (pkg.includes("12盒")) {
       newPrice = 9600;
+      console.log("✅ [Debug] 匹配到 12盒，價格設為:", newPrice);
+    } else {
+      console.log("⚠️ [Debug] 未匹配到任何特殊價格規則，使用預設價格:", newPrice);
     }
 
     setDisplayPrice(newPrice);
@@ -133,16 +155,22 @@ export default function ProductClient({ product }) {
 
   function handleBuyNow() {
     const optionVariant = [flavor, pkg].filter(Boolean).join(" / ");
-    addItem({
+    
+    const cartItem = {
       id: product.id,
       wcProductId: product.id,
       name: `${product.name}｜${product.subname || ""}`,
-      price: displayPrice, // 使用當前計算出的優惠價
+      price: displayPrice, 
       image: product.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: qty,
       variant: optionVariant,
-    });
+    };
+
+    // 🔍 [Debug] 5. 按下購買按鈕，檢查加入購物車的物件
+    console.log("🛒 [Debug] 加入購物車的資料:", cartItem);
+
+    addItem(cartItem);
     openCart();
     setShowAdded(true);
   }
@@ -258,7 +286,10 @@ export default function ProductClient({ product }) {
                     return (
                       <button
                         key={opt}
-                        onClick={() => setPkg(opt)}
+                        onClick={() => {
+                          console.log("👆 [Debug] 使用者點擊規格:", opt);
+                          setPkg(opt);
+                        }}
                         className={`relative flex items-center  justify-between p-3 rounded-lg border transition-all text-left ${
                           isSelected
                             ? "bg-white border-rose-500 shadow-md ring-1 ring-rose-500 z-10"
@@ -320,6 +351,10 @@ export default function ProductClient({ product }) {
               /* 當後台尚未讀取到屬性時的備用顯示 (或除錯提示) */
               <div className="p-4 bg-gray-50 text-gray-400 text-sm mb-6 rounded border border-gray-100">
                 載入規格中... (若持續顯示，請確認後台屬性名稱包含「優惠方案」)
+                {/* 🔍 [Debug] 顯示為什麼沒抓到 */}
+                <div className="text-xs text-red-500 mt-2">
+                  [Debug] 無法找到規格選項，請檢查 product.attributes
+                </div>
               </div>
             )}
 

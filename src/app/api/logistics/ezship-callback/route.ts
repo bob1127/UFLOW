@@ -1,36 +1,33 @@
+// app/api/logistics/ezship-callback/route.ts
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    
-    // ezShip 選完店後會傳回來的欄位
-    const storeName = formData.get("stName"); // 門市名稱
-    const storeId = formData.get("stCode");   // 門市店號
-    const storeAddr = formData.get("stAddr"); // 門市地址
-    const storeType = formData.get("stType"); // 門市類別 (FM, OK, LY 或 7-11 相關標記)
 
-    // 設定回傳導向網址 (回到購物車結帳頁 Step 2)
+    // ezShip 回傳欄位
+    const storeName = formData.get("stName");
+    const storeId = formData.get("stCode");
+    const storeAddr = formData.get("stAddr");
+
+    // 設定回傳網址 (使用 env 或 fallback)
+    // 注意：如果您的網站有 HTTPS，建議用 process.env.NEXT_PUBLIC_BASE_URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const redirectUrl = new URL("/cart", baseUrl); 
-    
-    // 將參數帶入 URL 讓前端 useEffect 接收
+    const redirectUrl = new URL("/cart", baseUrl);
+
+    // ✅ 統一參數名稱 (跟前端 useEffect 對接)
     redirectUrl.searchParams.set("step", "2");
     redirectUrl.searchParams.set("storeName", storeName as string);
     redirectUrl.searchParams.set("storeId", storeId as string);
     redirectUrl.searchParams.set("storeAddr", storeAddr as string);
-    
-    // 根據回傳的類型判斷顯示名稱
-    let method = "CVS";
-    if (storeType === "FM") method = "FAMI";
-    if (storeType === "7") method = "UNIMART";
 
-    redirectUrl.searchParams.set("shipMethod", method);
+    // ✅ 關鍵修改：加入 provider 參數
+    // 這樣前端就知道這是 "ezShip" 回來的，會保持在 "全家/萊爾富/OK" 的按鈕狀態
+    redirectUrl.searchParams.set("provider", "ezship");
 
-    // 回傳 303 Redirect 到結帳頁
-    return NextResponse.redirect(redirectUrl.toString(), 303);
+    return NextResponse.redirect(redirectUrl.toString(), 302);
   } catch (error) {
     console.error("ezShip Callback Error:", error);
-    return NextResponse.json({ error: "ezShip Map callback failed" }, { status: 500 });
+    return NextResponse.redirect(new URL("/cart?error=ezship_failed", req.url));
   }
 }
