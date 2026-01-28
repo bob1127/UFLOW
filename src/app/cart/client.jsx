@@ -736,7 +736,7 @@ function CheckoutStep({
               <span>{pricing.shipping === 0 ? "免運" : currency(pricing.shipping)}</span>
             </div>
             <div className="flex justify-between text-base font-black pt-3 border-t border-gray-100 mt-2">
-              <span>總金額</span>
+              <span>總金額.</span>
               <span>{currency(pricing.total)}</span>
             </div>
           </div>
