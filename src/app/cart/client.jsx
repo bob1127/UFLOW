@@ -1023,7 +1023,7 @@ export default function CartPage() {
     <Suspense
       fallback={
         <div className="h-screen flex items-center justify-center font-black tracking-widest text-gray-200">
-          UFLOW
+          UFLOW.
         </div>
       }
     >
