@@ -1,4 +1,3 @@
-// components/cart/CartSheet.tsx
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,11 +11,9 @@ import {
   keyOf,
 } from "@/lib/cartStore";
 
-const jpy = new Intl.NumberFormat("ja-JP", {
-  style: "currency",
-  currency: "JPY",
-  maximumFractionDigits: 0,
-});
+// ✅ 修正：改用台幣格式
+const currency = (n: number) =>
+  `NT$${(Math.round(n || 0)).toLocaleString("zh-TW")}`;
 
 export default function CartSheet() {
   const open = useCartStore(selectOpen);
@@ -27,7 +24,9 @@ export default function CartSheet() {
   const inc = useCartStore((s) => s.inc);
   const dec = useCartStore((s) => s.dec);
   const remove = useCartStore((s) => s.removeItem);
-  const clear = useCartStore((s) => s.clear);
+  
+  // ✅ 修正：Store 中已改名為 clearCart
+  const clearCart = useCartStore((s) => s.clearCart);
 
   const router = useRouter();
 
@@ -35,9 +34,11 @@ export default function CartSheet() {
   const goCheckout = () => {
     if (!items.length) return;
 
+    // 雖然 CartPage 會直接讀取 Zustand Store，
+    // 但保留這段 sessionStorage 邏輯作為備份或是給其他頁面參考並無大礙
     const mapped = items.map((it) => ({
       id: it.id,
-      wcProductId: (it as any).wcProductId ?? it.id,
+      wcProductId: it.wcProductId ?? it.id, // ✅ Store Type 已更新，不需要 (as any)
       title: it.name,
       variant: it.options
         ? Object.values(it.options).filter(Boolean).join(" / ")
@@ -80,14 +81,14 @@ export default function CartSheet() {
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 260, damping: 28 }}
           >
-            {/* Header: 修改處 */}
+            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-white z-10">
               <div className="font-bold text-lg">購物車</div>
 
               <div className="flex items-center gap-3">
                 {/* 清空按鈕 */}
                 <button
-                  onClick={clear}
+                  onClick={clearCart} // ✅ 修正：使用 clearCart
                   className="text-sm text-slate-500 hover:text-red-600 transition px-2"
                 >
                   清空
@@ -142,7 +143,7 @@ export default function CartSheet() {
                       <div className="relative w-[72px] h-[72px] flex-shrink-0">
                         <Image
                           src={it.image}
-                          alt={it.name}
+                          alt={it.name || "Product Image"} // ✅ 修正：補上 alt fallback
                           fill
                           className="rounded-lg object-cover"
                         />
@@ -153,7 +154,7 @@ export default function CartSheet() {
                       {it.options && (
                         <div className="text-xs text-slate-500 mt-0.5">
                           {Object.entries(it.options)
-                            .map(([k, v]) => `${v}`) // 簡化顯示，只顯示值
+                            .map(([key, value]) => `${value}`) // 簡化顯示
                             .join(" / ")}
                         </div>
                       )}
@@ -179,7 +180,7 @@ export default function CartSheet() {
                     </div>
                     <div className="flex flex-col items-end justify-between">
                       <div className="font-semibold text-sm">
-                        {jpy.format(it.price * it.qty)}
+                        {currency(it.price * it.qty)} {/* ✅ 修正：使用台幣格式 */}
                       </div>
                       <button
                         onClick={() => remove(k)}
@@ -198,7 +199,7 @@ export default function CartSheet() {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-slate-600 font-medium">小計</span>
                 <span className="text-xl font-bold tracking-tight">
-                  {jpy.format(subtotal)}
+                  {currency(subtotal)} {/* ✅ 修正：使用台幣格式 */}
                 </span>
               </div>
               <button
