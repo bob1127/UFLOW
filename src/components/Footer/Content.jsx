@@ -95,17 +95,19 @@ const Section2 = () => {
 
           {/* Section 3: ACTIVITY LOGOS */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
+        {/* Section 3: HEALTHY UFLOW (已修改為保健食品相關) */}
+          <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
           <FooterSection 
-            title="ACTIVITY UFLOW" 
+            title="HEALTHY UFLOW" 
             links={[
-              { label: "UFLOW LAND", href: "/land" },
-              { label: "UFLOW PARK", href: "/park" },
-              { label: "露營場.com", href: "/camp" },
-              { label: "豆知識", href: "/tips" },
-              { label: "露營飯", href: "/food" },
-              { label: "活動時間軸", href: "/events" },
-              { label: "玩樂大師", href: "/masters" },
-              { label: "UFLOW RADIO", href: "/radio" },
+              { label: "保健小知識", href: "/health-tips" },
+              { label: "益生菌百科", href: "/probiotics-info" },
+              { label: "營養補充指南", href: "/nutrition-guide" },
+              { label: "維他菌合生元", href: "/products/probiotics" },
+              { label: "鎂鎂香蜂草", href: "/products/magnesium" },
+              { label: "SGS 檢驗報告", href: "/reports" },
+              { label: "常見問題 FAQ", href: "/faq" },
+              { label: "健康生活誌", href: "/wellness-blog" },
             ]} 
           />
         </div>

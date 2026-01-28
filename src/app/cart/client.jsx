@@ -786,36 +786,65 @@ function CartContent() {
   const [shipMethod, setShipMethod] = useState("000");
   const [payMethod, setPayMethod] = useState("card");
 
-  // ✅ 3. 初始化：將 Store 中的 items 同步到本地 state
+ // ✅ 整合初始化：優先讀取 URL，其次才是 sessionStorage
   useEffect(() => {
+    // 1. 處理購物車商品
     setItems(storeItems);
-    setItemsLoaded(true);
-  }, [storeItems]);
 
-  useEffect(() => {
-    const s = searchParams.get("step");
-    const savedStep = sessionStorage.getItem("checkout_step");
-    if (s) setStep(parseInt(s, 10));
-    else if (savedStep) setStep(parseInt(savedStep, 10));
+    // 2. 處理網址參數 (綠界/ezShip 回傳)
+    const sId = searchParams.get("storeId");
+    const sName = searchParams.get("storeName");
+    const sAddr = searchParams.get("storeAddr");
+    const prov = searchParams.get("provider");
+    const urlStep = searchParams.get("step");
 
-    const savedCoupon = sessionStorage.getItem("cart_coupon");
-    if (savedCoupon) {
-      try { const parsed = JSON.parse(savedCoupon); if (parsed?.code) setAppliedCoupon(parsed); } catch {}
+    if (sId && sName) {
+      // 🌟 如果 URL 有門市資料，以此為準
+      setShipMethod(prov === "711" ? "711" : "CVS");
+      setAddr(prev => ({
+        ...prev,
+        line1: `${sName} (${sId})`,
+        storeId: sId,
+        storeName: sName,
+        storeAddr: sAddr || "",
+      }));
+      setStep(2);
+      log("URL Store Data Applied", { sId, sName });
+    } else {
+      // 🌟 URL 沒資料，才嘗試讀取暫存
+      const savedAddr = sessionStorage.getItem("checkout_addr");
+      if (savedAddr) { try { setAddr(JSON.parse(savedAddr)); } catch {} }
+
+      const savedShip = sessionStorage.getItem("checkout_shipMethod");
+      if (savedShip) setShipMethod(savedShip);
+
+      const savedStep = sessionStorage.getItem("checkout_step");
+      if (urlStep) setStep(parseInt(urlStep, 10));
+      else if (savedStep) setStep(parseInt(savedStep, 10));
     }
 
-    // 恢復使用者輸入的聯絡資訊 (從 sessionStorage)
+    // 恢復其他共用資訊
     const savedContact = sessionStorage.getItem("checkout_contact");
     if (savedContact) { try { setContact(JSON.parse(savedContact)); } catch {} }
 
-    const savedAddr = sessionStorage.getItem("checkout_addr");
-    if (savedAddr) { try { setAddr(JSON.parse(savedAddr)); } catch {} }
-
-    const savedShip = sessionStorage.getItem("checkout_shipMethod");
-    if (savedShip) setShipMethod(savedShip);
-
     const savedPay = sessionStorage.getItem("checkout_payMethod");
     if (savedPay) setPayMethod(savedPay);
-  }, [searchParams]);
+
+    const savedCoupon = sessionStorage.getItem("cart_coupon");
+    if (savedCoupon) { try { const parsed = JSON.parse(savedCoupon); if (parsed?.code) setAppliedCoupon(parsed); } catch {} }
+
+    setItemsLoaded(true);
+  }, [searchParams, storeItems]);
+
+  // ✅ 監聽狀態並同步回暫存 (僅在載入完成後執行)
+  useEffect(() => {
+    if (!itemsLoaded) return;
+    sessionStorage.setItem("checkout_contact", JSON.stringify(contact));
+    sessionStorage.setItem("checkout_addr", JSON.stringify(addr));
+    sessionStorage.setItem("checkout_shipMethod", shipMethod);
+    sessionStorage.setItem("checkout_payMethod", payMethod);
+    sessionStorage.setItem("checkout_step", String(step));
+  }, [itemsLoaded, contact, addr, shipMethod, payMethod, step]);
 
   useEffect(() => {
     if (!itemsLoaded) return;
