@@ -264,7 +264,7 @@ export default function Home() {
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/DSCF7865.jpg"
+                src="/images/DSCF7894.jpg"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
@@ -299,7 +299,7 @@ export default function Home() {
               </div>
               {/* 背景圖片 */}
               <Image
-                src="/images/鎂鎂香峰草-01.jpg"
+                src="/images/DSCF7801.jpg"
                 alt="img"
                 placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"

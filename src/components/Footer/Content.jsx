@@ -122,10 +122,10 @@ const Section2 = () => {
             </h3>
             <div className="flex justify-center gap-6 sm:gap-8">
                <SocialIcon icon={Icons.Instagram} label="Instagram" />
-               <SocialIcon icon={Icons.X} label="X" />
+          
                <SocialIcon icon={Icons.Facebook} label="Facebook" />
                <SocialIcon icon={Icons.YouTube} label="YouTube" />
-               <SocialIcon icon={Icons.TikTok} label="TikTok" />
+           
             </div>
           </div>
 
@@ -154,6 +154,9 @@ const Section2 = () => {
       {/* 底部版權聲明 */}
       <div className="mt-20 text-center text-[10px] text-slate-500 tracking-wider">
         COPYRIGHT © {new Date().getFullYear()} UFLOW CORPORATION. ALL RIGHTS RESERVED.
+      </div>
+            <div className="mt-4 text-center text-[13px] text-slate-500 tracking-wider">
+       Design By <Link className="font-bold  hover:text-stone-900" href='https://www.jeek-webdesign.com.tw' target="_blank">極客網頁設計.Jeek-WebDeisgn</Link>
       </div>
     </footer>
   );

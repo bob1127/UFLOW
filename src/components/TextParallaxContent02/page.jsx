@@ -232,7 +232,7 @@ const TextParallaxContentExample = () => {
                   {/* 主產品圖 */}
                   <div className="absolute z-10 w-[90%] max-w-[600px] drop-shadow-2xl">
                     <Image
-                      src="/images/2491274-cover-Photoroom.png"
+                      src="/images/維他菌-合生元.png"
                       alt="維他菌合生元產品圖"
                       width={800}
                       height={800}
@@ -263,7 +263,7 @@ const TextParallaxContentExample = () => {
               }}
             >
               <Image
-                src="/images/2491274-cover-Photoroom.png"
+                src="/images/DSCF7681.png"
                 alt="天然成分示意"
                 width={1400}
                 height={900}
@@ -377,7 +377,7 @@ const StickyBackground = ({ containerRef }) => {
 
   return (
     <motion.div
-      className="absolute inset-0 bg-[url('https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/promarineCollagen-x6m9vKow.png')] bg-center bg-cover bg-no-repeat"
+      className="absolute inset-0 bg-[url('/images/粉003.png')] bg-center bg-cover bg-no-repeat"
       style={{
         scale,
         y,

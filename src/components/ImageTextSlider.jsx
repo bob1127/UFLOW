@@ -10,34 +10,34 @@ import ImageReveal from "./ImageReveal";
 const data = [
   {
     title: "肽晶芙蓉",
-    subtitle: "營養",
-    price: "KOREDAKE是能夠輕鬆攝取1餐所需的營養",
-    description: "理想的營養平衡，支援容易偏頗的飲食生活。",
+    subtitle: "對美極度要求族群、醫美後保養族群、髮質脆弱族群、經常飲酒族群、",
+    price: "重建17歲の素顏元氣",
+    description: "不用蘋果光 也會有的澎澎自然",
     detail:
-      "打造健康的身體，營養均衡的飲食是必不可少的。 但是，在忙碌的每一天裡好好攝取營養是一件非常困難的事情。 既費力又費時。",
+      "不用打光，肌膚也能自帶澎潤感！UFLOW 肽晶芙蓉專為對美極度要求的妳設計 。嚴選四大國際專利原料：美國微脂體穀胱甘肽提升 200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦光傷害，抑制黑色素 ；搭配 24 小時長效維生素 C 與比利時正矽酸 ，由內而外撐起肌膚的「彈、緊、嫩」。",
     mainImages: [
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fcollections-shakepack.jpg",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fcollections-powder.jpg",
+      "/images/DSCF7850.jpg",
+      "/images/粉色01.png",
     ],
     subImages: [
-      "https://d2w53g1q050m78.cloudfront.net/koredakecojp/uploads/images/bnr-line.png",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fingredients%2Fingredients-selected_pc.jpg",
+      "/images/粉003.png",
+      "/images/DSCF7774.jpg",
     ],
   },
   {
-    title: "SHAKE PACK",
-    subtitle: "講究的風味",
-    price: "第一次15%OFF・第二次以後最多10%OFF",
+    title: "GABA鎂鎂香蜂草",
+    subtitle: "不是一次性「把身體壓下來」，而是陪伴身體，走過一整天的節奏變化。",
+    price: "國際原廠，專利足量",
     description:
-      "「我，像我一樣。」以這個為概念，「不用搖杯」就能喝到美味的單獨包裝型蛋白質「奶昔包含有大量女性1餐所需的33種營養素的大豆植物性健康蛋白，無論何時何地都可以輕鬆飲用 ",
-    detail: "「奶昔包」誕生了！",
+      "節奏管理，不必等臨界線失控 ",
+    detail: "不是失眠才需要，而是為了不過勞的你！UFLOW 獨創「1+1」保養哲學：白天一顆維持專注活力，夜晚一顆溫柔撫慰入眠 。嚴選三大國際頂規原料：韓國專利 GABA 穩定情緒、義大利高吸收鎂幫助代謝、法國香蜂草深層放鬆 。全成分產地、劑量透明公開，無藥性、零依賴，素食可食 。",
     mainImages: [
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-4.jpg",
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-3.jpg",
+      "/images/鎂鎂香峰草-01.jpg",
+      "/images/DSCF7801.jpg",
     ],
     subImages: [
-      "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fproducts%2Fshakepack-2.jpg",
-      "https://d2w53g1q050m78.cloudfront.net/koredakecojp/uploads/images/pages/products/howtodrink.jpg",
+      "/images/三種01.png",
+      "/images/藍色.png",
     ],
   },
 ];

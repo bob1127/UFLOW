@@ -8,7 +8,7 @@ const OPTIONS = { dragFree: true, loop: true };
 const SLIDES = [
   // --- 1. GABA 鎂鎂香蜂草 ---
   {
-    image: "/images/products/sample.png",
+    image: "/images/GABA鎂鎂香蜂草.png",
     title: "GABA 鎂鎂香蜂草",
     shortDescription: "舒緩放鬆，重拾夜間寧靜。",
     description:
@@ -19,7 +19,7 @@ const SLIDES = [
   },
   // --- 2. 維他菌合生元 ---
   {
-    image: "/images/products/sample.png",
+    image: "/images/維他菌-合生元.png",
     title: "次世代維他菌合生元",
     shortDescription: "4大益生菌 + 益生質 + 後生元，全方位保養。",
     description:
@@ -30,8 +30,8 @@ const SLIDES = [
   },
   // --- 3. 冰晶芙蓉 ---
   {
-    image: "/images/products/sample.png",
-    title: "冰晶芙蓉亮妍粉",
+    image: "/images/00912.png",
+    title: "肽晶芙蓉",
     shortDescription: "煥發光采，由內而外的透亮自信。",
     description:
       "專為美麗設計的植萃配方，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",
@@ -39,10 +39,8 @@ const SLIDES = [
     publishDate: "Best Seller",
     region: "Beauty",
   },
-
-  // --- (重複) 1. GABA 鎂鎂香蜂草 ---
-  {
-    image: "/images/products/sample.png",
+ {
+    image: "/images/GABA鎂鎂香蜂草.png",
     title: "GABA 鎂鎂香蜂草",
     shortDescription: "舒緩放鬆，重拾夜間寧靜。",
     description:
@@ -51,9 +49,9 @@ const SLIDES = [
     publishDate: "Hot Sale",
     region: "Global Patents",
   },
-  // --- (重複) 2. 維他菌合生元 ---
+  // --- 2. 維他菌合生元 ---
   {
-    image: "/images/products/sample.png",
+    image: "/images/維他菌-合生元.png",
     title: "次世代維他菌合生元",
     shortDescription: "4大益生菌 + 益生質 + 後生元，全方位保養。",
     description:
@@ -62,10 +60,10 @@ const SLIDES = [
     publishDate: "New Arrival",
     region: "Synbiotics",
   },
-  // --- (重複) 3. 冰晶芙蓉 ---
+  // --- 3. 冰晶芙蓉 ---
   {
-    image: "/images/products/sample.png",
-    title: "冰晶芙蓉亮妍粉",
+    image: "/images/00912.png",
+    title: "肽晶芙蓉",
     shortDescription: "煥發光采，由內而外的透亮自信。",
     description:
       "專為美麗設計的植萃配方，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",

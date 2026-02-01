@@ -1,15 +1,48 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 如果你有用 View Transitions 或其他實驗性功能，保留這裡
+  // experimental: { ... }, 
+
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**",
+        protocol: 'https',
+        hostname: 'inf.fjg.mybluehost.me', // 你的 WP 主機
+      },
+      // 👇 新增以下這三行來支援 WordPress CDN (Jetpack)
+      {
+        protocol: 'https',
+        hostname: 'i0.wp.com',
       },
       {
-        protocol: "http",
-        hostname: "**",
+        protocol: 'https',
+        hostname: 'i1.wp.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'i2.wp.com',
+      },
+      // 👇 原本的其他網域設定保留
+      {
+        protocol: 'https',
+        hostname: 'takidanifudouson.or.jp',
+      },
+      {
+         protocol: 'https',
+         hostname: 'shiroyamakumano-jinja.jp',
+      },
+      {
+         protocol: 'https',
+         hostname: 'coralclub.ru',
+      },
+       {
+         protocol: 'https',
+         hostname: 'ru.coral.club',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      }
     ],
   },
 };

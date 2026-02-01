@@ -76,7 +76,7 @@ export default function SwiperCardAbout({
   })();
 
   return (
-    <div className="w-full mx-auto m-0 p-0">
+    <div className="w-full mx-auto mt-[110px]  p-0">
       {!ratioPadding && (
         <style jsx>{`
           .banner-fixed-height {
@@ -115,12 +115,12 @@ export default function SwiperCardAbout({
          * 2. 加入 md:aspect-[1920/700] (桌機版依照 1920x700 比例)
          * 3. 手機版維持 aspect-[4/3] 或是 aspect-square，以免手機上看圖片變太細長
          */
-        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/850] overflow-hidden"
+        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/800] overflow-hidden"
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           <img
-            src="/images/肽晶芙蓉/重返17歲の元氣-850.png"
+            src="/images/index/slider/重返17歲の元氣.webp"
             className="absolute inset-0 h-full w-full object-cover"
             decoding="async"
             referrerPolicy="no-referrer"

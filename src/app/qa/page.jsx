@@ -15,7 +15,7 @@ export const metadata = {
     "裝修施工時間",
   ],
   icons: {
-    icon: "/images/logo/company-logo.ico",
+    icon: "/images/logo/uflow.ico",
   },
   openGraph: {
     type: "website",

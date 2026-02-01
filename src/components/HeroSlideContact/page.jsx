@@ -18,9 +18,9 @@ const Photos = () => {
 
   // ✅ 指定圖片路徑
   const imagePaths = [
-    "https://d2w53g1q050m78.cloudfront.net/koredakecojp/uploads/images/pages/index/index-message01_pc.jpg",
-    "https://d2w53g1q050m78.cloudfront.net/koredakecojp/uploads/images/pages/index/index-product_pc.jpg",
-    "https://hfa-mqt-qoqix3fm.landinghub.site/.landinghub/https%3A%2F%2Fd2w53g1q050m78.cloudfront.net%2Fkoredakecojp%2Fuploads%2Fimages%2Fpages%2Fnutrients%2Fnutrition-intro_pc.jpg",
+    "/images/粉003.png",
+    "/images/三種01.png",
+    "/images/粉紅0091.png",
   ];
 
   useGSAP(
@@ -190,12 +190,7 @@ const Photos = () => {
         </div>
 
         <div className="slider-title">
-          <div className="slider-title-wrapper" ref={titlesRef}>
-            <p>UFLOW 專家一致推薦</p>
-            <p>成分足量 專利配方</p>
-            <p>國際原料廠商 生醫產業碩博士</p>
-            <p>植萃 天然 科學 創新</p>
-          </div>
+          
         </div>
       </div>
     </>

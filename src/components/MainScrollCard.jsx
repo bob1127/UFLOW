@@ -411,9 +411,7 @@ export default function Home() {
                     />
                   </div>
                   <div className="absolute -top-10 -left-10 text-6xl font-black text-[#fbbf24] -rotate-12 drop-shadow-md">
-                    Big
-                    <br />
-                    Slant
+                   UFLOW
                   </div>
                 </div>
               </div>
@@ -453,9 +451,7 @@ export default function Home() {
                 />
                 <div className="absolute bottom-10 left-10 z-20">
                   <h2 className="text-[80px] font-black leading-none opacity-50">
-                    BIS
-                    <br />
-                    COTTI
+                    
                   </h2>
                 </div>
               </div>
@@ -463,13 +459,17 @@ export default function Home() {
               <div className="flex flex-col justify-center p-8 md:p-16">
                 <div className="relative">
                   <span className="absolute -top-20 -right-4 text-5xl font-black rotate-12 text-white/40">
-                    ザクザク
+                   國際原廠，專利足量
+
                   </span>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-8 border-b-4 border-white/30 pb-4 inline-block">
-                    也是中間卡片
+                  <h2 className="text-3xl md:text-4xl font-bold mb-8 border-b-4 border-white/30 pb-4 inline-block">
+                 肽晶芙蓉<br></br>
+            
+
                   </h2>
+                  <h3 className="text-2xl">     重建 17 歲素顏元氣，醫美級的透亮保養</h3>
                   <p className="leading-8 mb-8 text-white/90">
-                    因為這也是中間的卡片，所以它保留了斜角效果。
+                 不用打光，肌膚也能自帶澎潤感！UFLOW 肽晶芙蓉專為對美極度要求的妳設計嚴選四大國際專利原料：美國微脂體穀胱甘肽提升 200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦光傷害，抑制黑色素 ；搭配 24 小時長效維生素 C 與比利時正矽酸 ，由內而外撐起肌膚的「彈、緊、嫩」。
                   </p>
                 </div>
               </div>
