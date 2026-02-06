@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default function ThankYouPage() {
   return (
-    <Suspense fallback={<div className="p-10">Loading...</div>}>
+    <Suspense fallback={<div className="p-10">Loading</div>}>
       <ThankYouClient />
     </Suspense>
   );
