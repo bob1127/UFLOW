@@ -846,15 +846,7 @@ function CartContent() {
     sessionStorage.setItem("checkout_step", String(step));
   }, [itemsLoaded, contact, addr, shipMethod, payMethod, step]);
 
-  useEffect(() => {
-    if (!itemsLoaded) return;
-    sessionStorage.setItem("checkout_contact", JSON.stringify(contact));
-    sessionStorage.setItem("checkout_addr", JSON.stringify(addr));
-    sessionStorage.setItem("checkout_shipMethod", shipMethod);
-    sessionStorage.setItem("checkout_payMethod", payMethod);
-    sessionStorage.setItem("checkout_step", String(step));
-  }, [itemsLoaded, contact, addr, shipMethod, payMethod, step]);
-
+  // ✅ 3. 讀取可用折價券 (已移除假資料 Fallback)
   useEffect(() => {
     const loadAllCoupons = async () => {
       setCouponLoading(true);
@@ -866,37 +858,44 @@ function CartContent() {
         });
         const data = await res.json();
         
+        // 如果 API 回傳空陣列，就真的是空陣列，不再塞假資料
         const arr = res.ok && data?.ok && Array.isArray(data.available) ? data.available : [];
-        const wantedNormal = ["ufup-2025", "ufbd-12"];
-        const normal = arr.filter(c => c?.code && wantedNormal.includes(String(c.code).toLowerCase())).map(c => ({
-          code: c.code, amount: Number(c.amount) || 0, kind: c.kind || "", title: couponTitleByKindOrCode(c),
-        }));
-        const referral = arr.filter(c => {
-          const code = String(c?.code || "").toLowerCase();
-          const kind = String(c?.kind || "").toLowerCase();
-          return code.startsWith("ufamb-") || code.startsWith("uffrd-") || kind === "ref_ambassador_200" || kind === "ref_friend_50";
-        }).map(c => ({
-          code: c.code, amount: Number(c.amount) || 0, kind: c.kind || "", title: couponTitleByKindOrCode(c),
-        }));
         
-        const finalNormal = normal.length > 0 ? normal : [
-          { code: "ufup-2025", amount: 100, kind: "upgrade", title: `升等禮 - ${currency(100)}` },
-          { code: "ufbd-12", amount: 150, kind: "birthday", title: `生日禮金 - ${currency(150)}` },
-        ];
-        setCoupons(finalNormal);
+        // 拆分：一般禮金 (升等/生日) 與 推薦禮金
+        const referral = [];
+        const normal = [];
+
+        arr.forEach(c => {
+          const code = String(c.code || "").toLowerCase();
+          const kind = String(c.kind || "").toLowerCase();
+          const item = {
+            code: c.code, 
+            amount: Number(c.amount) || 0, 
+            kind: c.kind || "", 
+            title: couponTitleByKindOrCode(c),
+          };
+
+          if (code.startsWith("ufamb-") || code.startsWith("uffrd-") || kind === "ref_ambassador_200" || kind === "ref_friend_50") {
+            referral.push(item);
+          } else {
+            normal.push(item);
+          }
+        });
+
+        setCoupons(normal);
         setReferralCoupons(referral);
+
+        // 檢查已套用的 Coupon 是否仍然有效
         setAppliedCoupon(prev => {
           if (!prev?.code) return null;
           const code = String(prev.code).toLowerCase();
-          const ok = finalNormal.some(c => String(c.code).toLowerCase() === code) || referral.some(c => String(c.code).toLowerCase() === code);
-          return ok ? prev : null;
+          const isValid = [...normal, ...referral].some(c => String(c.code).toLowerCase() === code);
+          return isValid ? prev : null;
         });
+
       } catch (err) {
         errorLog("Fetch Coupons Failed", err);
-        setCoupons([
-          { code: "ufup-2025", amount: 100, kind: "upgrade", title: `升等禮 - ${currency(100)}` },
-          { code: "ufbd-12", amount: 150, kind: "birthday", title: `生日禮金 - ${currency(150)}` },
-        ]);
+        setCoupons([]); // 失敗時清空，不顯示假資料
         setReferralCoupons([]);
       } finally {
         setCouponLoading(false);
