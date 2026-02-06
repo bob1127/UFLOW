@@ -18,8 +18,8 @@ function ThankYouContent() {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">付款完成！</h1>
-        <p className="text-gray-500 mb-8">感謝您的購買，您的訂單已成功建立。</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">付款完成</h1>
+        <p className="text-gray-500 mb-8">感謝您的購買，您的訂單已成功建立</p>
 
         <div className="bg-gray-50 rounded-xl p-4 mb-8 border border-gray-100">
           <p className="text-sm text-gray-500 mb-1">訂單編號</p>

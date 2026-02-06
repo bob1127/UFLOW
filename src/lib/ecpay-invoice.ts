@@ -36,7 +36,7 @@ function phpUrlDecode(str: string) {
 }
 
 export function getInvoiceIssueUrl() {
-  // ✅ 只走正式
+  // ✅ 固定走正式環境 (你的 MerchantID 3481459 是正式帳號)
   return "https://einvoice.ecpay.com.tw/B2CInvoice/Issue";
 }
 
@@ -58,14 +58,26 @@ export type IssueInvoiceInput = {
 };
 
 export async function issueEcpayInvoice(input: IssueInvoiceInput) {
+  // 🔴 關鍵修正 1：讀取「發票專用」的變數，而不是金流的
   const MerchantID = process.env.ECPAY_MERCHANT_ID || "";
-  const HashKey = process.env.ECPAY_HASH_KEY || "";
-  const HashIV = process.env.ECPAY_HASH_IV || "";
+  const HashKey = process.env.ECPAY_INVOICE_HASH_KEY || ""; // 改這裡
+  const HashIV = process.env.ECPAY_INVOICE_HASH_IV || "";   // 改這裡
+
+  // 🔴 關鍵修正 2：加入除錯 Log，讓你在 Vercel 看得到變數狀態
+  console.log("🔍 [Invoice Debug] 發票開立前檢查:", {
+    MerchantID,
+    // 只印前4碼和長度，確保安全又能比對
+    HashKeyCheck: HashKey ? `${HashKey.substring(0, 4)}*** (Len:${HashKey.length})` : "❌ MISSING",
+    HashIVCheck: HashIV ? `${HashIV.substring(0, 4)}*** (Len:${HashIV.length})` : "❌ MISSING",
+    TargetUrl: getInvoiceIssueUrl(),
+    Amount: input.salesAmount
+  });
 
   if (!MerchantID) throw new Error("ECPAY_MERCHANT_ID 未設定");
-  if (!HashKey || !HashIV) throw new Error("ECPAY_HASH_KEY / ECPAY_HASH_IV 未設定");
+  if (!HashKey || !HashIV) throw new Error("ECPAY_INVOICE_HASH_KEY / IV 未設定 (請檢查 Vercel 變數)");
+
   if (HashKey.length !== 16 || HashIV.length !== 16) {
-    throw new Error("ECPAY_HASH_KEY / ECPAY_HASH_IV 長度必須為 16（AES-128）");
+    throw new Error(`發票 HashKey/IV 長度錯誤 (目前 Key:${HashKey.length}, IV:${HashIV.length})，AES-128 必須為 16 碼。請確認是否誤填金流 Key？`);
   }
 
   // ✅ SalesAmount 要等於 Items 加總（避免後續被打槍）
@@ -137,12 +149,24 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
   }
 
   if (!res.ok) {
+    // 這裡會印出綠界回傳的錯誤原文，通常包含 RtnMsg
     throw new Error(`Invoice API HTTP ${res.status} :: ${raw}`);
   }
 
   // ✅ 綠界常常 HTTP 200 但業務失敗，要看 TransCode / TransMsg
   if (result?.TransCode !== 1) {
-    throw new Error(`Invoice API Failed :: ${raw}`);
+    // 嘗試解密錯誤訊息 (如果有回傳 Data)
+    let extraMsg = "";
+    if (result?.Data) {
+      try {
+        const base64FromApi = phpUrlDecode(String(result.Data));
+        const decrypted = aesDecryptFromBase64(base64FromApi, HashKey, HashIV);
+        extraMsg = `Decrypted: ${decodeURIComponent(decrypted)}`;
+      } catch (e) {
+        extraMsg = " (Data 解密失敗)";
+      }
+    }
+    throw new Error(`Invoice API Failed :: ${raw} ${extraMsg}`);
   }
 
   // 若你想在本地直接看到 RtnCode，可以把回傳 Data 解開
