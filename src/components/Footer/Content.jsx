@@ -142,12 +142,7 @@ const Section2 = () => {
           </div>
 
           {/* English */}
-          <div className="text-center w-full">
-             <Link href="/en" className="font-serif text-[15px] font-bold tracking-widest text-slate-800 hover:text-slate-500 transition-colors">
-               English
-             </Link>
-          </div>
-
+          
         </div>
       </div>
       

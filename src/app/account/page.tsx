@@ -20,10 +20,11 @@ type Customer = {
   first_name?: string;
   last_name?: string;
   username?: string;
+  birthday?: string; // 生日欄位
 
-  // 可選：如果你 profile API 有回傳角色/權限（有就用，沒有也沒關係）
-  roles?: string[]; // e.g. ["administrator"]
-  role?: string; // e.g. "administrator"
+  // 可選：如果你 profile API 有回傳角色/權限
+  roles?: string[]; 
+  role?: string; 
   isAdmin?: boolean;
 };
 
@@ -435,7 +436,7 @@ export default function AccountPage() {
 
   const [showAllReferralCoupons, setShowAllReferralCoupons] = useState(false);
 
-  // admin visibility (front-end gate + fallback on 403)
+  // admin visibility
   const [isAdmin, setIsAdmin] = useState(false);
 
   /* ===== Admin analytics state ===== */
@@ -449,8 +450,12 @@ export default function AccountPage() {
   const [expandedOrdersLoading, setExpandedOrdersLoading] = useState(false);
   const [expandedOrdersError, setExpandedOrdersError] = useState("");
 
-  // prevent duplicate admin fetch
   const adminLoadedOnceRef = useRef(false);
+
+  // 生日相關 State
+  const [birthdayInput, setBirthdayInput] = useState("");
+  const [isSettingBirthday, setIsSettingBirthday] = useState(false);
+  const [birthdayLoading, setBirthdayLoading] = useState(false);
 
   /* ===================== Loaders (Account) ===================== */
   const loadProfile = useCallback(async () => {
@@ -468,7 +473,6 @@ export default function AccountPage() {
         setCustomer(data.customer || {});
         setMembership(data.membership || null);
 
-        // 盡量從 profile 判定 admin（有就用）
         const roles: string[] = Array.isArray(data?.customer?.roles)
           ? data.customer.roles
           : [];
@@ -564,6 +568,38 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
+  // 提交生日
+  const handleUpdateBirthday = async () => {
+    if (!birthdayInput) return alert("請選擇生日");
+    
+    if (!confirm(`您的生日是 ${birthdayInput} 嗎？\n確認後將無法再次修改。`)) {
+      return;
+    }
+
+    setBirthdayLoading(true);
+    try {
+      const res = await fetch("/api/account/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ birthday: birthdayInput }),
+      });
+      
+      const data = await res.json();
+      if (data.ok) {
+        alert("生日設定成功！");
+        setCustomer((prev) => prev ? { ...prev, birthday: birthdayInput } : null);
+        setIsSettingBirthday(false);
+        loadProfile(); 
+      } else {
+        alert(data.message || "更新失敗");
+      }
+    } catch (e) {
+      alert("系統錯誤，請稍後再試");
+    } finally {
+      setBirthdayLoading(false);
+    }
+  };
+
   const handleClaim = async (kind: ClaimKind) => {
     setClaimMessage(null);
     setClaimStatus(null);
@@ -650,6 +686,23 @@ export default function AccountPage() {
   const referralToShow = showAllReferralCoupons
     ? referralCoupons
     : referralCoupons.slice(0, previewLimit);
+  
+  // ✅ 新增：取得生日月份標籤
+  const getBirthMonthLabel = (dateStr?: string) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return `${d.getMonth() + 1}月`;
+  };
+
+  // ✅ 新增：檢查是否為當月壽星
+  const isCurrentMonthBirthday = useMemo(() => {
+    if (!customer?.birthday) return false;
+    const d = new Date(customer.birthday);
+    const now = new Date();
+    // 簡單比較月份 (0-11)
+    return d.getMonth() === now.getMonth();
+  }, [customer?.birthday]);
 
   /* ===================== Admin Loaders ===================== */
   const loadAdminCustomers = useCallback(async () => {
@@ -659,7 +712,6 @@ export default function AccountPage() {
       const res = await fetch("/api/admin/customers", { cache: "no-store" });
       const js = await res.json();
 
-      // 後端應該會擋非 admin，這裡做前端 fallback
       if (res.status === 401 || res.status === 403) {
         setIsAdmin(false);
         setAdminData([]);
@@ -711,7 +763,7 @@ export default function AccountPage() {
     }
   };
 
-  // admin tab 第一次被打開時才載入（保留你邏輯，不多打 API）
+  // admin tab 第一次被打開時才載入
   useEffect(() => {
     if (!loggedIn) return;
     if (!isAdmin) return;
@@ -905,7 +957,6 @@ export default function AccountPage() {
                   onClick={() => setActiveTab("orders")}
                 />
 
-                {/* ✅ 管理員才顯示 */}
                 {isAdmin && (
                   <SidebarItem
                     active={activeTab === "admin"}
@@ -1003,7 +1054,6 @@ export default function AccountPage() {
                   label="訂單資訊"
                   onClick={() => setActiveTab("orders")}
                 />
-                {/* ✅ 管理員才顯示 */}
                 {isAdmin && (
                   <TabButton
                     active={activeTab === "admin"}
@@ -1023,7 +1073,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* Content area: main (tab content) + right panel */}
+            {/* Content area */}
             <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
               {/* Main tab content */}
               <div className="space-y-4">
@@ -1043,6 +1093,10 @@ export default function AccountPage() {
                         <MiniField
                           label="Email"
                           value={customer?.email || "-"}
+                        />
+                         <MiniField 
+                          label="Birthday" 
+                          value={customer?.birthday || "未設定"} 
                         />
                         <div className="md:col-span-2">
                           <MiniField
@@ -1234,7 +1288,7 @@ export default function AccountPage() {
                   </ShellCard>
                 )}
 
-                {/* ===== Tab: Admin Analytics (admin only) ===== */}
+                {/* ===== Tab: Admin Analytics ===== */}
                 {activeTab === "admin" && isAdmin && (
                   <ShellCard
                     title="管理員分析：會員總覽"
@@ -1247,7 +1301,6 @@ export default function AccountPage() {
                       </button>
                     }
                   >
-                    {/* header stats */}
                     <div className="mb-4 grid gap-3 md:grid-cols-4">
                       <div className="rounded-xl bg-white px-4 py-3 shadow-sm border">
                         <div className="text-xs text-slate-500">會員數</div>
@@ -1281,7 +1334,6 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    {/* search bar */}
                     <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
                       <div className="relative w-full max-w-sm">
                         <input
@@ -1290,9 +1342,6 @@ export default function AccountPage() {
                           placeholder="搜尋姓名 / Email / 使用者名稱…"
                           className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
                         />
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                          Enter 搜尋
-                        </span>
                       </div>
                       <div className="text-xs text-slate-500">
                         顯示 {adminFiltered.length} / {adminData.length} 筆
@@ -1436,17 +1485,6 @@ export default function AccountPage() {
                                 )}
                               </Fragment>
                             ))}
-
-                            {adminFiltered.length === 0 && (
-                              <tr>
-                                <td
-                                  colSpan={9}
-                                  className="px-4 py-6 text-center text-sm text-slate-500"
-                                >
-                                  找不到符合條件的會員。
-                                </td>
-                              </tr>
-                            )}
                           </tbody>
                         </table>
                       </div>
@@ -1454,7 +1492,6 @@ export default function AccountPage() {
                   </ShellCard>
                 )}
 
-                {/* 如果有人用 URL/狀態硬切到 admin tab，但其實不是 admin */}
                 {activeTab === "admin" && !isAdmin && (
                   <ShellCard title="管理員分析">
                     <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -1464,7 +1501,7 @@ export default function AccountPage() {
                 )}
               </div>
 
-              {/* Right panel (always visible) */}
+              {/* Right panel */}
               <aside className="space-y-4 lg:sticky lg:top-4 h-fit">
                 <ShellCard title="Client Details">
                   <div className="flex items-center gap-3">
@@ -1558,32 +1595,94 @@ export default function AccountPage() {
                       </div>
                     </div>
 
+                    {/* ✅ 修改：壽星好禮區塊 (加入月份判斷) */}
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-[11px] text-slate-500">
-                            壽星好禮
-                          </div>
-                          <div className="mt-1 text-sm font-semibold text-slate-900">
-                            {membership?.birthdayCredit ?? 0} 元
-                          </div>
+                          <div className="text-[11px] text-slate-500">壽星好禮</div>
+                          
+                          {/* 判斷是否已有生日資料 */}
+                          {!customer?.birthday ? (
+                            <div className="mt-1">
+                               {isSettingBirthday ? (
+                                 <div className="flex flex-col gap-2 mt-1">
+                                   <input 
+                                     type="date" 
+                                     className="rounded border px-2 py-1 text-xs w-full"
+                                     value={birthdayInput}
+                                     onChange={(e) => setBirthdayInput(e.target.value)}
+                                   />
+                                   <div className="flex gap-2">
+                                     <button 
+                                       onClick={handleUpdateBirthday}
+                                       disabled={birthdayLoading}
+                                       className="text-xs bg-slate-900 text-white px-2 py-1 rounded"
+                                     >
+                                       {birthdayLoading ? "..." : "確定"}
+                                     </button>
+                                     <button 
+                                       onClick={() => setIsSettingBirthday(false)}
+                                       className="text-xs text-slate-500 px-1"
+                                     >
+                                       取消
+                                     </button>
+                                   </div>
+                                 </div>
+                               ) : (
+                                 <div className="text-sm font-semibold text-slate-400">
+                                   尚未設定生日
+                                 </div>
+                               )}
+                            </div>
+                          ) : (
+                            // 已有生日，顯示金額
+                            <div className="mt-1 text-sm font-semibold text-slate-900">
+                              {membership?.birthdayCredit ?? 0} 元
+                            </div>
+                          )}
                         </div>
-                        {membership?.birthdayCredit ? (
-                          <button
-                            onClick={() => handleClaim("birthday")}
-                            disabled={claimLoading.birthday || claimed.birthday}
-                            className="rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
-                          >
-                            {claimed.birthday
-                              ? "已領取"
-                              : claimLoading.birthday
-                              ? "領取中…"
-                              : "領取"}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
-                        )}
+
+                        {/* 右側按鈕區：加入月份判斷 */}
+                        <div className="flex flex-col items-end">
+                          {!customer?.birthday ? (
+                            !isSettingBirthday && (
+                              <button
+                                onClick={() => setIsSettingBirthday(true)}
+                                className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold hover:bg-white hover:border-slate-400"
+                              >
+                                填寫生日
+                              </button>
+                            )
+                          ) : (
+                            // 已經有生日了
+                            membership?.birthdayCredit ? (
+                              isCurrentMonthBirthday ? (
+                                // 1. 是當月壽星 -> 顯示領取按鈕
+                                <button
+                                  onClick={() => handleClaim("birthday")}
+                                  disabled={claimLoading.birthday || claimed.birthday}
+                                  className="rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
+                                >
+                                  {claimed.birthday ? "已領取" : "領取"}
+                                </button>
+                              ) : (
+                                // 2. 不是當月壽星 -> 顯示提示
+                                <span className="text-[10px] text-slate-400 border border-slate-100 bg-slate-50 px-2 py-1 rounded-lg">
+                                  限 {getBirthMonthLabel(customer.birthday)} 領取
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-xs text-slate-400">{customer.birthday}</span>
+                            )
+                          )}
+                        </div>
                       </div>
+                      
+                      {!customer?.birthday && isSettingBirthday && (
+                        <div className="mt-2 text-[10px] text-rose-500">
+                          * 生日填寫後將無法再次修改，請確認輸入正確。
+                        </div>
+                      )}
                     </div>
                   </div>
 
