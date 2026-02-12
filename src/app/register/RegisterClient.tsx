@@ -137,7 +137,7 @@ export default function RegisterPage() {
       const scope = "profile openid email";
 
       const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
-        redirectUri
+        redirectUri,
       )}&state=${state}&scope=${scope}`;
 
       window.location.href = lineAuthUrl;
@@ -151,13 +151,14 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md text-center space-y-6">
+      <div className="min-h-screen flex items-center justify-center bg-[#F49898] px-4">
+        <div className=" p-8 rounded-xl shadow-md w-full max-w-md text-center space-y-6">
           <h2 className="text-2xl font-semibold text-emerald-700">
             🎉 註冊成功！
           </h2>
           <p className="text-slate-600 leading-relaxed text-sm">
-            我們已寄出一封 <span className="font-semibold">信箱驗證信</span> 到：
+            我們已寄出一封 <span className="font-semibold">信箱驗證信</span>{" "}
+            到：
             <br />
             <span className="font-medium text-slate-800">{email}</span>
             <br />
@@ -168,7 +169,7 @@ export default function RegisterPage() {
             onClick={() =>
               router.push(`/login?next=${encodeURIComponent(next)}`)
             }
-            className="w-full bg-slate-800 text-white py-3 rounded-lg hover:bg-slate-700 transition font-medium"
+            className="w-full bg-slate-800 text-white py-3 rounded-xl  hover:bg-slate-700 transition font-medium"
           >
             前往登入
           </button>
@@ -182,8 +183,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white p-8 shadow-md w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#F49898] px-4">
+      <div className="bg-white/50  p-8 rounded-2xl border border-stone-200 w-full max-w-md space-y-6">
         <h2 className="text-2xl font-semibold text-center text-slate-800">
           會員註冊
         </h2>
@@ -296,7 +297,7 @@ export default function RegisterPage() {
               placeholder="使用者名稱"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+              className="w-full border  rounded-xl p-3   focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
               disabled={isAnyLoading}
               required
             />
@@ -305,7 +306,7 @@ export default function RegisterPage() {
               placeholder="電子信箱"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+              className="w-full border p-3 rounded-xl  focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
               disabled={isAnyLoading}
               required
             />
@@ -314,7 +315,7 @@ export default function RegisterPage() {
               placeholder="密碼"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+              className="w-full border p-3 rounded-xl  focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
               disabled={isAnyLoading}
               required
             />
@@ -322,10 +323,10 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isAnyLoading}
-            className={`w-full p-3 rounded-lg text-white font-medium transition duration-200 ${
+            className={`w-full p-3 rounded-xl  text-white font-medium transition duration-200 ${
               isAnyLoading
                 ? "bg-slate-400 cursor-not-allowed"
-                : "bg-slate-800 hover:bg-slate-700 hover:shadow-md"
+                : "bg-[#fc8282] hover:bg-[#f75e5e] hover:shadow-md"
             }`}
           >
             {loading ? "註冊中…" : "註冊"}

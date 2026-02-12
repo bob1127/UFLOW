@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
-  
+
   // 各種 Loading 狀態
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -124,7 +124,7 @@ export default function LoginPage() {
       const scope = "profile openid email";
 
       const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
-        redirectUri
+        redirectUri,
       )}&state=${state}&scope=${scope}`;
 
       window.location.href = lineAuthUrl;
@@ -137,9 +137,11 @@ export default function LoginPage() {
   const isAnyLoading = loading || googleLoading || fbLoading || lineLoading;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white p-8 shadow-md w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-semibold text-center text-slate-800">會員登入</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#F49898]  px-4">
+      <div className="bg-white/50 rounded-2xl border border-stone-200 p-8  w-full max-w-md space-y-6">
+        <h2 className="text-2xl font-semibold text-center text-slate-800">
+          會員登入
+        </h2>
 
         {error && (
           <p className="text-rose-600 text-sm text-center bg-rose-50 border border-rose-200 rounded-md py-2">
@@ -254,7 +256,7 @@ export default function LoginPage() {
               placeholder="帳號或信箱"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+              className="w-full border p-3 rounded-xl  focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
               autoComplete="username"
               disabled={isAnyLoading}
               required
@@ -264,7 +266,7 @@ export default function LoginPage() {
               placeholder="密碼"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+              className="w-full border p-3 rounded-xl  focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
               autoComplete="current-password"
               disabled={isAnyLoading}
               required
@@ -273,10 +275,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isAnyLoading}
-            className={`w-full p-3 rounded-lg text-white font-medium transition duration-200 ${
+            className={`w-full p-3 rounded-xl  text-white font-medium transition duration-200 ${
               isAnyLoading
                 ? "bg-slate-400 cursor-not-allowed"
-                : "bg-slate-800 hover:bg-slate-700 hover:shadow-md"
+                : "bg-[#fc8282] hover:bg-[#f75e5e] hover:shadow-md"
             }`}
           >
             {loading ? "登入中…" : "登入"}
