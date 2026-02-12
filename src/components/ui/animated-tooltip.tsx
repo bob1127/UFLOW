@@ -7,7 +7,7 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
-} from "motion/react";
+} from "framer-motion";
 
 export const AnimatedTooltip = ({
   items,
@@ -17,7 +17,6 @@ export const AnimatedTooltip = ({
     name: string;
     designation: string;
     image: string;
-    qrCodeImage: string;
   }[];
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -53,7 +52,7 @@ export const AnimatedTooltip = ({
                 initial={{ opacity: 0, y: 20, scale: 0.6 }}
                 animate={{
                   opacity: 1,
-                  y: -80,
+                  y: 0,
                   scale: 1,
                   transition: {
                     type: "spring",
@@ -67,31 +66,14 @@ export const AnimatedTooltip = ({
                   rotate: rotate,
                   whiteSpace: "nowrap",
                 }}
-                className="absolute -top-20 -left-1/2 translate-x-1/2 flex text-xs flex-col items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-3"
+                className="absolute -top-16 -left-1/2 translate-x-1/2 flex text-xs  flex-col items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-2"
               >
-                <div className="absolute inset-x-10 z-30 w-[20%] -bottom-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent h-px " />
+                <div className="absolute inset-x-10 z-30 w-[20%] -bottom-px bg-gradient-to-r from-transparent bg-[#1ccd2b] to-transparent h-px " />
                 <div className="absolute left-10 w-[40%] z-30 -bottom-px bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px " />
-
-                {/* 人员名称 */}
                 <div className="font-bold text-white relative z-30 text-base">
                   {item.name}
                 </div>
-
-                {/* 人员职称 */}
-                <div className="text-white text-xs mb-2">
-                  {item.designation}
-                </div>
-
-                {/* QR Code 图片 */}
-                {item.qrCodeImage && (
-                  <Image
-                    src={item.qrCodeImage}
-                    alt="QR Code"
-                    width={40}
-                    height={40}
-                    className="rounded-md bg-white p-1"
-                  />
-                )}
+                <div className="text-white text-xs">{item.designation}</div>
               </motion.div>
             )}
           </AnimatePresence>
