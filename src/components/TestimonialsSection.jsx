@@ -8,19 +8,19 @@ export default function TestimonialsSection() {
       quote: "我選擇UFLOW肽晶芙蓉-營養補給複方安心選擇！ ",
       name: "專業驗光師大推",
       designation: "Professional Optometrist",
-      src: "/images/檢驗/推薦-02.png",
+      src: "/images/檢驗/1.png",
     },
     {
       quote: "熬夜、日曬族的養顏美容營養補給新選擇 ",
       name: "營養師大讚",
       designation: "Professional Nutritionist",
-      src: "/images/檢驗/推薦-03.png",
+      src: "/images/檢驗/2.png",
     },
     {
       quote: "四大專利複方養顏好吸收 ",
       name: "美麗營養師推薦",
       designation: "Professional Nutritionist",
-      src: "/images/檢驗/推薦-04.png",
+      src: "/images/檢驗/3.png",
     },
   ];
 
