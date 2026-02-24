@@ -308,11 +308,11 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section className="bg-white w-full    min-h-[80vh] pt-32    relative">
+        {/* <section className="bg-white w-full    min-h-[80vh] pt-32    relative">
           <div className="absolute  w-[90%] max-w-[1750px]  right-[-7%]  xl:right-[0%] top-1/2 z-20 -translate-y-1/2">
             <TestimonialsSection />
           </div>
-        </section>
+        </section> */}
         <section className="section-main-products w-full pt-16 sm:pt-20">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* 文字區 */}
