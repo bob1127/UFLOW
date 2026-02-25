@@ -3,19 +3,20 @@
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Card, CardBody } from "@nextui-org/react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import AnimatedLink from "../AnimatedLink";
+// import AnimatedLink from "../AnimatedLink"; // 根據您的需求決定是否保留
 
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+// 修正 1：直接將目錄層級設定為 /images/
 const images = [
-  "mainvisual_01.jpg",
-  "0f604282863f194870997fd1107b8197.jpg",
-  "mainvisual_02.jpg",
-  "77a9ee9ac47dfe31070e837440d76fed.jpg",
-  "mainvisual_03.jpg",
-].map((img) => `/images/temple/${img}`);
+  "DSCF7845.jpg",
+  "DSCF7774.jpg",
+  "藍色.png",
+  "粉色01.png",
+  "DSCF7872.jpg",
+].map((img) => `/images/${img}`);
 
 export default function ProjectSwiper() {
   return (
@@ -55,13 +56,13 @@ export default function ProjectSwiper() {
         {images.map((imgUrl, idx) => (
           <SwiperSlide
             key={idx}
-            className=" overflow-hidden group relative duration-1000"
+            className="overflow-hidden group relative duration-1000"
           >
-            <div className="title absolute top-5 left-5 z-[999]">
+            {/* <div className="title absolute top-5 left-5 z-[999]">
               <span className="text-white text-[.9rem]">
                 Project-0{idx + 1}
               </span>
-            </div>
+            </div> */}
             <div className="title absolute bottom-5 flex right-5 z-[999]">
               <button className="relative h-12 rounded-full bg-transparent px-4 group-hover:text-white text-neutral-950">
                 <span className="relative inline-flex overflow-hidden">
@@ -78,11 +79,11 @@ export default function ProjectSwiper() {
               <div className="absolute z-50 w-full h-full inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0)_0%,_rgba(0,0,0,0.7)_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ease-in-out" />
               <Card
                 className="!rounded-none border-white pb-4 w-full h-[230px] md:h-[280px] lg:h-[320px] 2xl:h-[550px] max-h-[550px] border bg-no-repeat bg-center bg-cover shadow-none overflow-hidden transition-transform duration-1000 ease-in-out hover:scale-110"
+                // 修正 2：直接套用 imgUrl 變數，移除重複的 /images/
                 style={{ backgroundImage: `url('${imgUrl}')` }}
               >
                 <CardBody className="flex relative flex-col h-full w-full px-0">
                   {/* 這裡可以放測試文字 */}
-                  <div className="text-white z-10 px-4">測試圖片</div>
                 </CardBody>
               </Card>
             </div>

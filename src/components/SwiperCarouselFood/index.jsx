@@ -3,8 +3,8 @@ import { motion, useMotionValue } from "framer-motion";
 
 const video = [""];
 const imgs = [
-  "/images/Carousel-02.png",
-  "/images/Carousel-02.png",
+  "/images/DSCF7774.jpg",
+  "/images/DSCF7801.jpg",
   "/images/Carousel-02.png",
   "/images/Carousel-02.png",
   "/images/Carousel-02.png",

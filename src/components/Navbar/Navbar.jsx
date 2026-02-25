@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 // 子組件區塊
 // ============================================================================
 
-/** * 漢堡選單按鈕 
+/** * 漢堡選單按鈕
  * 風格：深色線條 (適配白底)
  */
 function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
@@ -81,7 +81,7 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   );
 }
 
-/** * 購物車按鈕 
+/** * 購物車按鈕
  * 風格：深色 Icon (適配白底)
  */
 function CartButton({ count = 0, onClick }) {
@@ -92,12 +92,7 @@ function CartButton({ count = 0, onClick }) {
       onClick={onClick}
       className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-800 hover:bg-slate-100 transition-colors"
     >
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        className="currentColor"
-      >
+      <svg width="22" height="22" viewBox="0 0 24 24" className="currentColor">
         <path
           d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
           fill="none"
@@ -144,7 +139,7 @@ function MobileDrawer({
   useEffect(() => {
     if (open) {
       const firstFocusable = panelRef.current?.querySelector(
-        'a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])'
+        'a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])',
       );
       firstFocusable?.focus?.();
     }
@@ -397,21 +392,23 @@ export default function App() {
       window.location.reload();
     }
   };
-
   const hotItems = [
     {
       title: "鎂鎂香蜂草",
-      href: "/products/14",
+      // 將 href 修改為對應的 slug
+      href: "/products/gaba-magnesium-lemon-balm",
       imageUrl: "/images/GABA鎂鎂香蜂草.png",
     },
     {
       title: "維他菌合生元",
-      href: "/products/14",
+      // 將 href 修改為對應的 slug
+      href: "/products/synbiotics",
       imageUrl: "/images/維他菌-合生元.png",
     },
     {
       title: "冰晶芙蓉",
-      href: "/products/14",
+      // 將 href 修改為對應的 slug
+      href: "/products/肽晶芙蓉",
       imageUrl: "/images/00912.png",
     },
   ];
@@ -435,7 +432,6 @@ export default function App() {
         }`}
       >
         <div className="mx-auto flex w-full justify-between px-4 lg:px-8">
-          
           {/* ====== 左側：LOGO ====== */}
           <div className="flex items-center py-4">
             <Link href="/" className="flex items-center gap-3 group">
@@ -461,7 +457,6 @@ export default function App() {
 
           {/* ====== 右側 (Desktop)：雙層結構 ====== */}
           <div className="hidden md:flex flex-col items-end justify-center py-2">
-            
             {/* --- 第一排 (Row 1): 上方工具列 + 黃色 CTA --- */}
             <div className="flex items-center gap-6 mb-3">
               {/* 聯絡我們 */}
@@ -486,7 +481,9 @@ export default function App() {
                 href="/products"
                 className="bg-[#FCD800] hover:bg-[#ffe033] text-black h-[46px] px-8 flex items-center justify-center gap-3 transition-colors relative group overflow-hidden"
                 // 使用 clip-path 模擬一點設計感 (可選)
-                style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }} 
+                style={{
+                  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+                }}
               >
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-[15px] font-extrabold tracking-wider">
@@ -607,9 +604,6 @@ export default function App() {
               {/* Mega Menu Header */}
               <div className="sticky top-0 z-10 flex items-center justify-between border-b px-8 py-5 bg-white">
                 <div>
-                  <h2 className="text-xl font-bold tracking-wide text-slate-900">
-                    全站導覽
-                  </h2>
                   <p className="mt-0.5 text-sm text-slate-500">
                     探索 UFLOW 的所有商品與服務
                   </p>
@@ -623,7 +617,6 @@ export default function App() {
 
               {/* Mega Menu Content */}
               <div className="mx-auto h-[calc(85vh-88px)] max-w-[1200px] overflow-y-auto px-8 pb-10 pt-8">
-                
                 {/* 區塊 1: 熱銷推薦 */}
                 <div className="mb-8">
                   <h3 className="mb-4 text-lg font-bold text-slate-800 border-l-4 border-[#FCD800] pl-3">
@@ -685,23 +678,54 @@ export default function App() {
 
                 {/* 區塊 2: 快速連結列表 (範例) */}
                 <div className="grid grid-cols-4 gap-8 pt-6 border-t border-slate-100">
-                    <div>
-                        <h4 className="font-bold text-slate-900 mb-3">關於我們</h4>
-                        <ul className="space-y-2 text-sm text-slate-600">
-                            <li><Link href="/brand" onClick={closeMenu} className="hover:text-black">品牌故事</Link></li>
-                            <li><Link href="/team" onClick={closeMenu} className="hover:text-black">經營團隊</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-slate-900 mb-3">客戶服務</h4>
-                        <ul className="space-y-2 text-sm text-slate-600">
-                            <li><Link href="/qa" onClick={closeMenu} className="hover:text-black">常見問題</Link></li>
-                            <li><Link href="/shipping" onClick={closeMenu} className="hover:text-black">運送政策</Link></li>
-                        </ul>
-                    </div>
-                     {/* 更多連結... */}
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-3">關於我們</h4>
+                    <ul className="space-y-2 text-sm text-slate-600">
+                      <li>
+                        <Link
+                          href="/brand"
+                          onClick={closeMenu}
+                          className="hover:text-black"
+                        >
+                          品牌故事
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/team"
+                          onClick={closeMenu}
+                          className="hover:text-black"
+                        >
+                          經營團隊
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-3">客戶服務</h4>
+                    <ul className="space-y-2 text-sm text-slate-600">
+                      <li>
+                        <Link
+                          href="/qa"
+                          onClick={closeMenu}
+                          className="hover:text-black"
+                        >
+                          常見問題
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/shipping"
+                          onClick={closeMenu}
+                          className="hover:text-black"
+                        >
+                          運送政策
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
+                  {/* 更多連結... */}
                 </div>
-
               </div>
             </motion.section>
           </>

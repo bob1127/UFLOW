@@ -23,7 +23,7 @@ const TextParallaxContentExample = () => {
   // 圖片放大 + 上移
   const scale = useSpring(
     useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.4, 1.2]),
-    { stiffness: 100, damping: 20 }
+    { stiffness: 100, damping: 20 },
   );
   const yImg = useSpring(useTransform(scrollYProgress, [0, 1], [0, -150]), {
     stiffness: 100,
@@ -31,14 +31,14 @@ const TextParallaxContentExample = () => {
   });
   const imgOpacity = useSpring(
     useTransform(scrollYProgress, [0, 0.05, 0.85, 1], [0.6, 1, 1, 0.85]),
-    { stiffness: 80, damping: 16 }
+    { stiffness: 80, damping: 16 },
   );
 
   // blur
   const blurValue = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
-    ["6px", "0px", "2px"]
+    ["6px", "0px", "2px"],
   );
   const blurFilter = useMotionTemplate`blur(${blurValue})`;
 
@@ -47,21 +47,21 @@ const TextParallaxContentExample = () => {
     useTransform(
       scrollYProgress,
       [0, 0.25, 0.75, 1],
-      ["-160%", "0%", "0%", "-160%"]
+      ["-160%", "0%", "0%", "-160%"],
     ),
-    { stiffness: 120, damping: 22 }
+    { stiffness: 120, damping: 22 },
   );
   const rightX = useSpring(
     useTransform(
       scrollYProgress,
       [0, 0.25, 0.75, 1],
-      ["160%", "0%", "0%", "160%"]
+      ["160%", "0%", "0%", "160%"],
     ),
-    { stiffness: 120, damping: 22 }
+    { stiffness: 120, damping: 22 },
   );
   const textOpacity = useSpring(
     useTransform(scrollYProgress, [0.1, 0.3, 0.8, 0.95], [0, 1, 1, 0]),
-    { stiffness: 100, damping: 20 }
+    { stiffness: 100, damping: 20 },
   );
 
   return (
@@ -69,86 +69,103 @@ const TextParallaxContentExample = () => {
       {/* ✅ isolate：避免 transform 影響 Navbar / Dropdown */}
       <div className="bg-white relative isolate">
         {/* 第一段：產品 + 文案 */}
-        <section className=" relative overflow-hidden flex flex-col justify-center items-center">
-          <div className="txt absolute right-[8%] top-[25%] -translate-x-1/2 flex flex-col justify-center items-center z-40 max-w-[550px]">
-            <h2 className="text-5xl font-bold text-stone-50 ">GABA 鎂鎂香蜂草</h2>
-            <div className="mt-5">
-              <h3 className="text-2xl text-stone-50 font-normal my-2">
+        {/* 第一段：產品 + 文案 (已修復 RWD 並改用背景圖) */}
+        <section
+          // ✨ 改用 CSS 背景圖片，設定 cover 與 center
+          className="relative w-full min-h-screen overflow-hidden flex flex-col justify-center items-center bg-[url('/images/鎂鎂香峰草-0331.jpg')] bg-cover bg-[center_top] lg:bg-center bg-no-repeat"
+        >
+          {/* ✨ 新增：手機版專用黑色半透明遮罩，提升文字可讀性，電腦版隱藏 */}
+          <div className="absolute inset-0 bg-black/60 lg:hidden z-0"></div>
+
+          {/* 文字內容區塊 */}
+          {/* ✨ RWD 修復重點：
+      1. 手機版 relative + flex center + padding，讓內容自然撐開
+      2. 電腦版恢復 absolute 定位靠右
+      3. w-full max-w-[550px] 確保小螢幕不破版
+  */}
+          <div className="txt relative z-10 w-full px-6 py-16 flex flex-col justify-center items-center lg:absolute lg:right-[5%] lg:top-1/2 lg:-translate-y-1/2 lg:items-start lg:max-w-[550px] lg:p-0">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-50 text-center lg:text-left drop-shadow-lg">
+              GABA 鎂鎂香蜂草
+            </h2>
+            <div className="mt-5 text-center lg:text-left">
+              <h3 className="text-lg sm:text-xl lg:text-2xl text-stone-50 font-normal my-2 drop-shadow-md">
                 舒壓好眠．能量代謝的科學新方
               </h3>
-              <h3 className="text-2xl text-stone-50  font-normal my-2">
+              <h3 className="text-lg sm:text-xl lg:text-2xl text-stone-50 font-normal my-2 drop-shadow-md">
                 專利GABA x 速可包覆鎂 x 法國香蜂草
               </h3>
             </div>
-            <p className="leading-relaxed text-stone-50  tracking-wider mt-4">
+            <p className="leading-relaxed text-stone-50 tracking-wider mt-4 text-justify lg:text-left text-sm sm:text-base drop-shadow-sm">
               針對生活步調緊湊、壓力大與睡眠品質不佳的現代人設計 。嚴選韓國專利
               GABAEX® (500mg) 作為情緒煞車，搭配義大利 SideMag® 速可包覆鎂
               (200mg)，利用 Sucrosomial® 專利技術提升吸收率達 300%
-              。加上法國香蜂草萃取，以黃金三角配方，幫助您日間提振精神、夜間放鬆入眠
-              。
+              。加上法國香蜂草萃取，以黃金三角配方，幫助您日間提振精神、夜間放鬆入眠。
             </p>
-            <div className="flex flex-row py-8">
-              <div className="flex flex-col mr-10 items-center">
+
+            {/* ✨ RWD 修復重點：
+        移除 mr-10，改用 flex-wrap 和 gap-x-8 gap-y-4
+        確保螢幕變窄時自動換行，不會有橫向卷軸
+    */}
+            <div className="flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-6 py-8 w-full">
+              <div className="flex flex-col items-center">
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-first-ByYP-jMQ.svg"
-                  alt=""
-                  width={800}
-                  height={800}
-                  className="w-[70px] h-[70px]"
+                  alt="純天然成分"
+                  width={80}
+                  height={80}
+                  className="w-[60px] h-[60px] lg:w-[70px] lg:h-[70px]"
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3 text-stone-50 ">純天然成分</b>
+                <b className="mt-3 text-stone-50 text-sm lg:text-base drop-shadow-md">
+                  純天然成分
+                </b>
               </div>
-              <div className="flex flex-col mr-10 items-center">
+              <div className="flex flex-col items-center">
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-second-DFPnTpt2.svg"
-                  alt=""
-                  width={800}
-                  height={800}
-                  className="w-[70px] h-[70px]"
+                  alt="純天然成分"
+                  width={80}
+                  height={80}
+                  className="w-[60px] h-[60px] lg:w-[70px] lg:h-[70px]"
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3 text-stone-50 ">純天然成分</b>
+                <b className="mt-3 text-stone-50 text-sm lg:text-base drop-shadow-md">
+                  純天然成分
+                </b>
               </div>
-              <div
-                data-aos="fadeUp"
-                className="flex flex-col mr-10 items-center"
-              >
+              <div data-aos="fadeUp" className="flex flex-col items-center">
                 <Image
                   src="https://coralclub.ru/rcp/templates/promarine-collagen-tripeptides/assets/best-product-third-BBToOs3r.svg"
-                  alt=""
-                  width={800}
-                  height={800}
-                  className="w-[70px] h-[70px]"
+                  alt="純天然成分"
+                  width={80}
+                  height={80}
+                  className="w-[60px] h-[60px] lg:w-[70px] lg:h-[70px]"
                   placeholder="empty"
                   loading="lazy"
                 />
-                <b className="mt-3 text-stone-50 ">純天然成分</b>
+                <b className="mt-3 text-stone-50 text-sm lg:text-base drop-shadow-md">
+                  純天然成分
+                </b>
               </div>
             </div>
-            <div className="h-[3px] bg-[#ebebeb] w-full rounded-full" />
-            <div className="flex justify-between mt-2">
-              <span className="text-[13px] text-stone-50  tracking-widest">
+
+            <div className="h-[2px] bg-[#ebebeb]/50 w-full rounded-full" />
+
+            {/* ✨ RWD 修復重點：
+        改為 flex-col 上下排列，並允許文字換行，解決文字被切斷的問題
+    */}
+            <div className="flex flex-col sm:flex-row justify-between mt-3 gap-2 w-full text-center lg:text-left">
+              <span className="text-[13px] text-stone-50 tracking-widest drop-shadow-sm whitespace-normal">
                 經過國家級的驗證，專業醫生的背書
               </span>
-              <span className="text-[13px] text-stone-50  tracking-widest">
+              <span className="text-[13px] text-stone-50 tracking-widest drop-shadow-sm whitespace-normal hidden sm:block">
                 經過國家級的驗證，專業醫生的背書
               </span>
             </div>
           </div>
-
-          <div className="img mt-8">
-            <ParallaxImage
-              src="/images/鎂鎂香峰草-0331.jpg"
-              alt=""
-              fill
-              className="object-contain "
-            />
-          </div>
         </section>
-
         {/* 第二段：左右圖文 */}
         <section className="w-full bg-[#f9f9f9] py-12 lg:py-24">
           {/* 限制最大寬度並居中，確保在大螢幕上不失真 */}
@@ -398,7 +415,7 @@ const OverlayCopy = ({ subheading, heading, containerRef }) => {
   const rawOpacity = useTransform(
     scrollYProgress,
     [0.15, 0.5, 0.85],
-    [0, 1, 0]
+    [0, 1, 0],
   );
 
   const y = useSpring(rawY, { damping: 30, stiffness: 120 });
@@ -434,7 +451,7 @@ const ExampleContent = () => {
   const rawOpacity = useTransform(
     scrollYProgress,
     [0, 0.3, 0.7, 1],
-    [0, 1, 1, 0]
+    [0, 1, 1, 0],
   );
   const rawY = useTransform(scrollYProgress, [0, 1], [50, -50]);
 

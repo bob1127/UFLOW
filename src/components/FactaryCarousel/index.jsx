@@ -39,7 +39,7 @@ const SLIDES = [
     publishDate: "Best Seller",
     region: "Beauty",
   },
- {
+  {
     image: "/images/GABA鎂鎂香蜂草.png",
     title: "GABA 鎂鎂香蜂草",
     shortDescription: "舒緩放鬆，重拾夜間寧靜。",
@@ -79,7 +79,7 @@ const App = () => (
        1. 加入 'py-20' (上下 padding) 確保陰影或放大效果不會被切到
        2. 加入 'overflow-hidden' 在最外層，避免左右捲軸出現
     */}
-    <main className="w-full min-h-screen flex items-center justify-center py-20 overflow-hidden  ">
+    <main className="w-full  flex items-center justify-center pb-20 overflow-hidden  ">
       <div className="w-full max-w-[1600px] mx-auto">
         <EmblaCarousel slides={SLIDES} options={OPTIONS} />
       </div>

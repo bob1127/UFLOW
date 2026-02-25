@@ -6,7 +6,7 @@ import TestimonialsSection from "@/components/TestimonialsSection"; // 根據你
 export default function TermsPage() {
   return (
     <main className="bg-white min-h-screen pt-32 pb-20">
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <div className="container mx-auto px-6 max-w-4xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

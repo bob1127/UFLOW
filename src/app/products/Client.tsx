@@ -39,8 +39,7 @@ export default function Client({ items }: { items: Product[] }) {
       <div
         className="w-full md:aspect-[1080/576] aspect-square xl:aspect-[1920/700] bg-center bg-cover bg-no-repeat"
         style={{
-          backgroundImage:
-            "url('/images/hero-banner/72de3bfc-c053-4ae8-87bd-89ad2257ded3.png')",
+          backgroundImage: "url('/images/植物01.png')",
         }}
       />
 

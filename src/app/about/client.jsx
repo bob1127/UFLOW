@@ -4,6 +4,21 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Leaf, FlaskConical, ShieldCheck, HeartHandshake } from "lucide-react";
 import Link from "next/link";
+import ScrollAnimate from "../../components/ScrollAnimation/page.jsx";
+// import SvgImg from "../../components/SVGImage.jsx";
+// import HeroSlider from "../../components/HeroSlideContact/page";
+import { Accordion, AccordionItem } from "@heroui/react";
+import Character from "../../components/TextOpacityScroll/Character.jsx";
+import GsapText from "../../components/RevealText/index";
+import MotionImage from "../../components/MotionImage.jsx";
+
+import Swiper from "../../components/SwiperCarousel/SwiperCardFood.jsx";
+
+// import HoverCard from "../../components/HoverCardBuild/index";
+
+// import { PlaceholdersAndVanishInput } from "../../components/ui/placeholders-and-vanish-input.js";
+// import { useGSAP } from "@gsap/react";
+import { CustomEase } from "gsap/CustomEase";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import React, { useRef, useEffect, useState } from "react";
@@ -162,101 +177,133 @@ export default function AboutPage() {
       );
     };
   }, []);
+
+  gsap.registerPlugin(CustomEase);
+
+  const placeholders = [
+    "理想的家，該具備哪些元素？",
+    "選擇房子時，你最在意什麼？",
+    "如何找到兼具品質與舒適的住宅？",
+    "買房是投資還是生活選擇？",
+    "未來的家，會是什麼模樣？",
+  ];
+
+  const handleChange = (e) => {
+    console.log(e.target.value);
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    console.log("submitted");
+  };
   return (
     <main className="w-full bg-white text-[#2b3742] overflow-hidden pt-20">
-      {/* 1. Hero Section：品牌標語 [cite: 1-4] */}
-      <section className="relative w-full h-[90vh] min-h-[500px] flex items-center justify-center bg-[url('/images/products/鎂鎂香蜂草.png')] bg-center bg-no-repeat bg-cover">
-        {/* ▼▼▼ 新增：黑色透明遮罩 (Overlay) ▼▼▼ */}
-        {/* inset-0: 填滿父層 / bg-black/50: 黑色50%透明度 / z-0: 確保在文字下方 */}
-        <div className="absolute inset-0 bg-black/50 z-0" />
-
-        {/* 背景裝飾圓 */}
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full border border-gray-200/50 opacity-20" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-blue-50 to-purple-50 blur-3xl opacity-60" />
-
-        {/* 內容區塊 (維持 relative z-10 以確保浮在遮罩上) */}
-        <div className="container mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="flex flex-col items-center gap-6"
-          >
-            <motion.h1
-              variants={fadeInUp}
-              className="text-4xl text-white md:text-6xl font-bold leading-tight"
-            >
-              養分循環補給 <br />
-            </motion.h1>
-            <motion.p
-              variants={fadeInUp}
-              className="max-w-xl text-lg text-gray-200 mt-4 leading-relaxed"
-            >
-              我們相信，健康是一種生活方式，<br></br>
-              也是一種簡單、自然且富有活力的人生。
-            </motion.p>
-          </motion.div>
+      <section>
+        <div>
+          <ScrollAnimate />
         </div>
       </section>
-      <section className="section_features w-full pt-16 sm:pt-20">
-        {/* 上半：價值觀區塊 */}
-        <div className="flex flex-col items-center justify-center mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-8">
-          <div className="w-full py-8 sm:py-10">
-            {/* 標題 */}
-            <div className="px-2 sm:px-6 lg:px-10 text-center sm:text-left">
-              <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
-                value
-              </h1>
-              <h2 className="mt-2 font-bold text-2xl sm:text-3xl lg:text-4xl leading-snug">
-                我們的價值觀
-              </h2>
-            </div>
+      {/* 輪播區 */}
+      <section className="section-padding">
+        <Swiper />
+      </section>
 
-            {/* 四個 value 區塊 */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-y-10 py-6 sm:py-8">
-              <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-                  植粹與天然
-                </h2>
-                <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
-                  我們的每一款產品都選用最純粹、最自然的成分，確保每一位
-                  顧客都能享受天然的健康益處。
-                </p>
-              </div>
+      {/* 動畫區 */}
 
-              <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-                  創新與科學
-                </h2>
-                <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
-                  我們致力於將創新的科技與天然成分相結合，
-                  通過科學研究為顧客提供更加有效的健康解決方案。
-                </p>
-              </div>
+      {/* 室內設計問題 區 */}
+      <section className="flex flex-col w-full max-w-[1120px] mx-auto px-4 md:px-8 py-12 md:py-24">
+        {/* 頂部標題區塊：使用 justify-between 確保左右貼齊邊界 */}
+        <div className="flex flex-col md:flex-row justify-between md:items-end w-full mb-12 lg:mb-16 gap-8">
+          {/* 左側主標 + 說明 */}
+          <div className="w-full md:w-3/4 flex flex-col">
+            <h2 className="text-4xl md:text-[2.6rem] leading-tight text-gray-900 font-normal">
+              養分循環補給
+              <br className="hidden md:block" />
+              相關問題
+            </h2>
+            <div className="line bg-black h-[1px] w-[80px] my-6"></div>
+            <p className="text-gray-800 text-sm md:text-base font-light max-w-[400px] leading-relaxed">
+              我們相信，健康是一種生活方式，
+              也是一種簡單、自然且富有活力的人生。
+            </p>
+          </div>
 
-              <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-                  透明與信任
-                </h2>
-                <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
-                  我們相信誠實與透明是建立品牌信任的基礎，
-                  會讓每一位顧客了解產品來源、成分及使用方式。
-                </p>
-              </div>
-
-              <div className="px-2 sm:px-6 lg:px-10 py-3 sm:py-5">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-                  關懷與共鳴
-                </h2>
-                <p className="max-w-[500px] text-sm sm:text-base leading-relaxed text-gray-700">
-                  我們關注每一位顧客的健康與生活需求，用心傾聽，
-                  提供貼心服務，並建立長久連結與信任。
-                </p>
-              </div>
-            </div>
+          {/* 右側標籤：使用文字直排 (writing-mode) 完美貼齊右側緣 */}
+          <div className="w-full md:w-1/4 flex justify-start md:justify-end md:pb-2">
+            <span className="text-[1rem] md:text-[1.1rem] text-gray-500 tracking-widest uppercase md:[writing-mode:vertical-rl] md:rotate-180">
+              LIFE - Healthy
+            </span>
           </div>
         </div>
 
+        {/* QA 卡片區塊：使用 Grid 網格系統，保證三張卡片自動撐滿並貼齊左右緣 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 w-full">
+          {[
+            {
+              title1: "植粹與天然",
+              title2: "植粹與天然",
+              tag: "Natural",
+              desc: "我們的每一款產品都選用最純粹、最自然的成分，確保每一位 顧客都能享受天然的健康益處。",
+              img: "/images/DSCF7801.jpg",
+            },
+            {
+              title1: "創新與科學",
+              title2: "創新與科學",
+              tag: "創新",
+              desc: "我們致力於將創新的科技與天然成分相結合， 通過科學研究為顧客提供更加有效的健康解決方案。",
+              img: "/images/DSCF7872.jpg",
+            },
+            {
+              title1: "透明與信任",
+              title2: "透明與信任",
+              tag: "Trust",
+              desc: "我們相信誠實與透明是建立品牌信任的基礎， 會讓每一位顧客了解產品來源、成分及使用方式。",
+              img: "/images/DSCF7850.jpg",
+            },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="group flex flex-col items-start w-full overflow-hidden cursor-pointer"
+            >
+              {/* 圖片容器：設定 aspect ratio 讓圖片高度統一 */}
+              <div className="overflow-hidden w-full aspect-[4/5] relative bg-gray-100">
+                <Image
+                  src={item.img}
+                  alt={`qa-item-${i}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover w-full h-full group-hover:scale-110 group-hover:rounded-[32px] transition-all duration-700 ease-out"
+                />
+              </div>
+
+              {/* 文字說明區塊：移除左右 px，緊貼圖片邊緣 */}
+              <div className="flex flex-col py-6 items-start w-full">
+                <span className="text-gray-400 tracking-wider text-sm mb-2 font-medium">
+                  - {item.tag}
+                </span>
+
+                <button className="relative h-8 bg-transparent text-neutral-800 font-semibold focus:outline-none text-left">
+                  <span className="relative inline-flex overflow-hidden h-full items-center">
+                    <div className="translate-y-0 text-lg md:text-[1.15rem] skew-y-0 transition duration-500 group-hover:-translate-y-[120%] group-hover:skew-y-12">
+                      {item.title1}
+                    </div>
+                    <div className="absolute top-0 text-lg md:text-[1.15rem] translate-y-[120%] skew-y-12 transition duration-500 group-hover:translate-y-0 group-hover:skew-y-0">
+                      {item.title2}
+                    </div>
+                  </span>
+                </button>
+
+                <p className="text-[15px] text-gray-500 mt-3 leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      {/* 1. Hero Section：品牌標語 [cite: 1-4] */}
+
+      <section className="section_features w-full pt-16 sm:pt-20">
         {/* 下半：圖片＋說明區塊 */}
         <div className="flex flex-col md:flex-row w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* 左側圖片區 */}
@@ -364,54 +411,6 @@ export default function AboutPage() {
               </p>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              UFLOW 新概念
-            </h2>
-            <div className="w-12 h-1 bg-blue-500 mx-auto my-6 rounded-full"></div>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg">
-              堅持四大原則，以科學與自然的完美平衡，為您的健康嚴格把關。
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-            {values.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group flex flex-col items-center text-center"
-              >
-                {/* 圖示區塊：拿掉卡片，保留純粹的圓形與圖示 */}
-                <div
-                  className={`w-20 h-20 rounded-full ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 ease-out`}
-                >
-                  {/* 稍微調整 Icon 大小以符合新的比例 */}
-                  <div className="scale-110">{item.icon}</div>
-                </div>
-
-                {/* 文字內容 */}
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-gray-500 leading-7 text-sm px-2">
-                  {item.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 

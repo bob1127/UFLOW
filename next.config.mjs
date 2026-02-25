@@ -9,6 +9,19 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'inf.fjg.mybluehost.me', // 你的 WP 主機
       },
+      {
+        protocol: 'https',
+        hostname: 'd2w53g1q050m78.cloudfront.net',
+        port: '',
+        pathname: '/**', // 允許該網域下的所有圖片路徑
+      },
+      // 如果你還有其他外部圖片來源（例如 coralclub.ru），也可以一併加進來：
+      {
+        protocol: 'https',
+        hostname: 'coralclub.ru',
+        port: '',
+        pathname: '/**',
+      },
       // 👇 新增以下這三行來支援 WordPress CDN (Jetpack)
       {
         protocol: 'https',

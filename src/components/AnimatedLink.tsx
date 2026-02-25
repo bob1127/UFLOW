@@ -24,7 +24,7 @@ const pageAnimation = () => {
       easing: "cubic-bezier(0.76, 0, 0.24, 1)",
       fill: "forwards",
       pseudoElement: "::view-transition-old(root)",
-    }
+    },
   );
 
   // 進場動畫
@@ -42,7 +42,7 @@ const pageAnimation = () => {
       easing: "cubic-bezier(0.76, 0, 0.24, 1)",
       fill: "forwards",
       pseudoElement: "::view-transition-new(root)",
-    }
+    },
   );
 };
 
@@ -54,28 +54,7 @@ const Nav = () => {
     { label: "About", url: "/about" },
   ];
 
-  return (
-    <nav className="p-6">
-      <ul className="flex gap-4">
-        {routes.map((route) => (
-          <li key={route.label}>
-            <Link
-              href={route.url}
-              onClick={(e) => {
-                e.preventDefault();
-                router.push(route.url, {
-                  onTransitionReady: pageAnimation,
-                });
-              }}
-              className="transition-all hover:underline"
-            >
-              {route.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
+  return <nav className="p-6"></nav>;
 };
 
 export default Nav;

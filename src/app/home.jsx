@@ -181,7 +181,7 @@ export default function Home() {
 
   return (
     <ReactLenis root>
-      <div className="">
+      <div className="w-screen ">
         {/* ✅ 修改後的：右下角懸浮廣告影片區塊 (開始) */}
         <AnimatePresence>
           {showModal && (
@@ -236,7 +236,7 @@ export default function Home() {
 
         {/* ... (以下原本的 sections 程式碼保持不變，請確保完整複製) ... */}
 
-        <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
+        <section className="section-two-column  xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Card 2 */}
             <div className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5">
