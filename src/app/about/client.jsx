@@ -251,7 +251,7 @@ export default function AboutPage() {
               title2: "創新與科學",
               tag: "創新",
               desc: "我們致力於將創新的科技與天然成分相結合， 通過科學研究為顧客提供更加有效的健康解決方案。",
-              img: "/images/DSCF7872.jpg",
+              img: "/images/DSCF7878.jpg",
             },
             {
               title1: "透明與信任",
@@ -301,7 +301,6 @@ export default function AboutPage() {
           ))}
         </div>
       </section>
-      {/* 1. Hero Section：品牌標語 [cite: 1-4] */}
 
       <section className="section_features w-full pt-16 sm:pt-20">
         {/* 下半：圖片＋說明區塊 */}
@@ -411,6 +410,54 @@ export default function AboutPage() {
               </p>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6">
+          <motion.div
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              UFLOW 新概念
+            </h2>
+            <div className="w-12 h-1 bg-blue-500 mx-auto my-6 rounded-full"></div>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+              堅持四大原則，以科學與自然的完美平衡，為您的健康嚴格把關。
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+            {values.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="group flex flex-col items-center text-center"
+              >
+                {/* 圖示區塊：拿掉卡片，保留純粹的圓形與圖示 */}
+                <div
+                  className={`w-20 h-20 rounded-full ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 ease-out`}
+                >
+                  {/* 稍微調整 Icon 大小以符合新的比例 */}
+                  <div className="scale-110">{item.icon}</div>
+                </div>
+
+                {/* 文字內容 */}
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-gray-500 leading-7 text-sm px-2">
+                  {item.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

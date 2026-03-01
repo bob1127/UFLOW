@@ -12,6 +12,30 @@ import React, {
 import { Link } from "next-view-transitions";
 import { useRouter } from "next/navigation";
 import { LineChart, BarChart } from "@mui/x-charts";
+import {
+  Home,
+  Package,
+  Users,
+  Tag,
+  BarChart2,
+  Settings,
+  Search,
+  Bell,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  ExternalLink,
+  Circle,
+  LogOut,
+  X,
+  Crown,
+  ShieldCheck,
+  Zap,
+  CreditCard,
+  Calendar,
+  Info,
+} from "lucide-react";
 
 /* ===================== Types (Account) ===================== */
 type Customer = {
@@ -20,11 +44,9 @@ type Customer = {
   first_name?: string;
   last_name?: string;
   username?: string;
-  birthday?: string; // 生日欄位
-
-  // 可選：如果你 profile API 有回傳角色/權限
-  roles?: string[]; 
-  role?: string; 
+  birthday?: string;
+  roles?: string[];
+  role?: string;
   isAdmin?: boolean;
 };
 
@@ -38,7 +60,8 @@ type MembershipInfo = {
   nextNeedAmount?: number | null;
 };
 
-type OrderItem = { name: string; quantity: number };
+type OrderItem = { name: string; quantity: number; total?: string };
+
 type Order = {
   id: number;
   number: string;
@@ -47,6 +70,13 @@ type Order = {
   total: string;
   currency: string;
   line_items: OrderItem[];
+  payment_method_title?: string;
+  // 💡 串接後端新增的支付資訊欄位
+  payment_info?: {
+    cvs_code?: string;
+    expire_date?: string;
+    atm_account?: string;
+  };
 };
 
 type ClaimKind = "upgrade" | "birthday";
@@ -82,7 +112,6 @@ type AdminCustomer = {
   tier: string;
   billingCity?: string;
   billingCountry?: string;
-
   referredCount: number;
   rewardedCount: number;
   referralEarned: number;
@@ -136,22 +165,105 @@ function pickCouponCreatedAt(c: AvailableCoupon) {
   return Number.isFinite(t) ? t : 0;
 }
 
-/* ===================== UI Atoms ===================== */
-function StatusPill({ status }: { status: string }) {
+/* ===================== UI Atoms (Shopify Style) ===================== */
+
+/**
+ * 💡 美化後的狀態標籤組件 (支援中文化與分級色彩)
+ */
+function StatusPill({
+  status,
+  type = "order",
+}: {
+  status: string;
+  type?: "order" | "account" | "tier" | "admin";
+}) {
   const s = String(status || "").toLowerCase();
-  const tone =
-    s === "completed"
-      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-      : s === "processing"
-      ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
-      : "bg-slate-50 text-slate-600 ring-1 ring-slate-200";
+
+  // 1. 訂單狀態顏色與中文化
+  if (type === "order") {
+    let label = status;
+    let tone = "bg-[#e4e5e7] text-[#202223] border-transparent";
+    let dotColor = "fill-[#5c5f62]";
+
+    if (s === "pending" || s === "待付款" || s === "waiting-payment") {
+      label = "待付款";
+      tone = "bg-[#ffea8a] text-[#8a6116] border-transparent";
+      dotColor = "fill-[#8a6116]";
+    } else if (s === "processing" || s === "處理中") {
+      label = "處理中";
+      tone = "bg-[#ffea8a] text-[#8a6116] border-transparent";
+      dotColor = "fill-[#8a6116]";
+    } else if (s === "completed" || s === "paid" || s === "已完成") {
+      label = "已完成";
+      tone = "bg-[#cbe5cc] text-[#1c5c27] border-transparent";
+      dotColor = "fill-[#1c5c27]";
+    } else if (s === "cancelled" || s === "已取消") {
+      label = "已取消";
+    }
+
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border",
+          tone,
+        )}
+      >
+        <Circle className={cn("w-1.5 h-1.5", dotColor)} />
+        {label}
+      </span>
+    );
+  }
+
+  // 2. 帳戶狀態顏色
+  if (type === "account") {
+    const isActive = s === "active" || s === "有效" || s === "正常";
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-sm",
+          isActive
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+            : "bg-gray-100 text-gray-600 border-gray-200",
+        )}
+      >
+        <span
+          className={cn(
+            "w-1.5 h-1.5 rounded-full",
+            isActive ? "bg-emerald-500 animate-pulse" : "bg-gray-400",
+          )}
+        />
+        {isActive ? "正常" : status}
+      </span>
+    );
+  }
+
+  // 3. 會員等級與權限標籤顏色
+  const isGold = s.includes("金") || s.includes("gold");
+  const isSilver = s.includes("銀") || s.includes("silver");
+  const isAdmin = s.includes("管理") || s.includes("admin");
+
+  let theme = "bg-slate-100 text-slate-600 border-slate-200";
+  let Icon = Zap;
+
+  if (isGold) {
+    theme = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm";
+    Icon = Crown;
+  } else if (isSilver) {
+    theme = "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm";
+    Icon = Crown;
+  } else if (isAdmin) {
+    theme = "bg-slate-800 text-white border-slate-900";
+    Icon = ShieldCheck;
+  }
+
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-1 text-[11px] font-semibold",
-        tone
+        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border uppercase tracking-wider",
+        theme,
       )}
     >
+      <Icon size={12} className={cn(!isAdmin && "text-current")} />
       {status}
     </span>
   );
@@ -171,19 +283,17 @@ function ShellCard({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white shadow-sm",
-        className
+        "bg-white border border-[#c9cccf] rounded-lg shadow-sm overflow-hidden",
+        className,
       )}
     >
       {(title || right) && (
-        <header className="flex items-center justify-between gap-3 px-5 pt-5">
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
+        <header className="px-5 py-4 border-b border-[#c9cccf] flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#202223]">{title}</h2>
           <div>{right}</div>
         </header>
       )}
-      <div className={cn("px-5", title || right ? "pb-5 pt-4" : "py-5")}>
-        {children}
-      </div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -196,9 +306,9 @@ function MiniField({
   value: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="text-[11px] text-slate-500">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
+    <div>
+      <p className="text-xs text-[#6d7175] mb-1">{label}</p>
+      <div className="text-sm text-[#202223] font-medium">{value}</div>
     </div>
   );
 }
@@ -206,48 +316,51 @@ function MiniField({
 function SidebarItem({
   active,
   label,
+  icon,
   onClick,
 }: {
   active?: boolean;
   label: string;
+  icon?: React.ReactNode;
   onClick?: () => void;
 }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left rounded-xl px-3 py-2 text-sm font-semibold transition",
+        "flex items-center gap-3 px-3 py-1.5 w-full text-left rounded-md transition-colors text-sm",
         active
-          ? "bg-[#F58A9C] text-slate-900"
-          : "text-slate-600 hover:bg-slate-100"
+          ? "bg-[#f6f6f7] text-[#202223] font-semibold shadow-sm"
+          : "text-[#5c5f62] hover:bg-[#f1f2f4]",
       )}
     >
+      <span className={active ? "text-[#202223]" : "text-[#8c9196]"}>
+        {icon}
+      </span>
       {label}
     </button>
   );
 }
 
-function TabButton({
-  active,
-  label,
-  onClick,
+function MetricBlock({
+  title,
+  value,
+  subtext,
 }: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
+  title: string;
+  value: React.ReactNode;
+  subtext?: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-xl px-3 py-2 text-sm font-semibold transition",
-        active
-          ? "bg-slate-900 text-white"
-          : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-      )}
-    >
-      {label}
-    </button>
+    <div className="flex flex-col flex-1">
+      <span className="text-xs font-medium text-[#6d7175] mb-1">{title}</span>
+      <div className="text-xl font-bold text-[#202223] flex items-center gap-2">
+        {value}
+        {subtext && (
+          <span className="text-xs font-normal text-[#6d7175]">{subtext}</span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -261,7 +374,7 @@ function MemberAnalytics({
 }) {
   if (!orders || orders.length === 0) {
     return (
-      <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-500">
+      <div className="mt-3 px-4 py-3 text-xs text-[#6d7175] bg-[#f9fafb] border border-[#e1e3e5] rounded-md">
         尚無足夠訂單資料可供分析。
       </div>
     );
@@ -277,10 +390,7 @@ function MemberAnalytics({
   orders.forEach((o) => {
     const d = new Date(o.date_created);
     if (isNaN(d.getTime())) return;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (!monthLabels.includes(key)) monthLabels.push(key);
     monthTotalsMap[key] = (monthTotalsMap[key] || 0) + (o.total || 0);
   });
@@ -292,7 +402,7 @@ function MemberAnalytics({
   orders.forEach((o) =>
     o.line_items.forEach((it) => {
       productMap[it.name] = (productMap[it.name] || 0) + (it.quantity || 0);
-    })
+    }),
   );
 
   const productEntries = Object.entries(productMap)
@@ -303,56 +413,29 @@ function MemberAnalytics({
   const productQty = productEntries.map(([, q]) => q);
 
   return (
-    <div className="mt-4 space-y-3">
-      {/* 指標卡片 */}
+    <div className="mt-4 space-y-4">
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">訂單數</div>
-          <div className="mt-1 text-lg font-semibold text-slate-800">
-            {orderCount}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">累計消費</div>
-          <div className="mt-1 text-lg font-semibold text-slate-800">
-            {formatNTD(totalAmount)}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">平均客單價</div>
-          <div className="mt-1 text-lg font-semibold text-slate-800">
-            {orderCount === 0 ? "—" : formatNTD(avgAmount)}
-          </div>
-        </div>
-
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">推薦註冊人數</div>
-          <div className="mt-1 text-lg font-semibold text-amber-700">
-            {customer.referredCount || 0}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">成功首單推薦</div>
-          <div className="mt-1 text-lg font-semibold text-amber-700">
-            {customer.rewardedCount || 0}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="text-[11px] text-slate-500">已賺推薦金</div>
-          <div className="mt-1 text-lg font-semibold text-amber-700">
-            {formatNTD(customer.referralEarned || 0)}
-          </div>
-        </div>
+        <MetricBlock title="訂單數" value={orderCount} />
+        <MetricBlock title="累計消費" value={formatNTD(totalAmount)} />
+        <MetricBlock
+          title="平均客單價"
+          value={orderCount === 0 ? "—" : formatNTD(avgAmount)}
+        />
+        <MetricBlock title="推薦註冊人數" value={customer.referredCount || 0} />
+        <MetricBlock title="成功首單推薦" value={customer.rewardedCount || 0} />
+        <MetricBlock
+          title="已賺推薦金"
+          value={formatNTD(customer.referralEarned || 0)}
+        />
       </div>
 
-      {/* 圖表：左右兩塊 */}
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="mb-1 text-[11px] font-semibold text-slate-600">
+      <div className="grid gap-4 md:grid-cols-2 pt-4 border-t border-[#ebebeb]">
+        <div className="rounded-lg border border-[#c9cccf] bg-white px-3 py-2 shadow-sm">
+          <div className="mb-1 text-xs font-semibold text-[#202223]">
             每月消費金額趨勢
           </div>
           {monthLabels.length === 0 ? (
-            <p className="text-xs text-slate-400">尚無可用的時間序列資料。</p>
+            <p className="text-xs text-[#6d7175]">尚無可用的時間序列資料。</p>
           ) : (
             <div className="h-52">
               <LineChart
@@ -372,12 +455,12 @@ function MemberAnalytics({
           )}
         </div>
 
-        <div className="rounded-lg border bg-white px-3 py-2">
-          <div className="mb-1 text-[11px] font-semibold text-slate-600">
+        <div className="rounded-lg border border-[#c9cccf] bg-white px-3 py-2 shadow-sm">
+          <div className="mb-1 text-xs font-semibold text-[#202223]">
             最常購買商品 TOP 5
           </div>
           {productLabels.length === 0 ? (
-            <p className="text-xs text-slate-400">尚無商品統計資料。</p>
+            <p className="text-xs text-[#6d7175]">尚無商品統計資料。</p>
           ) : (
             <div className="h-52">
               <BarChart
@@ -401,6 +484,9 @@ export default function AccountPage() {
 
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
 
+  // ================= 全域搜尋狀態 =================
+  const [searchQuery, setSearchQuery] = useState("");
+
   // account data
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -415,7 +501,7 @@ export default function AccountPage() {
   const [referralLoading, setReferralLoading] = useState(false);
 
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>(
-    []
+    [],
   );
   const [availableLoading, setAvailableLoading] = useState(false);
 
@@ -423,14 +509,10 @@ export default function AccountPage() {
     upgrade: false,
     birthday: false,
   });
-  const [claimed, setClaimed] = useState({
-    upgrade: false,
-    birthday: false,
-  });
-
+  const [claimed, setClaimed] = useState({ upgrade: false, birthday: false });
   const [claimMessage, setClaimMessage] = useState<string | null>(null);
   const [claimStatus, setClaimStatus] = useState<"success" | "error" | null>(
-    null
+    null,
   );
   const [claimedCode, setClaimedCode] = useState<string | null>(null);
 
@@ -443,9 +525,13 @@ export default function AccountPage() {
   const [adminData, setAdminData] = useState<AdminCustomer[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
-  const [adminQ, setAdminQ] = useState("");
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  // 💡 用於追蹤使用者訂單列表展開狀態
+  const [expandedUserOrderId, setExpandedUserOrderId] = useState<number | null>(
+    null,
+  );
+
   const [expandedOrders, setExpandedOrders] = useState<AdminOrder[]>([]);
   const [expandedOrdersLoading, setExpandedOrdersLoading] = useState(false);
   const [expandedOrdersError, setExpandedOrdersError] = useState("");
@@ -456,6 +542,10 @@ export default function AccountPage() {
   const [birthdayInput, setBirthdayInput] = useState("");
   const [isSettingBirthday, setIsSettingBirthday] = useState(false);
   const [birthdayLoading, setBirthdayLoading] = useState(false);
+
+  // 生日自動彈窗 State
+  const [showBirthdayModal, setShowBirthdayModal] = useState(false);
+  const [modalBirthdayInput, setModalBirthdayInput] = useState("");
 
   /* ===================== Loaders (Account) ===================== */
   const loadProfile = useCallback(async () => {
@@ -495,9 +585,6 @@ export default function AccountPage() {
     } catch {
       setError("讀取會員資料失敗，請稍後再試。");
       setLoggedIn(false);
-      setCustomer(null);
-      setMembership(null);
-      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -568,13 +655,22 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
-  // 提交生日
+  // ===================== 新增：登入載入完成後，若未設定生日自動彈出提醒 =====================
+  useEffect(() => {
+    if (!loading && loggedIn && customer && !customer.birthday) {
+      const hasPrompted = sessionStorage.getItem("birthdayPrompted");
+      if (!hasPrompted) {
+        setShowBirthdayModal(true);
+        sessionStorage.setItem("birthdayPrompted", "true");
+      }
+    }
+  }, [loading, loggedIn, customer]);
+
+  // 一般側邊欄點擊設定生日
   const handleUpdateBirthday = async () => {
     if (!birthdayInput) return alert("請選擇生日");
-    
-    if (!confirm(`您的生日是 ${birthdayInput} 嗎？\n確認後將無法再次修改。`)) {
+    if (!confirm(`您的生日是 ${birthdayInput} 嗎？\n確認後將無法再次修改。`))
       return;
-    }
 
     setBirthdayLoading(true);
     try {
@@ -583,13 +679,47 @@ export default function AccountPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ birthday: birthdayInput }),
       });
-      
       const data = await res.json();
       if (data.ok) {
         alert("生日設定成功！");
-        setCustomer((prev) => prev ? { ...prev, birthday: birthdayInput } : null);
+        setCustomer((prev) =>
+          prev ? { ...prev, birthday: birthdayInput } : null,
+        );
         setIsSettingBirthday(false);
-        loadProfile(); 
+        loadProfile();
+      } else {
+        alert(data.message || "更新失敗");
+      }
+    } catch (e) {
+      alert("系統錯誤，請稍後再試");
+    } finally {
+      setBirthdayLoading(false);
+    }
+  };
+
+  // 彈窗設定生日提交
+  const handleModalSubmit = async () => {
+    if (!modalBirthdayInput) return alert("請選擇生日");
+    if (
+      !confirm(`您的生日是 ${modalBirthdayInput} 嗎？\n確認後將無法再次修改。`)
+    )
+      return;
+
+    setBirthdayLoading(true);
+    try {
+      const res = await fetch("/api/account/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ birthday: modalBirthdayInput }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert("生日設定成功！");
+        setCustomer((prev) =>
+          prev ? { ...prev, birthday: modalBirthdayInput } : null,
+        );
+        setShowBirthdayModal(false);
+        loadProfile();
       } else {
         alert(data.message || "更新失敗");
       }
@@ -604,7 +734,6 @@ export default function AccountPage() {
     setClaimMessage(null);
     setClaimStatus(null);
     setClaimedCode(null);
-
     setClaimLoading((prev) => ({ ...prev, [kind]: true }));
     try {
       const res = await fetch("/api/account/coupons/claim", {
@@ -613,20 +742,17 @@ export default function AccountPage() {
         credentials: "include",
         body: JSON.stringify({ kind }),
       });
-
       const data = await res.json();
       if (!res.ok || !data?.ok) {
         setClaimStatus("error");
         setClaimMessage(
-          data?.message || data?.detail || "領取失敗，請稍後再試。"
+          data?.message || data?.detail || "領取失敗，請稍後再試。",
         );
         return;
       }
-
       setClaimStatus("success");
       setClaimMessage(data.message || "領取成功！");
       if (data.coupon?.code) setClaimedCode(data.coupon.code);
-
       setClaimed((prev) => ({ ...prev, [kind]: true }));
       loadAvailableCoupons();
     } catch {
@@ -638,40 +764,65 @@ export default function AccountPage() {
   };
 
   /* ===================== Derived (Account) ===================== */
+
+  // ===================== 處理頂部搜尋列過濾 (過濾訂單) =====================
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery) return orders;
+    const q = searchQuery.toLowerCase();
+    return orders.filter(
+      (o) =>
+        o.number.toLowerCase().includes(q) ||
+        o.status.toLowerCase().includes(q) ||
+        o.total.includes(q),
+    );
+  }, [orders, searchQuery]);
+
   const sortedCoupons = useMemo(() => {
     return [...availableCoupons].sort(
-      (a, b) => pickCouponCreatedAt(b) - pickCouponCreatedAt(a)
+      (a, b) => pickCouponCreatedAt(b) - pickCouponCreatedAt(a),
     );
   }, [availableCoupons]);
 
   const referralCoupons = useMemo(() => {
     return sortedCoupons.filter(
       (c) =>
-        isFriendCoupon(c.code, c.kind) || isAmbassadorCoupon(c.code, c.kind)
+        isFriendCoupon(c.code, c.kind) || isAmbassadorCoupon(c.code, c.kind),
     );
   }, [sortedCoupons]);
 
+  // ===================== 處理頂部搜尋列過濾 (過濾優惠券) =====================
+  const filteredCoupons = useMemo(() => {
+    let base = referralCoupons;
+    if (searchQuery && activeTab === "profile") {
+      const q = searchQuery.toLowerCase();
+      base = base.filter(
+        (c) => c.code.toLowerCase().includes(q) || String(c.amount).includes(q),
+      );
+    }
+    const previewLimit = 6;
+    return showAllReferralCoupons || (searchQuery && activeTab === "profile")
+      ? base
+      : base.slice(0, previewLimit);
+  }, [referralCoupons, showAllReferralCoupons, searchQuery, activeTab]);
+
   const ambassadorCoupons = useMemo(
     () => referralCoupons.filter((c) => isAmbassadorCoupon(c.code, c.kind)),
-    [referralCoupons]
+    [referralCoupons],
   );
-
   const friendCoupons = useMemo(
     () => referralCoupons.filter((c) => isFriendCoupon(c.code, c.kind)),
-    [referralCoupons]
+    [referralCoupons],
   );
 
   const ambassadorTotal = useMemo(
     () =>
       ambassadorCoupons.reduce((sum, c) => sum + (Number(c.amount) || 0), 0),
-    [ambassadorCoupons]
+    [ambassadorCoupons],
   );
-
   const friendTotal = useMemo(
     () => friendCoupons.reduce((sum, c) => sum + (Number(c.amount) || 0), 0),
-    [friendCoupons]
+    [friendCoupons],
   );
-
   const referralTotal = ambassadorTotal + friendTotal;
 
   const displayName =
@@ -682,12 +833,6 @@ export default function AccountPage() {
     customer?.username ||
     (customer?.email ? customer.email.split("@")[0] : "會員");
 
-  const previewLimit = 6;
-  const referralToShow = showAllReferralCoupons
-    ? referralCoupons
-    : referralCoupons.slice(0, previewLimit);
-  
-  // ✅ 新增：取得生日月份標籤
   const getBirthMonthLabel = (dateStr?: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -695,12 +840,10 @@ export default function AccountPage() {
     return `${d.getMonth() + 1}月`;
   };
 
-  // ✅ 新增：檢查是否為當月壽星
   const isCurrentMonthBirthday = useMemo(() => {
     if (!customer?.birthday) return false;
     const d = new Date(customer.birthday);
     const now = new Date();
-    // 簡單比較月份 (0-11)
     return d.getMonth() === now.getMonth();
   }, [customer?.birthday]);
 
@@ -711,14 +854,12 @@ export default function AccountPage() {
     try {
       const res = await fetch("/api/admin/customers", { cache: "no-store" });
       const js = await res.json();
-
       if (res.status === 401 || res.status === 403) {
         setIsAdmin(false);
         setAdminData([]);
         setAdminError("權限不足（僅管理員可查看）。");
         return;
       }
-
       if (!res.ok || !js.ok) throw new Error(js.message || "讀取失敗");
       setAdminData(js.customers || []);
       adminLoadedOnceRef.current = true;
@@ -729,49 +870,6 @@ export default function AccountPage() {
     }
   }, []);
 
-  const toggleExpand = async (customerId: number, email?: string) => {
-    if (expandedId === customerId) {
-      setExpandedId(null);
-      return;
-    }
-
-    setExpandedId(customerId);
-    setOrders([]);
-    setExpandedOrdersError("");
-
-    setOrdersLoading(true);
-
-    try {
-      const qs = new URLSearchParams({
-        customerId: String(customerId),
-      });
-
-      if (email) qs.set("email", email);
-
-      const res = await fetch(`/api/admin/customer-orders?${qs.toString()}`, {
-        cache: "no-store",
-      });
-
-      const js = await res.json();
-      if (!res.ok || !js.ok) throw new Error(js.message || "讀取訂單失敗");
-      setOrders(js.orders || []);
-    } catch (e: any) {
-      setOrders([]);
-      setExpandedOrdersError(e?.message || "讀取訂單失敗");
-    } finally {
-      setOrdersLoading(false);
-    }
-  };
-
-  // admin tab 第一次被打開時才載入
-  useEffect(() => {
-    if (!loggedIn) return;
-    if (!isAdmin) return;
-    if (activeTab !== "admin") return;
-    if (adminLoadedOnceRef.current) return;
-
-    loadAdminCustomers();
-  }, [activeTab, isAdmin, loggedIn, loadAdminCustomers]);
   const toggleExpandAdminRow = async (customerId: number, email?: string) => {
     if (expandedId === customerId) {
       setExpandedId(null);
@@ -788,7 +886,6 @@ export default function AccountPage() {
     try {
       const qs = new URLSearchParams({ customerId: String(customerId) });
       if (email) qs.set("email", email);
-
       const res = await fetch(`/api/admin/customer-orders?${qs.toString()}`, {
         cache: "no-store",
       });
@@ -798,9 +895,7 @@ export default function AccountPage() {
         setIsAdmin(false);
         throw new Error("權限不足（僅管理員可查看）。");
       }
-
       if (!res.ok || !js.ok) throw new Error(js.message || "讀取訂單失敗");
-
       setExpandedOrders(js.orders || []);
     } catch (e: any) {
       setExpandedOrders([]);
@@ -810,65 +905,76 @@ export default function AccountPage() {
     }
   };
 
+  useEffect(() => {
+    if (
+      !loggedIn ||
+      !isAdmin ||
+      activeTab !== "admin" ||
+      adminLoadedOnceRef.current
+    )
+      return;
+    loadAdminCustomers();
+  }, [activeTab, isAdmin, loggedIn, loadAdminCustomers]);
+
+  // ===================== 處理頂部搜尋列過濾 (過濾管理員列表) =====================
   const adminFiltered = useMemo(() => {
-    const keyword = adminQ.trim().toLowerCase();
-    if (!keyword) return adminData;
+    const keyword = searchQuery.trim().toLowerCase();
+    if (!keyword || activeTab !== "admin") return adminData;
     return adminData.filter(
       (c) =>
         c.name.toLowerCase().includes(keyword) ||
         c.email.toLowerCase().includes(keyword) ||
-        (c.username || "").toLowerCase().includes(keyword)
+        (c.username || "").toLowerCase().includes(keyword),
     );
-  }, [adminQ, adminData]);
+  }, [searchQuery, adminData, activeTab]);
 
   const totalMembers = adminData.length;
   const totalRevenue = adminData.reduce((s, c) => s + c.totalSpent, 0);
   const totalReferred = adminData.reduce(
     (s, c) => s + (c.referredCount || 0),
-    0
+    0,
   );
   const totalReferralEarned = adminData.reduce(
     (s, c) => s + (c.referralEarned || 0),
-    0
+    0,
   );
 
   const renderExpandedOrders = () => {
-    if (expandedOrdersLoading) {
-      return <p className="text-xs text-slate-500 py-2">載入訂單中…</p>;
-    }
-    if (expandedOrdersError) {
+    if (expandedOrdersLoading)
+      return <p className="text-xs text-[#6d7175] py-2">載入訂單中...</p>;
+    if (expandedOrdersError)
       return (
         <p className="text-xs text-rose-600 py-2">{expandedOrdersError}</p>
       );
-    }
-    if (expandedOrders.length === 0) {
-      return <p className="text-xs text-slate-500 py-2">目前尚無任何訂單。</p>;
-    }
+    if (expandedOrders.length === 0)
+      return <p className="text-xs text-[#6d7175] py-2">目前尚無任何訂單。</p>;
 
     return (
-      <div className="mt-1 rounded-lg border bg-slate-50">
-        <table className="min-w-full text-xs">
-          <thead className="bg-slate-100 text-slate-500">
+      <div className="mt-1 rounded-lg border border-[#c9cccf] bg-white overflow-hidden shadow-sm">
+        <table className="min-w-full text-xs text-left">
+          <thead className="bg-[#f9fafb] text-[#6d7175] border-b border-[#c9cccf]">
             <tr>
-              <th className="px-3 py-1 text-left">訂單編號</th>
-              <th className="px-3 py-1 text-left">日期</th>
-              <th className="px-3 py-1 text-left">狀態</th>
-              <th className="px-3 py-1 text-right">金額</th>
-              <th className="px-3 py-1 text-left">品項</th>
+              <th className="px-3 py-2 font-medium">訂單編號</th>
+              <th className="px-3 py-2 font-medium">日期</th>
+              <th className="px-3 py-2 font-medium">狀態</th>
+              <th className="px-3 py-2 font-medium text-right">金額</th>
+              <th className="px-3 py-2 font-medium">品項</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[#ebebeb]">
             {expandedOrders.map((o) => (
-              <tr key={o.id} className="border-t last:border-b">
-                <td className="px-3 py-1 align-top">#{o.number}</td>
-                <td className="px-3 py-1 align-top">
+              <tr key={o.id} className="text-[#202223]">
+                <td className="px-3 py-2 font-medium">#{o.number}</td>
+                <td className="px-3 py-2">
                   {new Date(o.date_created).toLocaleString("zh-TW")}
                 </td>
-                <td className="px-3 py-1 align-top">{o.status}</td>
-                <td className="px-3 py-1 align-top text-right">
+                <td className="px-3 py-2">
+                  <StatusPill status={o.status} />
+                </td>
+                <td className="px-3 py-2 text-right font-medium">
                   {formatNTD(o.total)}
                 </td>
-                <td className="px-3 py-1 align-top">
+                <td className="px-3 py-2 text-[#6d7175]">
                   {o.line_items.slice(0, 3).map((it, idx) => (
                     <span key={idx} className="mr-2">
                       {it.name} × {it.quantity}
@@ -887,11 +993,10 @@ export default function AccountPage() {
   /* ===================== UI States ===================== */
   if (loading) {
     return (
-      <div className="min-h-[70vh] bg-slate-100">
-        <div className="mx-auto max-w-6xl px-4 py-10">
-          <div className="animate-pulse rounded-2xl border bg-white p-6 text-slate-500">
-            載入中…
-          </div>
+      <div className="h-screen bg-[#f6f6f7] flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-8 h-8 rounded-full border-2 border-[#008060] border-t-transparent animate-spin"></div>
+          <p className="text-[#6d7175] text-sm font-medium">載入中...</p>
         </div>
       </div>
     );
@@ -899,121 +1004,192 @@ export default function AccountPage() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-[70vh] bg-slate-100">
-        <div className="mx-auto max-w-6xl px-4 py-10">
-          <div className="mx-auto w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">尚未登入</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              請先登入以檢視會員資料。
+      <div className="h-screen bg-[#f6f6f7] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white border border-[#c9cccf] rounded-lg shadow-sm p-8 text-center">
+          <h2 className="text-xl font-bold text-[#202223] mb-2">尚未登入</h2>
+          <p className="text-sm text-[#6d7175] mb-6">
+            請先登入以檢視您的會員中心與專屬優惠。
+          </p>
+          <button
+            onClick={() =>
+              router.push(`/login?next=${encodeURIComponent("/account")}`)
+            }
+            className="w-full bg-[#008060] hover:bg-[#006e52] text-white py-2.5 rounded-md text-sm font-medium transition-colors shadow-[0_1px_0_rgba(0,0,0,0.15)]"
+          >
+            前往登入
+          </button>
+          {error && (
+            <p className="mt-4 text-xs text-rose-600 bg-rose-50 p-2 rounded">
+              {error}
             </p>
-            <button
-              onClick={() =>
-                router.push(`/login?next=${encodeURIComponent("/account")}`)
-              }
-              className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              前往登入
-            </button>
-            {error && (
-              <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                {error}
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </div>
     );
   }
 
-  /* ===================== Main Layout ===================== */
+  /* ===================== 動態 Placeholder 判斷 ===================== */
+  const getSearchPlaceholder = () => {
+    if (activeTab === "orders") return "搜尋訂單編號或狀態...";
+    if (activeTab === "admin") return "搜尋會員姓名、Email...";
+    return "搜尋優惠券代碼...";
+  };
+
+  /* ===================== Main Layout (Shopify Style) ===================== */
   return (
-    <div className="min-h-[80vh] bg-slate-100 py-[100px] flex justify-center items-center">
-      <div className="  w-[92%] mx-auto max-w-[1920px]  ">
-        <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-          {/* Sidebar */}
-          <aside className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="p-4">
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-2xl bg-slate-900" />
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">
-                    Maglo.
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    Member Console
-                  </div>
+    <div className="min-h-screen flex flex-col pt-20 mt-10 bg-[#f6f6f7] text-[#202223] font-sans">
+      {/* 頂部導航 (Top Bar) */}
+      <header className="h-14 bg-[#1a1a1a] flex items-center justify-between px-4 shrink-0 z-10 border-b border-[#000]">
+        <div className="flex items-center gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
+            <div className="w-7 h-7 bg-[#95bf47] rounded flex items-center justify-center text-white">
+              <span className="text-sm">U</span>
+            </div>
+            UFLOW{" "}
+            <span className="text-[#a6a6a6] font-normal text-sm ml-1 hidden sm:inline">
+              後台
+            </span>
+          </div>
+        </div>
+
+        {/* 全域搜尋列 */}
+        <div className="flex-1 max-w-2xl px-4 hidden md:block">
+          <div className="relative flex items-center w-full">
+            <Search className="absolute left-3 text-[#8c9196] w-4 h-4" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={getSearchPlaceholder()}
+              className="w-full bg-[#2c2c2c] text-white placeholder-[#8c9196] text-sm border-none rounded-md pl-10 pr-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#95bf47]"
+            />
+          </div>
+        </div>
+
+        {/* 右側個人檔案 */}
+        <div className="flex items-center gap-4 justify-end">
+          <button className="text-[#a6a6a6] hover:text-white transition-colors relative">
+            <Bell className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2 bg-[#2c2c2c] px-2 py-1 rounded-md cursor-pointer hover:bg-[#333] transition-colors border border-[#404040]">
+            <div className="w-6 h-6 bg-[#ffc453] rounded-sm flex items-center justify-center text-[#8a6116] text-xs font-bold uppercase">
+              {displayName.substring(0, 2)}
+            </div>
+            <span className="text-sm text-white hidden sm:block truncate max-w-[100px]">
+              {displayName}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* 下半部：側邊欄 + 主內容 */}
+      <div className="flex flex-1">
+        {/* 左側側邊欄 (Sidebar) */}
+        <aside className="w-60 bg-[#ebebeb] border-r border-[#d2d5d8] flex flex-col hidden md:flex shrink-0">
+          <div className="p-3 flex flex-col gap-1">
+            <SidebarItem
+              active={activeTab === "profile"}
+              label="帳戶"
+              icon={<Users size={18} />}
+              onClick={() => {
+                setActiveTab("profile");
+                setSearchQuery("");
+              }}
+            />
+
+            <div className="mt-4 mb-1 px-3 text-xs font-semibold text-[#6d7175]">
+              訂單與銷售
+            </div>
+            <SidebarItem
+              active={activeTab === "orders"}
+              label="訂單"
+              icon={<Package size={18} />}
+              onClick={() => {
+                setActiveTab("orders");
+                setSearchQuery("");
+              }}
+            />
+            <SidebarItem
+              label="優惠券"
+              icon={<Tag size={18} />}
+              onClick={() => {
+                setActiveTab("profile");
+                setSearchQuery("");
+              }}
+            />
+            <SidebarItem
+              label="推薦計畫"
+              icon={<Users size={18} />}
+              onClick={() => {
+                setActiveTab("profile");
+                setSearchQuery("");
+              }}
+            />
+
+            {isAdmin && (
+              <>
+                <div className="mt-4 mb-1 px-3 text-xs font-semibold text-[#6d7175]">
+                  數據分析
                 </div>
-              </div>
-
-              <div className="mt-5 space-y-1">
                 <SidebarItem
-                  active={activeTab === "profile"}
-                  label="Account"
-                  onClick={() => setActiveTab("profile")}
+                  active={activeTab === "admin"}
+                  label="管理員分析"
+                  icon={<BarChart2 size={18} />}
+                  onClick={() => {
+                    setActiveTab("admin");
+                    setSearchQuery("");
+                  }}
                 />
-                <SidebarItem
-                  active={activeTab === "orders"}
-                  label="Orders"
-                  onClick={() => setActiveTab("orders")}
-                />
+              </>
+            )}
+          </div>
 
-                {isAdmin && (
-                  <SidebarItem
-                    active={activeTab === "admin"}
-                    label="Admin Analytics"
-                    onClick={() => setActiveTab("admin")}
-                  />
-                )}
+          <div className="mt-auto p-3 flex flex-col gap-1 border-t border-[#d2d5d8]">
+            <SidebarItem
+              label="合作洽談"
+              icon={<ExternalLink size={18} />}
+              onClick={() => router.push("/cooperate")}
+            />
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                router.replace("/login?next=/account");
+              }}
+              className="flex items-center gap-3 px-3 py-1.5 w-full text-left rounded-md transition-colors text-sm text-red-600 hover:bg-red-50"
+            >
+              <LogOut size={18} /> 登出
+            </button>
+          </div>
+        </aside>
 
-                <SidebarItem
-                  label="Referral"
-                  onClick={() => setActiveTab("profile")}
-                />
-                <SidebarItem
-                  label="Coupons"
-                  onClick={() => setActiveTab("profile")}
-                />
-              </div>
-            </div>
+        {/* 主內容區 (Main Content) */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 relative">
+          {/* 行動版搜尋框 (Mobile only) */}
+          <div className="md:hidden mb-4 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8c9196] w-4 h-4" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={getSearchPlaceholder()}
+              className="w-full bg-white border border-[#c9cccf] text-[#202223] text-sm rounded-md pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#008060]"
+            />
+          </div>
 
-            <div className="border-t p-4">
-              <button
-                onClick={async () => {
-                  await fetch("/api/auth/logout", { method: "POST" });
-                  router.replace("/login?next=/account");
-                }}
-                className="w-full rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                Logout
-              </button>
-            </div>
-          </aside>
-
-          {/* Main column */}
-          <main className="space-y-4">
-            {/* Topbar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="min-w-0">
-                <div className="text-xs text-slate-500">Member Center</div>
-                <div className="truncate text-lg font-semibold text-slate-900">
+          <div className="max-w-[1100px] mx-auto flex flex-col gap-5">
+            {/* 頁面標題與操作區 */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button className="p-1.5 border border-[#c9cccf] bg-white rounded-md shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-gray-50 text-[#5c5f62] hidden sm:block">
+                  <ChevronLeft size={20} />
+                </button>
+                <h1 className="text-2xl font-bold text-[#202223] flex items-center gap-3">
                   {displayName}
-                  {isAdmin && (
-                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
-                      管理員
-                    </span>
-                  )}
-                </div>
+                  {isAdmin && <StatusPill status="管理員" type="tier" />}
+                </h1>
               </div>
-
               <div className="flex items-center gap-2">
-                <div className="hidden md:flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <span className="text-slate-400">⌕</span>
-                  <input
-                    className="w-56 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    placeholder="Search…"
-                  />
-                </div>
-
                 <button
                   onClick={() => {
                     loadAvailableCoupons();
@@ -1022,185 +1198,182 @@ export default function AccountPage() {
                     loadProfile();
                     if (isAdmin && activeTab === "admin") loadAdminCustomers();
                   }}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
+                  className="bg-white border border-[#c9cccf] shadow-[0_1px_0_rgba(0,0,0,0.05)] text-[#202223] px-3 py-1.5 rounded-md text-sm font-medium hover:bg-[#f6f6f7] transition-colors"
                 >
-                  Refresh
+                  重新整理
                 </button>
-
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                  <div className="h-7 w-7 rounded-full bg-slate-200" />
-                  <div className="hidden sm:block">
-                    <div className="text-xs font-semibold text-slate-900">
-                      {displayName}
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      {customer?.email || ""}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs row */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <TabButton
-                  active={activeTab === "profile"}
-                  label="會員基本資料"
-                  onClick={() => setActiveTab("profile")}
-                />
-                <TabButton
-                  active={activeTab === "orders"}
-                  label="訂單資訊"
-                  onClick={() => setActiveTab("orders")}
-                />
-                {isAdmin && (
-                  <TabButton
-                    active={activeTab === "admin"}
-                    label="管理員分析"
-                    onClick={() => setActiveTab("admin")}
-                  />
-                )}
-              </div>
-
-              <div className="hidden sm:flex items-center gap-2">
-                <Link
-                  href="/cooperate"
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                <button
+                  onClick={loadProfile}
+                  className="bg-[#008060] text-white border border-[#008060] shadow-[0_1px_0_rgba(0,0,0,0.15)] rounded-md px-3 py-1.5 text-sm font-medium hover:bg-[#006e52] transition-colors"
                 >
-                  合作資訊
-                </Link>
+                  更新資料
+                </button>
               </div>
             </div>
 
-            {/* Content area */}
-            <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-              {/* Main tab content */}
-              <div className="space-y-4">
+            {/* 指標數據行 (Metric Row) */}
+            {activeTab === "profile" && (
+              <div className="bg-white border border-[#c9cccf] rounded-lg shadow-sm p-4 flex gap-4 sm:gap-8 flex-wrap">
+                <MetricBlock
+                  title="目前等級"
+                  value={
+                    membership?.tierName ? (
+                      <StatusPill status={membership.tierName} type="tier" />
+                    ) : (
+                      "—"
+                    )
+                  }
+                />
+                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                <MetricBlock
+                  title="年度累積消費"
+                  value={formatMoneyNT(membership?.totalSpent12m || 0)}
+                />
+                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                <MetricBlock
+                  title="推薦獎金總額"
+                  value={formatMoneyNT(referralTotal)}
+                />
+                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                <MetricBlock
+                  title="升級進度"
+                  value={
+                    membership?.nextNeedAmount
+                      ? formatMoneyNT(membership.nextNeedAmount)
+                      : "—"
+                  }
+                  subtext={
+                    membership?.nextTierName
+                      ? `距離 ${membership.nextTierName} 尚差`
+                      : undefined
+                  }
+                />
+              </div>
+            )}
+
+            {/* 行動裝置的分頁選項 */}
+            <div className="md:hidden flex border-b border-[#c9cccf] overflow-x-auto pb-[1px]">
+              {["profile", "orders", ...(isAdmin ? ["admin"] : [])].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab as TabKey);
+                      setSearchQuery("");
+                    }}
+                    className={`px-4 py-3 text-sm font-medium relative whitespace-nowrap ${activeTab === tab ? "text-[#202223]" : "text-[#6d7175]"}`}
+                  >
+                    {tab === "profile"
+                      ? "帳戶"
+                      : tab === "orders"
+                        ? "訂單"
+                        : "數據分析"}
+                    {activeTab === tab && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#008060] rounded-t-md"></div>
+                    )}
+                  </button>
+                ),
+              )}
+            </div>
+
+            {/* 雙欄式佈局 (Shopify 經典排版 2/3 + 1/3) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+              {/* 左側主要區塊 */}
+              <div className="lg:col-span-2 flex flex-col gap-5">
                 {/* ===== Tab: Profile ===== */}
                 {activeTab === "profile" && (
                   <>
+                    {/* 會員資料卡片 */}
                     <ShellCard
-                      title="Member Info"
+                      title="會員資料概覽"
                       right={
-                        <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-[12px] font-semibold text-slate-700 ring-1 ring-slate-200">
-                          ID {customer?.id || "-"}
+                        <span className="text-xs font-mono text-[#6d7175] bg-gray-50 px-2 py-1 rounded">
+                          #UID_{customer?.id || "-"}
                         </span>
                       }
                     >
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <MiniField label="Name" value={displayName} />
+                      <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                        <MiniField label="姓名" value={displayName} />
                         <MiniField
-                          label="Email"
+                          label="電子信箱"
                           value={customer?.email || "-"}
                         />
-                         <MiniField 
-                          label="Birthday" 
-                          value={customer?.birthday || "未設定"} 
-                        />
-                        <div className="md:col-span-2">
-                          <MiniField
-                            label="Username"
-                            value={customer?.username || "-"}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 md:grid-cols-3">
                         <MiniField
-                          label="Tier"
-                          value={membership?.tierName || "—"}
+                          label="生日"
+                          value={customer?.birthday || "未設定"}
                         />
                         <MiniField
-                          label="Spend (12m)"
-                          value={formatMoneyNT(membership?.totalSpent12m || 0)}
-                        />
-                        <MiniField
-                          label="Referral Total"
-                          value={formatMoneyNT(referralTotal)}
+                          label="使用者名稱"
+                          value={customer?.username || "-"}
                         />
                       </div>
-
-                      {membership?.nextTierName &&
-                        membership.nextNeedAmount != null && (
-                          <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                            再累積消費{" "}
-                            <b className="text-slate-900">
-                              {formatMoneyNT(membership.nextNeedAmount)}
-                            </b>{" "}
-                            可升等為{" "}
-                            <b className="text-slate-900">
-                              {membership.nextTierName}
-                            </b>
-                          </div>
-                        )}
                     </ShellCard>
 
+                    {/* 推薦計畫卡片 */}
                     <ShellCard
-                      title="Referral Program"
-                      right={
-                        <span className="text-[12px] text-slate-500">
-                          金牌大使推薦
-                        </span>
-                      }
+                      title="推薦計畫"
+                      right={<StatusPill status="金牌大使推薦" type="tier" />}
                     >
                       {referralLoading ? (
-                        <div className="text-sm text-slate-500">
-                          讀取推薦資訊中…
-                        </div>
+                        <p className="text-sm text-[#6d7175]">
+                          讀取推薦資訊中...
+                        </p>
                       ) : !referral ? (
-                        <div className="text-sm text-slate-500">
-                          尚無推薦資訊
-                        </div>
+                        <p className="text-sm text-[#6d7175]">尚無推薦資訊</p>
                       ) : (
-                        <div className="space-y-3">
-                          <div className="rounded-2xl border border-lime-200 bg-lime-50 px-4 py-3 text-sm text-slate-800">
-                            親友註冊可得 <b>NT$ {referral.friendReward}</b>{" "}
+                        <div className="space-y-5">
+                          <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-4 text-sm text-emerald-900">
+                            親友註冊可得{" "}
+                            <strong className="text-emerald-700">
+                              NT$ {referral.friendReward}
+                            </strong>{" "}
                             購物金，親友首單完成後你可得{" "}
-                            <b>NT$ {referral.ambassadorReward}</b> 抵用金。
+                            <strong className="text-emerald-700">
+                              NT$ {referral.ambassadorReward}
+                            </strong>{" "}
+                            抵用金。
                           </div>
 
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                              <div className="text-[11px] text-slate-500">
-                                Referral Code
-                              </div>
-                              <div className="mt-2 flex items-center justify-between gap-2">
-                                <div className="text-sm font-semibold text-slate-900">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-[#6d7175] mb-1">
+                                您的推薦碼
+                              </p>
+                              <div className="flex items-center justify-between border border-[#c9cccf] rounded-md px-3 py-2 bg-[#f9fafb]">
+                                <code className="text-sm font-mono font-bold text-[#008060]">
                                   {referral.refCode}
-                                </div>
+                                </code>
                                 <button
                                   onClick={() =>
                                     navigator.clipboard.writeText(
-                                      referral.refCode
+                                      referral.refCode,
                                     )
                                   }
-                                  className="rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                                  className="text-[#5c5f62] hover:text-[#008060] transition-colors"
                                 >
-                                  Copy
+                                  <Copy size={16} />
                                 </button>
                               </div>
                             </div>
-
-                            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 md:col-span-2">
-                              <div className="text-[11px] text-slate-500">
-                                Referral Link
-                              </div>
-                              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                            <div>
+                              <p className="text-xs text-[#6d7175] mb-1">
+                                推薦連結
+                              </p>
+                              <div className="flex items-center gap-2">
                                 <input
                                   readOnly
                                   value={referral.referralLink}
-                                  className="w-full rounded-xl border bg-slate-50 px-3 py-2 text-xs"
+                                  className="flex-1 border border-[#c9cccf] rounded-md px-3 py-2 text-sm bg-[#f9fafb] outline-none font-mono text-xs"
                                 />
                                 <button
                                   onClick={() =>
                                     navigator.clipboard.writeText(
-                                      referral.referralLink
+                                      referral.referralLink,
                                     )
                                   }
-                                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                                  className="bg-white border border-[#c9cccf] shadow-sm text-[#202223] px-3 py-2 rounded-md hover:bg-[#f6f6f7] transition-colors font-medium text-sm"
                                 >
-                                  Copy Link
+                                  複製
                                 </button>
                               </div>
                             </div>
@@ -1214,272 +1387,175 @@ export default function AccountPage() {
                 {/* ===== Tab: Orders ===== */}
                 {activeTab === "orders" && (
                   <ShellCard
-                    title="Orders"
-                    right={
-                      <button
-                        onClick={loadOrders}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-                      >
-                        重新整理訂單
-                      </button>
+                    title={
+                      searchQuery
+                        ? `搜尋結果: "${searchQuery}"`
+                        : "我的訂單紀錄"
                     }
                   >
                     {ordersLoading ? (
-                      <div className="text-sm text-slate-500">載入訂單中…</div>
-                    ) : orders.length === 0 ? (
-                      <div className="text-sm text-slate-500">
-                        目前尚未有任何訂單紀錄。
-                      </div>
+                      <p className="text-sm text-[#6d7175]">載入訂單中...</p>
+                    ) : filteredOrders.length === 0 ? (
+                      <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                        {searchQuery
+                          ? "找不到符合條件的訂單。"
+                          : "目前尚未有任何訂單紀錄。"}
+                      </p>
                     ) : (
-                      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                        <div className="grid grid-cols-12 gap-2 bg-slate-50 px-4 py-3 text-[11px] font-semibold text-slate-600">
-                          <div className="col-span-3">Order</div>
-                          <div className="col-span-3">Created</div>
-                          <div className="col-span-2">Status</div>
-                          <div className="col-span-2 text-right">Total</div>
-                          <div className="col-span-2 text-right">Items</div>
-                        </div>
-
-                        <div className="divide-y">
-                          {orders.map((o) => {
-                            const itemsCount = (o.line_items || []).reduce(
-                              (sum, it) => sum + (it.quantity || 0),
-                              0
-                            );
-                            return (
-                              <div
-                                key={o.id}
-                                className="grid grid-cols-12 gap-2 px-4 py-3 text-sm"
-                              >
-                                <div className="col-span-3 font-semibold text-slate-900">
-                                  #{o.number}
-                                </div>
-                                <div className="col-span-3 text-slate-600">
-                                  {new Date(o.date_created).toLocaleString(
-                                    "zh-TW"
-                                  )}
-                                </div>
-                                <div className="col-span-2">
-                                  <StatusPill status={o.status} />
-                                </div>
-                                <div className="col-span-2 text-right font-semibold text-slate-900">
-                                  {formatMoneyNT(Number(o.total))}
-                                </div>
-                                <div className="col-span-2 text-right text-slate-600">
-                                  {itemsCount}
-                                </div>
-
-                                {o.line_items?.length > 0 && (
-                                  <div className="col-span-12 mt-1 text-[12px] text-slate-500">
-                                    {o.line_items.slice(0, 4).map((it, idx) => (
-                                      <span key={idx} className="mr-2">
-                                        {it.name} × {it.quantity}
-                                      </span>
-                                    ))}
-                                    {o.line_items.length > 4 && <span>…</span>}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </ShellCard>
-                )}
-
-                {/* ===== Tab: Admin Analytics ===== */}
-                {activeTab === "admin" && isAdmin && (
-                  <ShellCard
-                    title="管理員分析：會員總覽"
-                    right={
-                      <button
-                        onClick={loadAdminCustomers}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-                      >
-                        重新整理
-                      </button>
-                    }
-                  >
-                    <div className="mb-4 grid gap-3 md:grid-cols-4">
-                      <div className="rounded-xl bg-white px-4 py-3 shadow-sm border">
-                        <div className="text-xs text-slate-500">會員數</div>
-                        <div className="text-lg font-semibold">
-                          {totalMembers}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-3 shadow-sm border">
-                        <div className="text-xs text-slate-500">
-                          累計消費總額
-                        </div>
-                        <div className="text-lg font-semibold">
-                          {formatNTD(totalRevenue)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-3 shadow-sm border">
-                        <div className="text-xs text-slate-500">
-                          全站推薦註冊數
-                        </div>
-                        <div className="text-lg font-semibold text-amber-700">
-                          {totalReferred}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-3 shadow-sm border">
-                        <div className="text-xs text-slate-500">
-                          全站推薦金支出
-                        </div>
-                        <div className="text-lg font-semibold text-amber-700">
-                          {formatNTD(totalReferralEarned)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-                      <div className="relative w-full max-w-sm">
-                        <input
-                          value={adminQ}
-                          onChange={(e) => setAdminQ(e.target.value)}
-                          placeholder="搜尋姓名 / Email / 使用者名稱…"
-                          className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
-                        />
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        顯示 {adminFiltered.length} / {adminData.length} 筆
-                      </div>
-                    </div>
-
-                    {adminLoading && (
-                      <div className="mt-6 flex justify-center text-slate-500">
-                        載入中…
-                      </div>
-                    )}
-
-                    {!adminLoading && adminError && (
-                      <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                        {adminError}
-                      </div>
-                    )}
-
-                    {!adminLoading && !adminError && (
-                      <div className="overflow-x-auto w-full max-w-[450px] sm:max-w-[700px] lg:max-w-[1920px] rounded-xl border bg-white shadow-sm">
-                        <table className="w-full text-sm">
-                          <thead className="bg-[#F58A9C] text-xs uppercase text-slate-500">
+                      <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
+                        <table className="w-full text-sm text-left whitespace-nowrap">
+                          <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
                             <tr>
-                              <th className="px-4 py-2 text-slate-50 text-left">
-                                會員
+                              <th className="px-5 py-3 font-medium">
+                                訂單號碼
                               </th>
-                              <th className="px-4 py-2 text-slate-50 text-left">
-                                Email
+                              <th className="px-5 py-3 font-medium">
+                                下單日期
                               </th>
-                              <th className="px-4 py-2 text-slate-50 text-left">
-                                城市
+                              <th className="px-5 py-3 font-medium">
+                                訂單狀態
                               </th>
-                              <th className="px-4 py-2 text-slate-50 text-right">
-                                訂單數
-                              </th>
-                              <th className="px-4 py-2 text-slate-50 text-right">
-                                累計消費
-                              </th>
-                              <th className="px-4 py-2 text-slate-50 text-right">
-                                推薦註冊
-                              </th>
-                              <th className="px-4 py-2 text-slate-50 text-right">
-                                推薦金
-                              </th>
-                              <th className="px-4 py-2 text-slate-50 text-center">
-                                會員等級
-                              </th>
-                              <th className="px-4 py-2 text-slate-50 text-left">
-                                最近訂購
+                              <th className="px-5 py-3 font-medium text-right">
+                                總金額
                               </th>
                             </tr>
                           </thead>
-
-                          <tbody>
-                            {adminFiltered.map((c) => (
-                              <Fragment key={c.id}>
+                          <tbody className="divide-y divide-[#ebebeb]">
+                            {filteredOrders.map((o) => (
+                              <Fragment key={o.id}>
                                 <tr
-                                  className="border-t last:border-b hover:bg-slate-50/80 cursor-pointer"
                                   onClick={() =>
-                                    toggleExpandAdminRow(c.id, c.email)
+                                    setExpandedUserOrderId(
+                                      expandedUserOrderId === o.id
+                                        ? null
+                                        : o.id,
+                                    )
                                   }
+                                  className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
                                 >
-                                  <td className="px-4 py-2 align-middle">
-                                    <div className="font-medium text-slate-800">
-                                      {c.name || "—"}
-                                    </div>
-                                    {c.username && (
-                                      <div className="text-xs text-slate-500">
-                                        @{c.username}
-                                      </div>
+                                  <td className="px-5 py-4 font-semibold text-[#202223] flex items-center gap-2">
+                                    {expandedUserOrderId === o.id ? (
+                                      <ChevronUp size={14} />
+                                    ) : (
+                                      <ChevronDown size={14} />
                                     )}
+                                    #{o.number}
                                   </td>
-
-                                  <td className="px-4 py-2 align-middle text-slate-700">
-                                    {c.email}
+                                  <td className="px-5 py-4 text-[#6d7175]">
+                                    {new Date(
+                                      o.date_created,
+                                    ).toLocaleDateString("zh-TW")}
                                   </td>
-                                  <td className="px-4 py-2 align-middle text-slate-700">
-                                    {c.billingCountry || ""}{" "}
-                                    {c.billingCity || ""}
+                                  <td className="px-5 py-4">
+                                    <StatusPill
+                                      status={o.status}
+                                      type="order"
+                                    />
                                   </td>
-                                  <td className="px-4 py-2 align-middle text-right">
-                                    {c.ordersCount}
-                                  </td>
-                                  <td className="px-4 py-2 align-middle text-right">
-                                    {formatNTD(c.totalSpent)}
-                                  </td>
-
-                                  <td className="px-4 py-2 align-middle text-right text-amber-700 font-semibold">
-                                    {c.referredCount || 0}
-                                  </td>
-                                  <td className="px-4 py-2 align-middle text-right text-amber-700 font-semibold">
-                                    {formatNTD(c.referralEarned || 0)}
-                                  </td>
-
-                                  <td className="px-4 py-2 align-middle text-center">
-                                    <span
-                                      className={cn(
-                                        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
-                                        c.tier.includes("VVIP")
-                                          ? "bg-purple-100 text-purple-700"
-                                          : c.tier.includes("UVIP")
-                                          ? "bg-indigo-100 text-indigo-700"
-                                          : c.tier.includes("金")
-                                          ? "bg-amber-100 text-amber-700"
-                                          : c.tier.includes("銀")
-                                          ? "bg-slate-100 text-slate-700"
-                                          : c.tier.includes("銅")
-                                          ? "bg-orange-100 text-orange-700"
-                                          : "bg-slate-50 text-slate-400"
-                                      )}
-                                    >
-                                      {c.tier}
-                                    </span>
-                                  </td>
-
-                                  <td className="px-4 py-2 align-middle text-xs text-slate-500">
-                                    {c.lastOrderDate
-                                      ? new Date(
-                                          c.lastOrderDate
-                                        ).toLocaleDateString("zh-TW")
-                                      : "—"}
+                                  <td className="px-5 py-4 font-bold text-[#202223] text-right">
+                                    {formatMoneyNT(Number(o.total))}
                                   </td>
                                 </tr>
 
-                                {expandedId === c.id && (
-                                  <tr className="bg-slate-50/40">
-                                    <td colSpan={9} className="px-4 pb-3 pt-0">
-                                      <div className="pt-2 text-xs text-slate-500 mb-1">
-                                        會員訂單明細
+                                {/* 💡 使用者訂單展開詳情：顯示支付資訊與品項清單 */}
+                                {expandedUserOrderId === o.id && (
+                                  <tr className="bg-gray-50/50">
+                                    <td
+                                      colSpan={4}
+                                      className="px-8 py-6 border-b border-[#c9cccf]"
+                                    >
+                                      <div className="grid md:grid-cols-2 gap-8">
+                                        {/* 左側：支付/繳費資訊 */}
+                                        <div className="flex flex-col gap-4">
+                                          <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                            <CreditCard
+                                              size={18}
+                                              className="text-blue-600"
+                                            />{" "}
+                                            付款詳情
+                                          </h4>
+                                          {o.payment_info?.cvs_code ? (
+                                            <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
+                                              <p className="text-xs opacity-80 mb-1">
+                                                超商繳費代碼 (CVS)
+                                              </p>
+                                              <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
+                                                {o.payment_info.cvs_code}
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigator.clipboard.writeText(
+                                                      o.payment_info!.cvs_code!,
+                                                    );
+                                                  }}
+                                                  className="hover:scale-110 active:scale-95 transition-transform"
+                                                >
+                                                  <Copy size={20} />
+                                                </button>
+                                              </div>
+                                              <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                <div className="flex items-center gap-2 text-xs">
+                                                  <Calendar size={14} />{" "}
+                                                  繳費期限:{" "}
+                                                  {o.payment_info.expire_date}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
+                                              付款方式:{" "}
+                                              <span className="font-medium text-gray-900">
+                                                {o.payment_method_title ||
+                                                  "標準支付"}
+                                              </span>
+                                              <p className="mt-1 text-xs opacity-70">
+                                                此訂單目前無須額外代碼，請依系統指示操作。
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* 右側：訂單商品清單 */}
+                                        <div className="flex flex-col gap-4">
+                                          <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                            <Info
+                                              size={18}
+                                              className="text-gray-600"
+                                            />{" "}
+                                            訂單品項
+                                          </h4>
+                                          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                            {o.line_items.map((item, idx) => (
+                                              <div
+                                                key={idx}
+                                                className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                                              >
+                                                <div>
+                                                  <p className="text-sm font-bold text-gray-900">
+                                                    {item.name}
+                                                  </p>
+                                                  <p className="text-xs text-gray-500">
+                                                    數量: {item.quantity}
+                                                  </p>
+                                                </div>
+                                                <p className="text-sm font-mono font-medium">
+                                                  {item.total
+                                                    ? formatMoneyNT(
+                                                        Number(item.total),
+                                                      )
+                                                    : ""}
+                                                </p>
+                                              </div>
+                                            ))}
+                                            <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
+                                              <span>總計金額</span>
+                                              <span className="text-lg text-emerald-700">
+                                                {formatMoneyNT(Number(o.total))}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
-
-                                      {renderExpandedOrders()}
-
-                                      {/* analytics */}
-                                      <MemberAnalytics
-                                        orders={expandedOrders}
-                                        customer={c}
-                                      />
                                     </td>
                                   </tr>
                                 )}
@@ -1492,309 +1568,375 @@ export default function AccountPage() {
                   </ShellCard>
                 )}
 
-                {activeTab === "admin" && !isAdmin && (
-                  <ShellCard title="管理員分析">
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                      權限不足（僅網站管理員可查看此區塊）。
+                {/* ===== Tab: Admin Analytics ===== */}
+                {activeTab === "admin" && isAdmin && (
+                  <ShellCard
+                    title={
+                      searchQuery
+                        ? `搜尋結果: "${searchQuery}"`
+                        : "會員管理列表"
+                    }
+                  >
+                    <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <span className="text-xs text-[#6d7175]">
+                        顯示 {adminFiltered.length} / {adminData.length} 筆
+                      </span>
                     </div>
+
+                    {adminLoading && (
+                      <p className="text-sm text-[#6d7175] py-4">載入中...</p>
+                    )}
+                    {!adminLoading && adminError && (
+                      <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-md">
+                        {adminError}
+                      </p>
+                    )}
+
+                    {!adminLoading &&
+                      !adminError &&
+                      adminFiltered.length === 0 && (
+                        <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                          找不到符合條件的會員。
+                        </p>
+                      )}
+
+                    {!adminLoading &&
+                      !adminError &&
+                      adminFiltered.length > 0 && (
+                        <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
+                          <table className="w-full text-sm text-left whitespace-nowrap">
+                            <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
+                              <tr>
+                                <th className="px-5 py-3 font-medium">會員</th>
+                                <th className="px-5 py-3 font-medium">地區</th>
+                                <th className="px-5 py-3 font-medium text-right">
+                                  訂單數
+                                </th>
+                                <th className="px-5 py-3 font-medium text-right">
+                                  消費額
+                                </th>
+                                <th className="px-5 py-3 font-medium text-center">
+                                  等級
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#ebebeb]">
+                              {adminFiltered.map((c) => (
+                                <Fragment key={c.id}>
+                                  <tr
+                                    onClick={() =>
+                                      toggleExpandAdminRow(c.id, c.email)
+                                    }
+                                    className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
+                                  >
+                                    <td className="px-5 py-3">
+                                      <div className="font-semibold text-[#2c6ecb] hover:underline">
+                                        {c.name || "—"}
+                                      </div>
+                                      <div className="text-xs text-[#6d7175]">
+                                        {c.email}
+                                      </div>
+                                    </td>
+                                    <td className="px-5 py-3 text-[#6d7175]">
+                                      {c.billingCity || "—"}
+                                    </td>
+                                    <td className="px-5 py-3 text-right">
+                                      {c.ordersCount}
+                                    </td>
+                                    <td className="px-5 py-3 text-right">
+                                      {formatNTD(c.totalSpent)}
+                                    </td>
+                                    <td className="px-5 py-3 text-center">
+                                      <StatusPill status={c.tier} type="tier" />
+                                    </td>
+                                  </tr>
+                                  {expandedId === c.id && (
+                                    <tr className="bg-[#f9fafb]">
+                                      <td
+                                        colSpan={5}
+                                        className="px-5 py-4 border-b border-[#c9cccf] whitespace-normal"
+                                      >
+                                        <div className="font-semibold text-[#202223] mb-2">
+                                          會員分析與訂單
+                                        </div>
+                                        {renderExpandedOrders()}
+                                        <MemberAnalytics
+                                          orders={expandedOrders}
+                                          customer={c}
+                                        />
+                                      </td>
+                                    </tr>
+                                  )}
+                                </Fragment>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                  </ShellCard>
+                )}
+
+                {activeTab === "admin" && !isAdmin && (
+                  <ShellCard title="權限不足">
+                    <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200">
+                      權限不足（僅網站管理員可查看此區塊）。
+                    </p>
                   </ShellCard>
                 )}
               </div>
 
-              {/* Right panel */}
-              <aside className="space-y-4 lg:sticky lg:top-4 h-fit">
-                <ShellCard title="Client Details">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-200" />
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-slate-900">
-                        {displayName}
-                      </div>
-                      <div className="truncate text-[12px] text-slate-500">
-                        {customer?.email || "-"}
-                      </div>
+              {/* 右側資訊區塊 (1/3) */}
+              <div className="lg:col-span-1 flex flex-col gap-5">
+                {/* 狀態卡片 */}
+                <ShellCard title="狀態與詳情">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
+                      <span className="text-[#6d7175] text-sm">帳戶狀態</span>
+                      <StatusPill status="正常運作" type="account" />
                     </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-2">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="text-[11px] text-slate-500">Tier</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">
-                        {membership?.tierName || "—"}
-                      </div>
-                      {membership?.discountLabel && (
-                        <div className="mt-1 text-[12px] text-slate-500">
-                          {membership.discountLabel}
-                        </div>
-                      )}
+                    <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
+                      <span className="text-[#6d7175] text-sm">折扣優惠</span>
+                      <span className="font-bold text-emerald-600 text-sm">
+                        {membership?.discountLabel || "—"}
+                      </span>
                     </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="text-[11px] text-slate-500">
-                        Spend (12m)
-                      </div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">
-                        {formatMoneyNT(membership?.totalSpent12m || 0)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <button
-                      onClick={loadProfile}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                    >
-                      Update Profile
-                    </button>
-                  </div>
-                </ShellCard>
-
-                <ShellCard title="Actions & Coupons">
-                  <div className="grid gap-2">
-                    <button
-                      onClick={loadAvailableCoupons}
-                      className="w-full rounded-xl bg-[#F58A9C] px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-[#ed788c]"
-                    >
-                      Refresh Coupons
-                    </button>
-
-                    <button
-                      onClick={loadOrders}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                    >
-                      Preview Orders
-                    </button>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-[11px] text-slate-500">
-                            升等禮
-                          </div>
-                          <div className="mt-1 text-sm font-semibold text-slate-900">
-                            {membership?.upgradeGift ?? 0} 元
-                          </div>
-                        </div>
-                        {membership?.upgradeGift ? (
+                    <div>
+                      <span className="text-[#6d7175] text-sm block mb-2">
+                        生日
+                      </span>
+                      {!customer?.birthday ? (
+                        !isSettingBirthday ? (
                           <button
-                            onClick={() => handleClaim("upgrade")}
-                            disabled={claimLoading.upgrade || claimed.upgrade}
-                            className="rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
+                            onClick={() => setIsSettingBirthday(true)}
+                            className="w-full border border-dashed border-[#c9cccf] bg-[#f9fafb] hover:bg-white text-[#202223] py-1.5 rounded-md text-sm font-medium transition-colors"
                           >
-                            {claimed.upgrade
-                              ? "已領取"
-                              : claimLoading.upgrade
-                              ? "領取中…"
-                              : "領取"}
+                            設定生日
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ✅ 修改：壽星好禮區塊 (加入月份判斷) */}
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-[11px] text-slate-500">壽星好禮</div>
-                          
-                          {/* 判斷是否已有生日資料 */}
-                          {!customer?.birthday ? (
-                            <div className="mt-1">
-                               {isSettingBirthday ? (
-                                 <div className="flex flex-col gap-2 mt-1">
-                                   <input 
-                                     type="date" 
-                                     className="rounded border px-2 py-1 text-xs w-full"
-                                     value={birthdayInput}
-                                     onChange={(e) => setBirthdayInput(e.target.value)}
-                                   />
-                                   <div className="flex gap-2">
-                                     <button 
-                                       onClick={handleUpdateBirthday}
-                                       disabled={birthdayLoading}
-                                       className="text-xs bg-slate-900 text-white px-2 py-1 rounded"
-                                     >
-                                       {birthdayLoading ? "..." : "確定"}
-                                     </button>
-                                     <button 
-                                       onClick={() => setIsSettingBirthday(false)}
-                                       className="text-xs text-slate-500 px-1"
-                                     >
-                                       取消
-                                     </button>
-                                   </div>
-                                 </div>
-                               ) : (
-                                 <div className="text-sm font-semibold text-slate-400">
-                                   尚未設定生日
-                                 </div>
-                               )}
-                            </div>
-                          ) : (
-                            // 已有生日，顯示金額
-                            <div className="mt-1 text-sm font-semibold text-slate-900">
-                              {membership?.birthdayCredit ?? 0} 元
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 右側按鈕區：加入月份判斷 */}
-                        <div className="flex flex-col items-end">
-                          {!customer?.birthday ? (
-                            !isSettingBirthday && (
+                          <div className="flex flex-col gap-2">
+                            <input
+                              type="date"
+                              value={birthdayInput}
+                              onChange={(e) => setBirthdayInput(e.target.value)}
+                              className="w-full border border-[#c9cccf] rounded-md px-3 py-1.5 text-sm outline-none"
+                            />
+                            <div className="flex gap-2">
                               <button
-                                onClick={() => setIsSettingBirthday(true)}
-                                className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold hover:bg-white hover:border-slate-400"
+                                onClick={handleUpdateBirthday}
+                                disabled={birthdayLoading}
+                                className="flex-1 bg-[#008060] text-white text-sm py-1.5 rounded-md hover:bg-[#006e52]"
                               >
-                                填寫生日
+                                {birthdayLoading ? "..." : "儲存"}
                               </button>
-                            )
-                          ) : (
-                            // 已經有生日了
-                            membership?.birthdayCredit ? (
-                              isCurrentMonthBirthday ? (
-                                // 1. 是當月壽星 -> 顯示領取按鈕
-                                <button
-                                  onClick={() => handleClaim("birthday")}
-                                  disabled={claimLoading.birthday || claimed.birthday}
-                                  className="rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50 disabled:opacity-60"
-                                >
-                                  {claimed.birthday ? "已領取" : "領取"}
-                                </button>
-                              ) : (
-                                // 2. 不是當月壽星 -> 顯示提示
-                                <span className="text-[10px] text-slate-400 border border-slate-100 bg-slate-50 px-2 py-1 rounded-lg">
-                                  限 {getBirthMonthLabel(customer.birthday)} 領取
-                                </span>
-                              )
-                            ) : (
-                              <span className="text-xs text-slate-400">{customer.birthday}</span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                      
-                      {!customer?.birthday && isSettingBirthday && (
-                        <div className="mt-2 text-[10px] text-rose-500">
-                          * 生日填寫後將無法再次修改，請確認輸入正確。
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {claimMessage && (
-                    <div
-                      className={cn(
-                        "mt-4 rounded-2xl border px-4 py-3 text-sm",
-                        claimStatus === "success"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-rose-200 bg-rose-50 text-rose-800"
-                      )}
-                    >
-                      <div className="font-semibold">{claimMessage}</div>
-                      {claimedCode && (
-                        <div className="mt-1 text-[12px]">
-                          折扣碼：{" "}
-                          <span className="font-semibold">{claimedCode}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <div className="text-[11px] text-slate-500">
-                      推薦獎金總額
-                    </div>
-                    <div className="mt-1 text-base font-semibold text-slate-900">
-                      {formatMoneyNT(referralTotal)}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[12px] text-slate-600">
-                      <span className="rounded-full bg-white px-2 py-1 ring-1 ring-slate-200">
-                        推薦人 200：{formatMoneyNT(ambassadorTotal)}（
-                        {ambassadorCoupons.length}）
-                      </span>
-                      <span className="rounded-full bg-white px-2 py-1 ring-1 ring-slate-200">
-                        被推薦人 50：{formatMoneyNT(friendTotal)}（
-                        {friendCoupons.length}）
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    {availableLoading ? (
-                      <div className="text-sm text-slate-500">
-                        讀取可用購物金中…
-                      </div>
-                    ) : referralCoupons.length === 0 ? (
-                      <div className="text-sm text-slate-500">
-                        目前尚無推薦獎金折扣碼
-                      </div>
-                    ) : (
-                      <div className="divide-y overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                        {referralToShow.map((c) => (
-                          <div
-                            key={c.code}
-                            className="flex items-center justify-between gap-3 px-4 py-3"
-                          >
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={cn(
-                                    "rounded-full px-2 py-1 text-[11px] font-semibold",
-                                    isAmbassadorCoupon(c.code, c.kind)
-                                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                                      : "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
-                                  )}
-                                >
-                                  {isAmbassadorCoupon(c.code, c.kind)
-                                    ? "推薦人 200"
-                                    : "被推薦人 50"}
-                                </span>
-                                <span className="text-sm font-semibold text-slate-900">
-                                  {formatMoneyNT(c.amount)}
-                                </span>
-                              </div>
-                              <div className="mt-1 truncate text-[12px] text-slate-600">
-                                Code：{" "}
-                                <span className="font-semibold text-slate-900">
-                                  {c.code}
-                                </span>
-                              </div>
+                              <button
+                                onClick={() => setIsSettingBirthday(false)}
+                                className="flex-1 bg-white border border-[#c9cccf] text-[#202223] text-sm py-1.5 rounded-md hover:bg-[#f6f6f7]"
+                              >
+                                取消
+                              </button>
                             </div>
-
-                            <button
-                              onClick={() =>
-                                navigator.clipboard.writeText(c.code)
-                              }
-                              className="shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50"
-                            >
-                              Copy
-                            </button>
+                            <p className="text-[10px] text-rose-500 italic">
+                              * 生日填寫後將無法修改
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {referralCoupons.length > previewLimit && (
-                      <button
-                        onClick={() => setShowAllReferralCoupons((v) => !v)}
-                        className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                      >
-                        {showAllReferralCoupons ? "收合" : "顯示全部"}（
-                        {referralCoupons.length}）
-                      </button>
-                    )}
+                        )
+                      ) : (
+                        <div className="font-bold text-[#202223] text-sm bg-gray-50 px-3 py-1.5 rounded border border-gray-100 flex items-center gap-2">
+                          <span className="text-rose-400">🎂</span>{" "}
+                          {customer.birthday}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </ShellCard>
-              </aside>
+
+                {/* 獎勵與折價券卡片 */}
+                <ShellCard title="獎勵與優惠券">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
+                      <div>
+                        <p className="text-sm font-medium text-[#202223]">
+                          升等禮
+                        </p>
+                        <p className="text-xs font-bold text-amber-600">
+                          {membership?.upgradeGift ?? 0} 元
+                        </p>
+                      </div>
+                      {membership?.upgradeGift ? (
+                        <button
+                          onClick={() => handleClaim("upgrade")}
+                          disabled={claimLoading.upgrade || claimed.upgrade}
+                          className={cn(
+                            "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
+                            claimed.upgrade
+                              ? "bg-gray-100 text-gray-400 border-gray-200"
+                              : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
+                          )}
+                        >
+                          {claimed.upgrade ? "已領取" : "領取禮物"}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-[#6d7175]">—</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
+                      <div>
+                        <p className="text-sm font-medium text-[#202223]">
+                          生日禮
+                        </p>
+                        <p className="text-xs font-bold text-rose-600">
+                          {membership?.birthdayCredit ?? 0} 元
+                        </p>
+                      </div>
+                      {customer?.birthday && membership?.birthdayCredit ? (
+                        isCurrentMonthBirthday ? (
+                          <button
+                            onClick={() => handleClaim("birthday")}
+                            disabled={claimLoading.birthday || claimed.birthday}
+                            className={cn(
+                              "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
+                              claimed.birthday
+                                ? "bg-gray-100 text-gray-400 border-gray-200"
+                                : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
+                            )}
+                          >
+                            {claimed.birthday ? "已領取" : "領取好禮"}
+                          </button>
+                        ) : (
+                          <span className="text-[10px] bg-[#f9fafb] border border-[#e1e3e5] text-[#6d7175] px-2 py-1 rounded">
+                            限 {getBirthMonthLabel(customer.birthday)} 領取
+                          </span>
+                        )
+                      ) : null}
+                    </div>
+
+                    {claimMessage && (
+                      <div
+                        className={cn(
+                          "p-3 rounded-md border text-sm animate-in fade-in slide-in-from-top-1",
+                          claimStatus === "success"
+                            ? "bg-[#cbe5cc]/30 border-[#1c5c27]/20 text-[#1c5c27]"
+                            : "bg-rose-50 border-rose-200 text-rose-700",
+                        )}
+                      >
+                        <p className="font-bold">{claimMessage}</p>
+                        {claimedCode && (
+                          <p className="text-xs mt-1 font-mono bg-white/50 px-1.5 py-0.5 rounded border border-current w-fit">
+                            折扣碼: {claimedCode}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold text-[#202223]">
+                          可用優惠券
+                        </span>
+                        <button
+                          onClick={loadAvailableCoupons}
+                          className="text-xs text-[#2c6ecb] hover:underline"
+                        >
+                          刷新清單
+                        </button>
+                      </div>
+
+                      {availableLoading ? (
+                        <p className="text-xs text-[#6d7175]">讀取中...</p>
+                      ) : filteredCoupons.length === 0 ? (
+                        <p className="text-xs text-[#6d7175] bg-[#f9fafb] p-3 rounded-md border border-[#e1e3e5]">
+                          找不到可用折扣碼
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {filteredCoupons.map((c) => (
+                            <div
+                              key={c.code}
+                              className="border border-[#c9cccf] rounded-md p-3 flex justify-between items-center bg-[#f9fafb] hover:shadow-sm"
+                            >
+                              <div>
+                                <span className="font-bold text-rose-600 text-sm">
+                                  {formatMoneyNT(c.amount)}
+                                </span>
+                                <p className="text-[11px] text-[#6d7175] mt-0.5 font-medium">
+                                  {isAmbassadorCoupon(c.code, c.kind)
+                                    ? "推薦大使獎勵"
+                                    : "新會員首購獎勵"}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  navigator.clipboard.writeText(c.code)
+                                }
+                                className="text-[#5c5f62] hover:text-[#008060] bg-white border border-[#c9cccf] p-1.5 rounded shadow-sm hover:border-[#008060]"
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </ShellCard>
+              </div>
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
+
+      {/* 生日填寫自動彈窗 */}
+      {showBirthdayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a]/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-5 py-4 border-b border-[#c9cccf] flex justify-between items-center bg-[#f9fafb]">
+              <h3 className="text-base font-bold text-[#202223] flex items-center gap-2">
+                專屬壽星好禮 🎁
+              </h3>
+              <button
+                onClick={() => setShowBirthdayModal(false)}
+                className="text-[#6d7175] hover:text-[#202223]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-[#202223] mb-2 font-bold">
+                您尚未設定生日！
+              </p>
+              <p className="text-sm text-[#6d7175] mb-5 leading-relaxed">
+                填寫生日，即可在生日當月領取專屬購物金。
+                <br />
+                <span className="text-rose-600 font-bold mt-1 inline-block">
+                  * 生日設定後無法修改
+                </span>
+              </p>
+              <input
+                type="date"
+                value={modalBirthdayInput}
+                onChange={(e) => setModalBirthdayInput(e.target.value)}
+                className="w-full border border-[#c9cccf] rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#008060] mb-6 font-medium"
+              />
+              <div className="flex justify-end gap-3 pt-2 border-t border-[#ebebeb]">
+                <button
+                  onClick={() => setShowBirthdayModal(false)}
+                  className="px-4 py-2 border border-[#c9cccf] bg-white rounded-md text-sm font-bold text-[#202223] hover:bg-[#f6f6f7]"
+                >
+                  稍後再說
+                </button>
+                <button
+                  onClick={handleModalSubmit}
+                  disabled={birthdayLoading || !modalBirthdayInput}
+                  className="px-4 py-2 bg-[#008060] text-white rounded-md text-sm font-bold hover:bg-[#006e52]"
+                >
+                  確認送出
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

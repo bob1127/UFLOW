@@ -18,6 +18,34 @@ function basicAuth() {
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
 
+/**
+ * 💡 新增：從 meta_data 中提取綠界或其他金流的支付資訊
+ */
+function extractPaymentDetails(metaData: any[]) {
+  const info: any = {};
+  if (!Array.isArray(metaData)) return undefined;
+
+  metaData.forEach((item: any) => {
+    const key = String(item.key).toLowerCase();
+    const val = item.value;
+
+    // 匹配超商繳費代碼 (綠界常見 Key: _PaymentNo, _payment_no)
+    if (key.includes("payment_no") || key === "_paymentno") {
+      info.cvs_code = val;
+    }
+    // 匹配繳費期限 (綠界常見 Key: _ExpireDate, _expire_date)
+    if (key.includes("expire_date") || key === "_expiredate") {
+      info.expire_date = val;
+    }
+    // 匹配 ATM 虛擬帳號
+    if (key.includes("vaccount") || key === "_atmbankcode") {
+      info.atm_account = val;
+    }
+  });
+
+  return Object.keys(info).length > 0 ? info : undefined;
+}
+
 export async function GET() {
   const noCache = { "Cache-Control": "no-store, no-cache, must-revalidate" };
 
@@ -63,7 +91,6 @@ export async function GET() {
     }
 
     const normalizedEmail = email ? email.trim().toLowerCase() : null;
-
     let customerId: number | null = null;
 
     if (wpUserId) {
@@ -101,9 +128,6 @@ export async function GET() {
           if (Array.isArray(customers) && customers.length > 0) {
             customerId = customers[0].id;
           }
-        } else {
-          const txt = await cRes.text();
-          console.error("orders fetch customer by email error:", cRes.status, txt);
         }
       } catch (e) {
         console.error("orders fetch customer by email catch error:", e);
@@ -121,12 +145,8 @@ export async function GET() {
             cache: "no-store",
           }
         );
-
         if (oRes.ok) {
           ordersRaw = (await oRes.json()) as any[];
-        } else {
-          const txt = await oRes.text();
-          console.error("orders fetch by customer error:", oRes.status, txt);
         }
       } catch (e) {
         console.error("orders fetch by customer catch error:", e);
@@ -155,15 +175,13 @@ export async function GET() {
                 return emailInOrder === normalizedEmail;
               })
             : [];
-        } else {
-          const txt = await oRes.text();
-          console.error("orders fallback search error:", oRes.status, txt);
         }
       } catch (e) {
         console.error("orders fallback search catch error:", e);
       }
     }
 
+    // 💡 關鍵修改：在回傳前，將支付方式標題與 meta_data 中的支付資訊提取出來
     const orders = (ordersRaw || []).map((o: any) => ({
       id: o.id,
       number: o.number,
@@ -171,9 +189,15 @@ export async function GET() {
       date_created: o.date_created,
       total: o.total,
       currency: o.currency,
+      // 新增：提取支付方式名稱（如：綠界科技 ECPay）
+      payment_method_title: o.payment_method_title || "標準支付",
+      // 新增：掃描 meta_data 提取繳費代碼與期限
+      payment_info: extractPaymentDetails(o.meta_data || []),
       line_items: (o.line_items || []).map((it: any) => ({
         name: it.name,
         quantity: it.quantity,
+        // 加入金額，讓前端展開時可以顯示品項小計
+        total: it.total,
       })),
     }));
 
