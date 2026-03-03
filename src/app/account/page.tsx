@@ -71,7 +71,6 @@ type Order = {
   currency: string;
   line_items: OrderItem[];
   payment_method_title?: string;
-  // 💡 串接後端新增的支付資訊欄位
   payment_info?: {
     cvs_code?: string;
     expire_date?: string;
@@ -165,11 +164,7 @@ function pickCouponCreatedAt(c: AvailableCoupon) {
   return Number.isFinite(t) ? t : 0;
 }
 
-/* ===================== UI Atoms (Shopify Style) ===================== */
-
-/**
- * 💡 美化後的狀態標籤組件 (支援中文化與分級色彩)
- */
+/* ===================== UI Atoms (Shopify Style for Normal Tabs) ===================== */
 function StatusPill({
   status,
   type = "order",
@@ -179,7 +174,7 @@ function StatusPill({
 }) {
   const s = String(status || "").toLowerCase();
 
-  // 1. 訂單狀態顏色與中文化
+  // 1. 訂單狀態顏色
   if (type === "order") {
     let label = status;
     let tone = "bg-[#e4e5e7] text-[#202223] border-transparent";
@@ -237,7 +232,7 @@ function StatusPill({
     );
   }
 
-  // 3. 會員等級與權限標籤顏色
+  // 3. 會員等級與權限標籤顏色 (用於個人帳戶頁面)
   const isGold = s.includes("金") || s.includes("gold");
   const isSilver = s.includes("銀") || s.includes("silver");
   const isAdmin = s.includes("管理") || s.includes("admin");
@@ -252,7 +247,7 @@ function StatusPill({
     theme = "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm";
     Icon = Crown;
   } else if (isAdmin) {
-    theme = "bg-slate-800 text-white border-slate-900";
+    theme = "bg-[#1a1a1a] text-white border-black shadow-sm";
     Icon = ShieldCheck;
   }
 
@@ -364,7 +359,7 @@ function MetricBlock({
   );
 }
 
-/* ===================== Admin Analytics Components ===================== */
+/* ===================== Admin Analytics Components (採用指定設計) ===================== */
 function MemberAnalytics({
   orders,
   customer,
@@ -374,7 +369,7 @@ function MemberAnalytics({
 }) {
   if (!orders || orders.length === 0) {
     return (
-      <div className="mt-3 px-4 py-3 text-xs text-[#6d7175] bg-[#f9fafb] border border-[#e1e3e5] rounded-md">
+      <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-500">
         尚無足夠訂單資料可供分析。
       </div>
     );
@@ -390,7 +385,10 @@ function MemberAnalytics({
   orders.forEach((o) => {
     const d = new Date(o.date_created);
     if (isNaN(d.getTime())) return;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}`;
     if (!monthLabels.includes(key)) monthLabels.push(key);
     monthTotalsMap[key] = (monthTotalsMap[key] || 0) + (o.total || 0);
   });
@@ -413,29 +411,56 @@ function MemberAnalytics({
   const productQty = productEntries.map(([, q]) => q);
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-4 space-y-3">
+      {/* 6 個小指標卡片 */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricBlock title="訂單數" value={orderCount} />
-        <MetricBlock title="累計消費" value={formatNTD(totalAmount)} />
-        <MetricBlock
-          title="平均客單價"
-          value={orderCount === 0 ? "—" : formatNTD(avgAmount)}
-        />
-        <MetricBlock title="推薦註冊人數" value={customer.referredCount || 0} />
-        <MetricBlock title="成功首單推薦" value={customer.rewardedCount || 0} />
-        <MetricBlock
-          title="已賺推薦金"
-          value={formatNTD(customer.referralEarned || 0)}
-        />
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">訂單數</div>
+          <div className="mt-1 text-lg font-semibold text-slate-800">
+            {orderCount}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">累計消費</div>
+          <div className="mt-1 text-lg font-semibold text-slate-800">
+            {formatNTD(totalAmount)}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">平均客單價</div>
+          <div className="mt-1 text-lg font-semibold text-slate-800">
+            {orderCount === 0 ? "—" : formatNTD(avgAmount)}
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">推薦註冊人數</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {customer.referredCount || 0}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">成功首單推薦</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {customer.rewardedCount || 0}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="text-[11px] text-slate-500">已賺推薦金</div>
+          <div className="mt-1 text-lg font-semibold text-amber-700">
+            {formatNTD(customer.referralEarned || 0)}
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 pt-4 border-t border-[#ebebeb]">
-        <div className="rounded-lg border border-[#c9cccf] bg-white px-3 py-2 shadow-sm">
-          <div className="mb-1 text-xs font-semibold text-[#202223]">
+      {/* 2 個大圖表卡片 */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="mb-1 text-[11px] font-semibold text-slate-600">
             每月消費金額趨勢
           </div>
           {monthLabels.length === 0 ? (
-            <p className="text-xs text-[#6d7175]">尚無可用的時間序列資料。</p>
+            <p className="text-xs text-slate-400">尚無可用的時間序列資料。</p>
           ) : (
             <div className="h-52">
               <LineChart
@@ -455,12 +480,12 @@ function MemberAnalytics({
           )}
         </div>
 
-        <div className="rounded-lg border border-[#c9cccf] bg-white px-3 py-2 shadow-sm">
-          <div className="mb-1 text-xs font-semibold text-[#202223]">
+        <div className="rounded-lg border bg-white px-3 py-2">
+          <div className="mb-1 text-[11px] font-semibold text-slate-600">
             最常購買商品 TOP 5
           </div>
           {productLabels.length === 0 ? (
-            <p className="text-xs text-[#6d7175]">尚無商品統計資料。</p>
+            <p className="text-xs text-slate-400">尚無商品統計資料。</p>
           ) : (
             <div className="h-52">
               <BarChart
@@ -567,13 +592,17 @@ export default function AccountPage() {
           ? data.customer.roles
           : [];
         const role: string = String(data?.customer?.role || "");
+
+        // 強化身分判斷
         const adminFlag =
           Boolean(data?.customer?.isAdmin) ||
           Boolean(data?.isAdmin) ||
           roles.includes("administrator") ||
           roles.includes("admin") ||
+          roles.includes("網站管理員") ||
           role === "administrator" ||
-          role === "admin";
+          role === "admin" ||
+          role === "網站管理員";
 
         setIsAdmin(adminFlag);
       } else {
@@ -655,7 +684,7 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
-  // ===================== 新增：登入載入完成後，若未設定生日自動彈出提醒 =====================
+  // ===================== 登入載入完成後，若未設定生日自動彈出提醒 =====================
   useEffect(() => {
     if (!loading && loggedIn && customer && !customer.birthday) {
       const hasPrompted = sessionStorage.getItem("birthdayPrompted");
@@ -666,7 +695,6 @@ export default function AccountPage() {
     }
   }, [loading, loggedIn, customer]);
 
-  // 一般側邊欄點擊設定生日
   const handleUpdateBirthday = async () => {
     if (!birthdayInput) return alert("請選擇生日");
     if (!confirm(`您的生日是 ${birthdayInput} 嗎？\n確認後將無法再次修改。`))
@@ -697,7 +725,6 @@ export default function AccountPage() {
     }
   };
 
-  // 彈窗設定生日提交
   const handleModalSubmit = async () => {
     if (!modalBirthdayInput) return alert("請選擇生日");
     if (
@@ -765,7 +792,6 @@ export default function AccountPage() {
 
   /* ===================== Derived (Account) ===================== */
 
-  // ===================== 處理頂部搜尋列過濾 (過濾訂單) =====================
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return orders;
     const q = searchQuery.toLowerCase();
@@ -790,7 +816,6 @@ export default function AccountPage() {
     );
   }, [sortedCoupons]);
 
-  // ===================== 處理頂部搜尋列過濾 (過濾優惠券) =====================
   const filteredCoupons = useMemo(() => {
     let base = referralCoupons;
     if (searchQuery && activeTab === "profile") {
@@ -854,17 +879,19 @@ export default function AccountPage() {
     try {
       const res = await fetch("/api/admin/customers", { cache: "no-store" });
       const js = await res.json();
-      if (res.status === 401 || res.status === 403) {
-        setIsAdmin(false);
+
+      if (!res.ok || !js.ok) {
         setAdminData([]);
-        setAdminError("權限不足（僅管理員可查看）。");
+        setAdminError(
+          `伺服器拒絕 (${res.status}): ${js?.message || "請檢查後端 API 的權限設定"}`,
+        );
         return;
       }
-      if (!res.ok || !js.ok) throw new Error(js.message || "讀取失敗");
+
       setAdminData(js.customers || []);
       adminLoadedOnceRef.current = true;
     } catch (e: any) {
-      setAdminError(e?.message || "讀取失敗");
+      setAdminError(e?.message || "讀取會員名單時發生錯誤");
     } finally {
       setAdminLoading(false);
     }
@@ -891,11 +918,9 @@ export default function AccountPage() {
       });
       const js = await res.json();
 
-      if (res.status === 401 || res.status === 403) {
-        setIsAdmin(false);
-        throw new Error("權限不足（僅管理員可查看）。");
+      if (!res.ok || !js.ok) {
+        throw new Error(`(${res.status}) ${js?.message || "讀取訂單失敗"}`);
       }
-      if (!res.ok || !js.ok) throw new Error(js.message || "讀取訂單失敗");
       setExpandedOrders(js.orders || []);
     } catch (e: any) {
       setExpandedOrders([]);
@@ -939,42 +964,44 @@ export default function AccountPage() {
     0,
   );
 
-  const renderExpandedOrders = () => {
-    if (expandedOrdersLoading)
-      return <p className="text-xs text-[#6d7175] py-2">載入訂單中...</p>;
-    if (expandedOrdersError)
+  // 管理員專用的訂單渲染 (套用指定的 UI)
+  const renderExpandedOrdersAdmin = () => {
+    if (expandedOrdersLoading) {
+      return <p className="text-xs text-slate-500 py-2">載入訂單中…</p>;
+    }
+    if (expandedOrdersError) {
       return (
         <p className="text-xs text-rose-600 py-2">{expandedOrdersError}</p>
       );
-    if (expandedOrders.length === 0)
-      return <p className="text-xs text-[#6d7175] py-2">目前尚無任何訂單。</p>;
+    }
+    if (expandedOrders.length === 0) {
+      return <p className="text-xs text-slate-500 py-2">目前尚無任何訂單。</p>;
+    }
 
     return (
-      <div className="mt-1 rounded-lg border border-[#c9cccf] bg-white overflow-hidden shadow-sm">
-        <table className="min-w-full text-xs text-left">
-          <thead className="bg-[#f9fafb] text-[#6d7175] border-b border-[#c9cccf]">
+      <div className="mt-1 rounded-lg border bg-slate-50">
+        <table className="min-w-full text-xs">
+          <thead className="bg-slate-100 text-slate-500">
             <tr>
-              <th className="px-3 py-2 font-medium">訂單編號</th>
-              <th className="px-3 py-2 font-medium">日期</th>
-              <th className="px-3 py-2 font-medium">狀態</th>
-              <th className="px-3 py-2 font-medium text-right">金額</th>
-              <th className="px-3 py-2 font-medium">品項</th>
+              <th className="px-3 py-1 text-left">訂單編號</th>
+              <th className="px-3 py-1 text-left">日期</th>
+              <th className="px-3 py-1 text-left">狀態</th>
+              <th className="px-3 py-1 text-right">金額</th>
+              <th className="px-3 py-1 text-left">品項</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#ebebeb]">
+          <tbody>
             {expandedOrders.map((o) => (
-              <tr key={o.id} className="text-[#202223]">
-                <td className="px-3 py-2 font-medium">#{o.number}</td>
-                <td className="px-3 py-2">
+              <tr key={o.id} className="border-t last:border-b">
+                <td className="px-3 py-1 align-top">#{o.number}</td>
+                <td className="px-3 py-1 align-top">
                   {new Date(o.date_created).toLocaleString("zh-TW")}
                 </td>
-                <td className="px-3 py-2">
-                  <StatusPill status={o.status} />
-                </td>
-                <td className="px-3 py-2 text-right font-medium">
+                <td className="px-3 py-1 align-top">{o.status}</td>
+                <td className="px-3 py-1 align-top text-right">
                   {formatNTD(o.total)}
                 </td>
-                <td className="px-3 py-2 text-[#6d7175]">
+                <td className="px-3 py-1 align-top">
                   {o.line_items.slice(0, 3).map((it, idx) => (
                     <span key={idx} className="mr-2">
                       {it.name} × {it.quantity}
@@ -1035,13 +1062,12 @@ export default function AccountPage() {
     return "搜尋優惠券代碼...";
   };
 
-  /* ===================== Main Layout (Shopify Style) ===================== */
+  /* ===================== Main Layout ===================== */
   return (
     <div className="min-h-screen flex flex-col pt-20 mt-10 bg-[#f6f6f7] text-[#202223] font-sans">
       {/* 頂部導航 (Top Bar) */}
       <header className="h-14 bg-[#1a1a1a] flex items-center justify-between px-4 shrink-0 z-10 border-b border-[#000]">
         <div className="flex items-center gap-4">
-          {/* Logo */}
           <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
             <div className="w-7 h-7 bg-[#95bf47] rounded flex items-center justify-center text-white">
               <span className="text-sm">U</span>
@@ -1053,7 +1079,6 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* 全域搜尋列 */}
         <div className="flex-1 max-w-2xl px-4 hidden md:block">
           <div className="relative flex items-center w-full">
             <Search className="absolute left-3 text-[#8c9196] w-4 h-4" />
@@ -1067,7 +1092,6 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* 右側個人檔案 */}
         <div className="flex items-center gap-4 justify-end">
           <button className="text-[#a6a6a6] hover:text-white transition-colors relative">
             <Bell className="w-5 h-5" />
@@ -1097,7 +1121,6 @@ export default function AccountPage() {
                 setSearchQuery("");
               }}
             />
-
             <div className="mt-4 mb-1 px-3 text-xs font-semibold text-[#6d7175]">
               訂單與銷售
             </div>
@@ -1130,11 +1153,11 @@ export default function AccountPage() {
             {isAdmin && (
               <>
                 <div className="mt-4 mb-1 px-3 text-xs font-semibold text-[#6d7175]">
-                  數據分析
+                  進階管理
                 </div>
                 <SidebarItem
                   active={activeTab === "admin"}
-                  label="管理員分析"
+                  label="會員管理與分析"
                   icon={<BarChart2 size={18} />}
                   onClick={() => {
                     setActiveTab("admin");
@@ -1164,8 +1187,8 @@ export default function AccountPage() {
         </aside>
 
         {/* 主內容區 (Main Content) */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 relative">
-          {/* 行動版搜尋框 (Mobile only) */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 relative overflow-y-auto w-full">
+          {/* 行動版搜尋框 */}
           <div className="md:hidden mb-4 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8c9196] w-4 h-4" />
             <input
@@ -1177,425 +1200,690 @@ export default function AccountPage() {
             />
           </div>
 
-          <div className="max-w-[1100px] mx-auto flex flex-col gap-5">
-            {/* 頁面標題與操作區 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <button className="p-1.5 border border-[#c9cccf] bg-white rounded-md shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-gray-50 text-[#5c5f62] hidden sm:block">
-                  <ChevronLeft size={20} />
-                </button>
-                <h1 className="text-2xl font-bold text-[#202223] flex items-center gap-3">
-                  {displayName}
-                  {isAdmin && <StatusPill status="管理員" type="tier" />}
-                </h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    loadAvailableCoupons();
-                    loadOrders();
-                    loadReferral();
-                    loadProfile();
-                    if (isAdmin && activeTab === "admin") loadAdminCustomers();
-                  }}
-                  className="bg-white border border-[#c9cccf] shadow-[0_1px_0_rgba(0,0,0,0.05)] text-[#202223] px-3 py-1.5 rounded-md text-sm font-medium hover:bg-[#f6f6f7] transition-colors"
-                >
-                  重新整理
-                </button>
-                <button
-                  onClick={loadProfile}
-                  className="bg-[#008060] text-white border border-[#008060] shadow-[0_1px_0_rgba(0,0,0,0.15)] rounded-md px-3 py-1.5 text-sm font-medium hover:bg-[#006e52] transition-colors"
-                >
-                  更新資料
-                </button>
-              </div>
-            </div>
+          <div className="max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+            {/* 一般會員頁面區塊 (Profile & Orders) */}
+            {activeTab !== "admin" && (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button className="p-1.5 border border-[#c9cccf] bg-white rounded-md shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-gray-50 text-[#5c5f62] hidden sm:block">
+                      <ChevronLeft size={20} />
+                    </button>
+                    <h1 className="text-2xl font-bold text-[#202223] flex items-center gap-3">
+                      {displayName}
+                      {isAdmin && <StatusPill status="管理員" type="tier" />}
+                    </h1>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        loadAvailableCoupons();
+                        loadOrders();
+                        loadReferral();
+                        loadProfile();
+                      }}
+                      className="bg-white border border-[#c9cccf] shadow-[0_1px_0_rgba(0,0,0,0.05)] text-[#202223] px-3 py-1.5 rounded-md text-sm font-medium hover:bg-[#f6f6f7] transition-colors"
+                    >
+                      重新整理
+                    </button>
+                    <button
+                      onClick={loadProfile}
+                      className="bg-[#008060] text-white border border-[#008060] shadow-[0_1px_0_rgba(0,0,0,0.15)] rounded-md px-3 py-1.5 text-sm font-medium hover:bg-[#006e52] transition-colors"
+                    >
+                      更新資料
+                    </button>
+                  </div>
+                </div>
 
-            {/* 指標數據行 (Metric Row) */}
-            {activeTab === "profile" && (
-              <div className="bg-white border border-[#c9cccf] rounded-lg shadow-sm p-4 flex gap-4 sm:gap-8 flex-wrap">
-                <MetricBlock
-                  title="目前等級"
-                  value={
-                    membership?.tierName ? (
-                      <StatusPill status={membership.tierName} type="tier" />
-                    ) : (
-                      "—"
-                    )
-                  }
-                />
-                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
-                <MetricBlock
-                  title="年度累積消費"
-                  value={formatMoneyNT(membership?.totalSpent12m || 0)}
-                />
-                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
-                <MetricBlock
-                  title="推薦獎金總額"
-                  value={formatMoneyNT(referralTotal)}
-                />
-                <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
-                <MetricBlock
-                  title="升級進度"
-                  value={
-                    membership?.nextNeedAmount
-                      ? formatMoneyNT(membership.nextNeedAmount)
-                      : "—"
-                  }
-                  subtext={
-                    membership?.nextTierName
-                      ? `距離 ${membership.nextTierName} 尚差`
-                      : undefined
-                  }
-                />
-              </div>
-            )}
-
-            {/* 行動裝置的分頁選項 */}
-            <div className="md:hidden flex border-b border-[#c9cccf] overflow-x-auto pb-[1px]">
-              {["profile", "orders", ...(isAdmin ? ["admin"] : [])].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setActiveTab(tab as TabKey);
-                      setSearchQuery("");
-                    }}
-                    className={`px-4 py-3 text-sm font-medium relative whitespace-nowrap ${activeTab === tab ? "text-[#202223]" : "text-[#6d7175]"}`}
-                  >
-                    {tab === "profile"
-                      ? "帳戶"
-                      : tab === "orders"
-                        ? "訂單"
-                        : "數據分析"}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#008060] rounded-t-md"></div>
-                    )}
-                  </button>
-                ),
-              )}
-            </div>
-
-            {/* 雙欄式佈局 (Shopify 經典排版 2/3 + 1/3) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-              {/* 左側主要區塊 */}
-              <div className="lg:col-span-2 flex flex-col gap-5">
-                {/* ===== Tab: Profile ===== */}
                 {activeTab === "profile" && (
-                  <>
-                    {/* 會員資料卡片 */}
-                    <ShellCard
-                      title="會員資料概覽"
-                      right={
-                        <span className="text-xs font-mono text-[#6d7175] bg-gray-50 px-2 py-1 rounded">
-                          #UID_{customer?.id || "-"}
-                        </span>
+                  <div className="bg-white border border-[#c9cccf] rounded-lg shadow-sm p-4 flex gap-4 sm:gap-8 flex-wrap">
+                    <MetricBlock
+                      title="目前等級"
+                      value={
+                        membership?.tierName ? (
+                          <StatusPill
+                            status={membership.tierName}
+                            type="tier"
+                          />
+                        ) : (
+                          "—"
+                        )
                       }
-                    >
-                      <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                        <MiniField label="姓名" value={displayName} />
-                        <MiniField
-                          label="電子信箱"
-                          value={customer?.email || "-"}
-                        />
-                        <MiniField
-                          label="生日"
-                          value={customer?.birthday || "未設定"}
-                        />
-                        <MiniField
-                          label="使用者名稱"
-                          value={customer?.username || "-"}
-                        />
-                      </div>
-                    </ShellCard>
-
-                    {/* 推薦計畫卡片 */}
-                    <ShellCard
-                      title="推薦計畫"
-                      right={<StatusPill status="金牌大使推薦" type="tier" />}
-                    >
-                      {referralLoading ? (
-                        <p className="text-sm text-[#6d7175]">
-                          讀取推薦資訊中...
-                        </p>
-                      ) : !referral ? (
-                        <p className="text-sm text-[#6d7175]">尚無推薦資訊</p>
-                      ) : (
-                        <div className="space-y-5">
-                          <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-4 text-sm text-emerald-900">
-                            親友註冊可得{" "}
-                            <strong className="text-emerald-700">
-                              NT$ {referral.friendReward}
-                            </strong>{" "}
-                            購物金，親友首單完成後你可得{" "}
-                            <strong className="text-emerald-700">
-                              NT$ {referral.ambassadorReward}
-                            </strong>{" "}
-                            抵用金。
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-[#6d7175] mb-1">
-                                您的推薦碼
-                              </p>
-                              <div className="flex items-center justify-between border border-[#c9cccf] rounded-md px-3 py-2 bg-[#f9fafb]">
-                                <code className="text-sm font-mono font-bold text-[#008060]">
-                                  {referral.refCode}
-                                </code>
-                                <button
-                                  onClick={() =>
-                                    navigator.clipboard.writeText(
-                                      referral.refCode,
-                                    )
-                                  }
-                                  className="text-[#5c5f62] hover:text-[#008060] transition-colors"
-                                >
-                                  <Copy size={16} />
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-xs text-[#6d7175] mb-1">
-                                推薦連結
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  readOnly
-                                  value={referral.referralLink}
-                                  className="flex-1 border border-[#c9cccf] rounded-md px-3 py-2 text-sm bg-[#f9fafb] outline-none font-mono text-xs"
-                                />
-                                <button
-                                  onClick={() =>
-                                    navigator.clipboard.writeText(
-                                      referral.referralLink,
-                                    )
-                                  }
-                                  className="bg-white border border-[#c9cccf] shadow-sm text-[#202223] px-3 py-2 rounded-md hover:bg-[#f6f6f7] transition-colors font-medium text-sm"
-                                >
-                                  複製
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </ShellCard>
-                  </>
+                    />
+                    <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                    <MetricBlock
+                      title="年度累積消費"
+                      value={formatMoneyNT(membership?.totalSpent12m || 0)}
+                    />
+                    <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                    <MetricBlock
+                      title="推薦獎金總額"
+                      value={formatMoneyNT(referralTotal)}
+                    />
+                    <div className="hidden sm:block w-px bg-[#e1e3e5] my-2"></div>
+                    <MetricBlock
+                      title="升級進度"
+                      value={
+                        membership?.nextNeedAmount
+                          ? formatMoneyNT(membership.nextNeedAmount)
+                          : "—"
+                      }
+                      subtext={
+                        membership?.nextTierName
+                          ? `距離 ${membership.nextTierName} 尚差`
+                          : undefined
+                      }
+                    />
+                  </div>
                 )}
 
-                {/* ===== Tab: Orders ===== */}
-                {activeTab === "orders" && (
-                  <ShellCard
-                    title={
-                      searchQuery
-                        ? `搜尋結果: "${searchQuery}"`
-                        : "我的訂單紀錄"
-                    }
-                  >
-                    {ordersLoading ? (
-                      <p className="text-sm text-[#6d7175]">載入訂單中...</p>
-                    ) : filteredOrders.length === 0 ? (
-                      <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
-                        {searchQuery
-                          ? "找不到符合條件的訂單。"
-                          : "目前尚未有任何訂單紀錄。"}
-                      </p>
-                    ) : (
-                      <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
-                        <table className="w-full text-sm text-left whitespace-nowrap">
-                          <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
-                            <tr>
-                              <th className="px-5 py-3 font-medium">
-                                訂單號碼
-                              </th>
-                              <th className="px-5 py-3 font-medium">
-                                下單日期
-                              </th>
-                              <th className="px-5 py-3 font-medium">
-                                訂單狀態
-                              </th>
-                              <th className="px-5 py-3 font-medium text-right">
-                                總金額
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#ebebeb]">
-                            {filteredOrders.map((o) => (
-                              <Fragment key={o.id}>
-                                <tr
-                                  onClick={() =>
-                                    setExpandedUserOrderId(
-                                      expandedUserOrderId === o.id
-                                        ? null
-                                        : o.id,
-                                    )
-                                  }
-                                  className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
-                                >
-                                  <td className="px-5 py-4 font-semibold text-[#202223] flex items-center gap-2">
-                                    {expandedUserOrderId === o.id ? (
-                                      <ChevronUp size={14} />
-                                    ) : (
-                                      <ChevronDown size={14} />
-                                    )}
-                                    #{o.number}
-                                  </td>
-                                  <td className="px-5 py-4 text-[#6d7175]">
-                                    {new Date(
-                                      o.date_created,
-                                    ).toLocaleDateString("zh-TW")}
-                                  </td>
-                                  <td className="px-5 py-4">
-                                    <StatusPill
-                                      status={o.status}
-                                      type="order"
-                                    />
-                                  </td>
-                                  <td className="px-5 py-4 font-bold text-[#202223] text-right">
-                                    {formatMoneyNT(Number(o.total))}
-                                  </td>
-                                </tr>
+                <div className="md:hidden flex border-b border-[#c9cccf] overflow-x-auto pb-[1px]">
+                  {["profile", "orders", ...(isAdmin ? ["admin"] : [])].map(
+                    (tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => {
+                          setActiveTab(tab as TabKey);
+                          setSearchQuery("");
+                        }}
+                        className={`px-4 py-3 text-sm font-medium relative whitespace-nowrap ${activeTab === tab ? "text-[#202223]" : "text-[#6d7175]"}`}
+                      >
+                        {tab === "profile"
+                          ? "帳戶"
+                          : tab === "orders"
+                            ? "訂單"
+                            : "數據分析"}
+                        {activeTab === tab && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#008060] rounded-t-md"></div>
+                        )}
+                      </button>
+                    ),
+                  )}
+                </div>
 
-                                {/* 💡 使用者訂單展開詳情：顯示支付資訊與品項清單 */}
-                                {expandedUserOrderId === o.id && (
-                                  <tr className="bg-gray-50/50">
-                                    <td
-                                      colSpan={4}
-                                      className="px-8 py-6 border-b border-[#c9cccf]"
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+                  <div className="lg:col-span-2 flex flex-col gap-5">
+                    {activeTab === "profile" && (
+                      <>
+                        <ShellCard
+                          title="會員資料概覽"
+                          right={
+                            <span className="text-xs font-mono text-[#6d7175] bg-gray-50 px-2 py-1 rounded">
+                              #UID_{customer?.id || "-"}
+                            </span>
+                          }
+                        >
+                          <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                            <MiniField label="姓名" value={displayName} />
+                            <MiniField
+                              label="電子信箱"
+                              value={customer?.email || "-"}
+                            />
+                            <MiniField
+                              label="生日"
+                              value={customer?.birthday || "未設定"}
+                            />
+                            <MiniField
+                              label="使用者名稱"
+                              value={customer?.username || "-"}
+                            />
+                          </div>
+                        </ShellCard>
+
+                        <ShellCard
+                          title="推薦計畫"
+                          right={
+                            <StatusPill status="金牌大使推薦" type="tier" />
+                          }
+                        >
+                          {referralLoading ? (
+                            <p className="text-sm text-[#6d7175]">
+                              讀取推薦資訊中...
+                            </p>
+                          ) : !referral ? (
+                            <p className="text-sm text-[#6d7175]">
+                              尚無推薦資訊
+                            </p>
+                          ) : (
+                            <div className="space-y-5">
+                              <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-4 text-sm text-emerald-900">
+                                親友註冊可得{" "}
+                                <strong className="text-emerald-700">
+                                  NT$ {referral.friendReward}
+                                </strong>{" "}
+                                購物金，親友首單完成後你可得{" "}
+                                <strong className="text-emerald-700">
+                                  NT$ {referral.ambassadorReward}
+                                </strong>{" "}
+                                抵用金。
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs text-[#6d7175] mb-1">
+                                    您的推薦碼
+                                  </p>
+                                  <div className="flex items-center justify-between border border-[#c9cccf] rounded-md px-3 py-2 bg-[#f9fafb]">
+                                    <code className="text-sm font-mono font-bold text-[#008060]">
+                                      {referral.refCode}
+                                    </code>
+                                    <button
+                                      onClick={() =>
+                                        navigator.clipboard.writeText(
+                                          referral.refCode,
+                                        )
+                                      }
+                                      className="text-[#5c5f62] hover:text-[#008060] transition-colors"
                                     >
-                                      <div className="grid md:grid-cols-2 gap-8">
-                                        {/* 左側：支付/繳費資訊 */}
-                                        <div className="flex flex-col gap-4">
-                                          <h4 className="font-bold text-[#202223] flex items-center gap-2">
-                                            <CreditCard
-                                              size={18}
-                                              className="text-blue-600"
-                                            />{" "}
-                                            付款詳情
-                                          </h4>
-                                          {o.payment_info?.cvs_code ? (
-                                            <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
-                                              <p className="text-xs opacity-80 mb-1">
-                                                超商繳費代碼 (CVS)
-                                              </p>
-                                              <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
-                                                {o.payment_info.cvs_code}
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigator.clipboard.writeText(
-                                                      o.payment_info!.cvs_code!,
-                                                    );
-                                                  }}
-                                                  className="hover:scale-110 active:scale-95 transition-transform"
-                                                >
-                                                  <Copy size={20} />
-                                                </button>
-                                              </div>
-                                              <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
-                                                <div className="flex items-center gap-2 text-xs">
-                                                  <Calendar size={14} />{" "}
-                                                  繳費期限:{" "}
-                                                  {o.payment_info.expire_date}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
-                                              付款方式:{" "}
-                                              <span className="font-medium text-gray-900">
-                                                {o.payment_method_title ||
-                                                  "標準支付"}
-                                              </span>
-                                              <p className="mt-1 text-xs opacity-70">
-                                                此訂單目前無須額外代碼，請依系統指示操作。
-                                              </p>
-                                            </div>
-                                          )}
-                                        </div>
+                                      <Copy size={16} />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-[#6d7175] mb-1">
+                                    推薦連結
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      readOnly
+                                      value={referral.referralLink}
+                                      className="flex-1 border border-[#c9cccf] rounded-md px-3 py-2 text-sm bg-[#f9fafb] outline-none font-mono text-xs"
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        navigator.clipboard.writeText(
+                                          referral.referralLink,
+                                        )
+                                      }
+                                      className="bg-white border border-[#c9cccf] shadow-sm text-[#202223] px-3 py-2 rounded-md hover:bg-[#f6f6f7] transition-colors font-medium text-sm"
+                                    >
+                                      複製
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </ShellCard>
+                      </>
+                    )}
 
-                                        {/* 右側：訂單商品清單 */}
-                                        <div className="flex flex-col gap-4">
-                                          <h4 className="font-bold text-[#202223] flex items-center gap-2">
-                                            <Info
-                                              size={18}
-                                              className="text-gray-600"
-                                            />{" "}
-                                            訂單品項
-                                          </h4>
-                                          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                                            {o.line_items.map((item, idx) => (
-                                              <div
-                                                key={idx}
-                                                className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
-                                              >
-                                                <div>
-                                                  <p className="text-sm font-bold text-gray-900">
-                                                    {item.name}
+                    {activeTab === "orders" && (
+                      <ShellCard
+                        title={
+                          searchQuery
+                            ? `搜尋結果: "${searchQuery}"`
+                            : "我的訂單紀錄"
+                        }
+                      >
+                        {ordersLoading ? (
+                          <p className="text-sm text-[#6d7175]">
+                            載入訂單中...
+                          </p>
+                        ) : filteredOrders.length === 0 ? (
+                          <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                            {searchQuery
+                              ? "找不到符合條件的訂單。"
+                              : "目前尚未有任何訂單紀錄。"}
+                          </p>
+                        ) : (
+                          <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
+                            <table className="w-full text-sm text-left whitespace-nowrap">
+                              <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
+                                <tr>
+                                  <th className="px-5 py-3 font-medium">
+                                    訂單號碼
+                                  </th>
+                                  <th className="px-5 py-3 font-medium">
+                                    下單日期
+                                  </th>
+                                  <th className="px-5 py-3 font-medium">
+                                    訂單狀態
+                                  </th>
+                                  <th className="px-5 py-3 font-medium text-right">
+                                    總金額
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#ebebeb]">
+                                {filteredOrders.map((o) => (
+                                  <Fragment key={o.id}>
+                                    <tr
+                                      onClick={() =>
+                                        setExpandedUserOrderId(
+                                          expandedUserOrderId === o.id
+                                            ? null
+                                            : o.id,
+                                        )
+                                      }
+                                      className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
+                                    >
+                                      <td className="px-5 py-4 font-semibold text-[#202223] flex items-center gap-2">
+                                        {expandedUserOrderId === o.id ? (
+                                          <ChevronUp size={14} />
+                                        ) : (
+                                          <ChevronDown size={14} />
+                                        )}{" "}
+                                        #{o.number}
+                                      </td>
+                                      <td className="px-5 py-4 text-[#6d7175]">
+                                        {new Date(
+                                          o.date_created,
+                                        ).toLocaleDateString("zh-TW")}
+                                      </td>
+                                      <td className="px-5 py-4">
+                                        <StatusPill
+                                          status={o.status}
+                                          type="order"
+                                        />
+                                      </td>
+                                      <td className="px-5 py-4 font-bold text-[#202223] text-right">
+                                        {formatMoneyNT(Number(o.total))}
+                                      </td>
+                                    </tr>
+
+                                    {expandedUserOrderId === o.id && (
+                                      <tr className="bg-gray-50/50">
+                                        <td
+                                          colSpan={4}
+                                          className="px-8 py-6 border-b border-[#c9cccf]"
+                                        >
+                                          <div className="grid md:grid-cols-2 gap-8">
+                                            <div className="flex flex-col gap-4">
+                                              <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                                <CreditCard
+                                                  size={18}
+                                                  className="text-blue-600"
+                                                />{" "}
+                                                付款詳情
+                                              </h4>
+                                              {o.payment_info?.cvs_code ? (
+                                                <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
+                                                  <p className="text-xs opacity-80 mb-1">
+                                                    超商繳費代碼 (CVS)
                                                   </p>
-                                                  <p className="text-xs text-gray-500">
-                                                    數量: {item.quantity}
+                                                  <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
+                                                    {o.payment_info.cvs_code}
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigator.clipboard.writeText(
+                                                          o.payment_info!
+                                                            .cvs_code!,
+                                                        );
+                                                      }}
+                                                      className="hover:scale-110 active:scale-95 transition-transform"
+                                                    >
+                                                      <Copy size={20} />
+                                                    </button>
+                                                  </div>
+                                                  <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                    <div className="flex items-center gap-2 text-xs">
+                                                      <Calendar size={14} />{" "}
+                                                      繳費期限:{" "}
+                                                      {
+                                                        o.payment_info
+                                                          .expire_date
+                                                      }
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
+                                                  付款方式:{" "}
+                                                  <span className="font-medium text-gray-900">
+                                                    {o.payment_method_title ||
+                                                      "標準支付"}
+                                                  </span>
+                                                  <p className="mt-1 text-xs opacity-70">
+                                                    此訂單目前無須額外代碼，請依系統指示操作。
                                                   </p>
                                                 </div>
-                                                <p className="text-sm font-mono font-medium">
-                                                  {item.total
-                                                    ? formatMoneyNT(
-                                                        Number(item.total),
-                                                      )
-                                                    : ""}
-                                                </p>
+                                              )}
+                                            </div>
+                                            <div className="flex flex-col gap-4">
+                                              <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                                <Info
+                                                  size={18}
+                                                  className="text-gray-600"
+                                                />{" "}
+                                                訂單品項
+                                              </h4>
+                                              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                                {o.line_items.map(
+                                                  (item, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                                                    >
+                                                      <div>
+                                                        <p className="text-sm font-bold text-gray-900">
+                                                          {item.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                          數量: {item.quantity}
+                                                        </p>
+                                                      </div>
+                                                      <p className="text-sm font-mono font-medium">
+                                                        {item.total
+                                                          ? formatMoneyNT(
+                                                              Number(
+                                                                item.total,
+                                                              ),
+                                                            )
+                                                          : ""}
+                                                      </p>
+                                                    </div>
+                                                  ),
+                                                )}
+                                                <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
+                                                  <span>總計金額</span>
+                                                  <span className="text-lg text-emerald-700">
+                                                    {formatMoneyNT(
+                                                      Number(o.total),
+                                                    )}
+                                                  </span>
+                                                </div>
                                               </div>
-                                            ))}
-                                            <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
-                                              <span>總計金額</span>
-                                              <span className="text-lg text-emerald-700">
-                                                {formatMoneyNT(Number(o.total))}
-                                              </span>
                                             </div>
                                           </div>
-                                        </div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                              </Fragment>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </Fragment>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </ShellCard>
                     )}
+                  </div>
+
+                  <div className="lg:col-span-1 flex flex-col gap-5">
+                    <ShellCard title="狀態與詳情">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
+                          <span className="text-[#6d7175] text-sm">
+                            帳戶狀態
+                          </span>
+                          <StatusPill status="正常運作" type="account" />
+                        </div>
+                        <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
+                          <span className="text-[#6d7175] text-sm">
+                            折扣優惠
+                          </span>
+                          <span className="font-bold text-emerald-600 text-sm">
+                            {membership?.discountLabel || "—"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6d7175] text-sm block mb-2">
+                            生日
+                          </span>
+                          {!customer?.birthday ? (
+                            !isSettingBirthday ? (
+                              <button
+                                onClick={() => setIsSettingBirthday(true)}
+                                className="w-full border border-dashed border-[#c9cccf] bg-[#f9fafb] hover:bg-white text-[#202223] py-1.5 rounded-md text-sm font-medium transition-colors"
+                              >
+                                設定生日
+                              </button>
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                <input
+                                  type="date"
+                                  value={birthdayInput}
+                                  onChange={(e) =>
+                                    setBirthdayInput(e.target.value)
+                                  }
+                                  className="w-full border border-[#c9cccf] rounded-md px-3 py-1.5 text-sm outline-none"
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={handleUpdateBirthday}
+                                    disabled={birthdayLoading}
+                                    className="flex-1 bg-[#008060] text-white text-sm py-1.5 rounded-md hover:bg-[#006e52]"
+                                  >
+                                    {birthdayLoading ? "..." : "儲存"}
+                                  </button>
+                                  <button
+                                    onClick={() => setIsSettingBirthday(false)}
+                                    className="flex-1 bg-white border border-[#c9cccf] text-[#202223] text-sm py-1.5 rounded-md hover:bg-[#f6f6f7]"
+                                  >
+                                    取消
+                                  </button>
+                                </div>
+                                <p className="text-[10px] text-rose-500 italic">
+                                  * 生日填寫後將無法修改
+                                </p>
+                              </div>
+                            )
+                          ) : (
+                            <div className="font-bold text-[#202223] text-sm bg-gray-50 px-3 py-1.5 rounded border border-gray-100 flex items-center gap-2">
+                              <span className="text-rose-400">🎂</span>{" "}
+                              {customer.birthday}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </ShellCard>
+
+                    <ShellCard title="獎勵與優惠券">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
+                          <div>
+                            <p className="text-sm font-medium text-[#202223]">
+                              升等禮
+                            </p>
+                            <p className="text-xs font-bold text-amber-600">
+                              {membership?.upgradeGift ?? 0} 元
+                            </p>
+                          </div>
+                          {membership?.upgradeGift ? (
+                            <button
+                              onClick={() => handleClaim("upgrade")}
+                              disabled={claimLoading.upgrade || claimed.upgrade}
+                              className={cn(
+                                "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
+                                claimed.upgrade
+                                  ? "bg-gray-100 text-gray-400 border-gray-200"
+                                  : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
+                              )}
+                            >
+                              {claimed.upgrade ? "已領取" : "領取禮物"}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-[#6d7175]">—</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
+                          <div>
+                            <p className="text-sm font-medium text-[#202223]">
+                              生日禮
+                            </p>
+                            <p className="text-xs font-bold text-rose-600">
+                              {membership?.birthdayCredit ?? 0} 元
+                            </p>
+                          </div>
+                          {customer?.birthday && membership?.birthdayCredit ? (
+                            isCurrentMonthBirthday ? (
+                              <button
+                                onClick={() => handleClaim("birthday")}
+                                disabled={
+                                  claimLoading.birthday || claimed.birthday
+                                }
+                                className={cn(
+                                  "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
+                                  claimed.birthday
+                                    ? "bg-gray-100 text-gray-400 border-gray-200"
+                                    : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
+                                )}
+                              >
+                                {claimed.birthday ? "已領取" : "領取好禮"}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] bg-[#f9fafb] border border-[#e1e3e5] text-[#6d7175] px-2 py-1 rounded">
+                                限 {getBirthMonthLabel(customer.birthday)} 領取
+                              </span>
+                            )
+                          ) : null}
+                        </div>
+
+                        {claimMessage && (
+                          <div
+                            className={cn(
+                              "p-3 rounded-md border text-sm animate-in fade-in slide-in-from-top-1",
+                              claimStatus === "success"
+                                ? "bg-[#cbe5cc]/30 border-[#1c5c27]/20 text-[#1c5c27]"
+                                : "bg-rose-50 border-rose-200 text-rose-700",
+                            )}
+                          >
+                            <p className="font-bold">{claimMessage}</p>
+                            {claimedCode && (
+                              <p className="text-xs mt-1 font-mono bg-white/50 px-1.5 py-0.5 rounded border border-current w-fit">
+                                折扣碼: {claimedCode}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="mt-2">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-bold text-[#202223]">
+                              可用優惠券
+                            </span>
+                            <button
+                              onClick={loadAvailableCoupons}
+                              className="text-xs text-[#2c6ecb] hover:underline"
+                            >
+                              刷新清單
+                            </button>
+                          </div>
+
+                          {availableLoading ? (
+                            <p className="text-xs text-[#6d7175]">讀取中...</p>
+                          ) : filteredCoupons.length === 0 ? (
+                            <p className="text-xs text-[#6d7175] bg-[#f9fafb] p-3 rounded-md border border-[#e1e3e5]">
+                              找不到可用折扣碼
+                            </p>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              {filteredCoupons.map((c) => (
+                                <div
+                                  key={c.code}
+                                  className="border border-[#c9cccf] rounded-md p-3 flex justify-between items-center bg-[#f9fafb] hover:shadow-sm"
+                                >
+                                  <div>
+                                    <span className="font-bold text-rose-600 text-sm">
+                                      {formatMoneyNT(c.amount)}
+                                    </span>
+                                    <p className="text-[11px] text-[#6d7175] mt-0.5 font-medium">
+                                      {isAmbassadorCoupon(c.code, c.kind)
+                                        ? "推薦大使獎勵"
+                                        : "新會員首購獎勵"}
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() =>
+                                      navigator.clipboard.writeText(c.code)
+                                    }
+                                    className="text-[#5c5f62] hover:text-[#008060] bg-white border border-[#c9cccf] p-1.5 rounded shadow-sm hover:border-[#008060]"
+                                  >
+                                    <Copy size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </ShellCard>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ======================= 管理員專用 UI (全版寬) ======================= */}
+            {activeTab === "admin" && (
+              <div className="w-full">
+                <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-[#202223] flex items-center gap-3">
+                      會員管理與分析
+                    </h1>
+                  </div>
+
+                  {isAdmin && !adminError && (
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
+                        <div className="text-xs text-slate-500">會員數</div>
+                        <div className="text-lg font-semibold text-[#202223]">
+                          {totalMembers}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
+                        <div className="text-xs text-slate-500">
+                          累計消費總額
+                        </div>
+                        <div className="text-lg font-semibold text-[#202223]">
+                          {formatNTD(totalRevenue)}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
+                        <div className="text-xs text-slate-500">
+                          全站推薦註冊數
+                        </div>
+                        <div className="text-lg font-semibold text-amber-700">
+                          {totalReferred}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
+                        <div className="text-xs text-slate-500">
+                          全站推薦金支出
+                        </div>
+                        <div className="text-lg font-semibold text-amber-700">
+                          {formatNTD(totalReferralEarned)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </header>
+
+                {!isAdmin && (
+                  <ShellCard title="權限不足">
+                    <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200">
+                      權限不足或是後端尚未開放，目前僅可瀏覽這段錯誤訊息。
+                      <br />
+                      如果仍顯示此錯誤，請檢查您的{" "}
+                      <code>/api/admin/customers</code> 是否正確驗證 JWT 權限。
+                    </p>
                   </ShellCard>
                 )}
 
-                {/* ===== Tab: Admin Analytics ===== */}
-                {activeTab === "admin" && isAdmin && (
-                  <ShellCard
-                    title={
-                      searchQuery
-                        ? `搜尋結果: "${searchQuery}"`
-                        : "會員管理列表"
-                    }
-                  >
-                    <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <span className="text-xs text-[#6d7175]">
-                        顯示 {adminFiltered.length} / {adminData.length} 筆
+                {isAdmin && (
+                  <>
+                    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+                      <span className="text-xs font-medium text-[#6d7175] bg-[#e4e5e7] px-3 py-1.5 rounded-full">
+                        顯示 {adminFiltered.length} / {adminData.length} 筆資料
                       </span>
                     </div>
 
                     {adminLoading && (
                       <p className="text-sm text-[#6d7175] py-4">載入中...</p>
                     )}
+
                     {!adminLoading && adminError && (
-                      <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-md">
-                        {adminError}
+                      <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200 shadow-sm">
+                        <strong>請求拒絕</strong>：{adminError}
                       </p>
                     )}
 
                     {!adminLoading &&
                       !adminError &&
                       adminFiltered.length === 0 && (
-                        <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                        <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-white">
                           找不到符合條件的會員。
                         </p>
                       )}
@@ -1603,67 +1891,138 @@ export default function AccountPage() {
                     {!adminLoading &&
                       !adminError &&
                       adminFiltered.length > 0 && (
-                        <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
-                          <table className="w-full text-sm text-left whitespace-nowrap">
-                            <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
+                        <div className="overflow-x-auto rounded-xl border border-[#c9cccf] bg-white shadow-sm">
+                          <table className="min-w-full text-sm">
+                            {/* 🌟 採用指定的粉色表頭與白字 */}
+                            <thead className="bg-[#F58A9C] text-xs uppercase text-slate-50">
                               <tr>
-                                <th className="px-5 py-3 font-medium">會員</th>
-                                <th className="px-5 py-3 font-medium">地區</th>
-                                <th className="px-5 py-3 font-medium text-right">
+                                <th className="px-4 py-3 text-left font-semibold">
+                                  會員
+                                </th>
+                                <th className="px-4 py-3 text-left font-semibold">
+                                  Email
+                                </th>
+                                <th className="px-4 py-3 text-left font-semibold">
+                                  城市
+                                </th>
+                                <th className="px-4 py-3 text-right font-semibold">
                                   訂單數
                                 </th>
-                                <th className="px-5 py-3 font-medium text-right">
-                                  消費額
+                                <th className="px-4 py-3 text-right font-semibold">
+                                  累計消費
                                 </th>
-                                <th className="px-5 py-3 font-medium text-center">
-                                  等級
+                                <th className="px-4 py-3 text-right font-semibold">
+                                  推薦註冊
+                                </th>
+                                <th className="px-4 py-3 text-right font-semibold">
+                                  推薦金
+                                </th>
+                                <th className="px-4 py-3 text-center font-semibold">
+                                  會員等級
+                                </th>
+                                <th className="px-4 py-3 text-left font-semibold">
+                                  最近訂購
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#ebebeb]">
+
+                            <tbody>
                               {adminFiltered.map((c) => (
                                 <Fragment key={c.id}>
                                   <tr
+                                    className="border-t border-[#ebebeb] last:border-b hover:bg-slate-50/80 cursor-pointer transition-colors"
                                     onClick={() =>
                                       toggleExpandAdminRow(c.id, c.email)
                                     }
-                                    className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
                                   >
-                                    <td className="px-5 py-3">
-                                      <div className="font-semibold text-[#2c6ecb] hover:underline">
+                                    <td className="px-4 py-3 align-middle">
+                                      <div className="font-medium text-slate-800">
                                         {c.name || "—"}
                                       </div>
-                                      <div className="text-xs text-[#6d7175]">
-                                        {c.email}
-                                      </div>
+                                      {c.username && (
+                                        <div className="text-xs text-slate-500">
+                                          @{c.username}
+                                        </div>
+                                      )}
                                     </td>
-                                    <td className="px-5 py-3 text-[#6d7175]">
-                                      {c.billingCity || "—"}
+                                    <td className="px-4 py-3 align-middle text-slate-700">
+                                      {c.email}
                                     </td>
-                                    <td className="px-5 py-3 text-right">
+                                    <td className="px-4 py-3 align-middle text-slate-700">
+                                      {c.billingCountry || ""}{" "}
+                                      {c.billingCity || ""}
+                                    </td>
+                                    <td className="px-4 py-3 align-middle text-right">
                                       {c.ordersCount}
                                     </td>
-                                    <td className="px-5 py-3 text-right">
+                                    <td className="px-4 py-3 align-middle text-right font-medium">
                                       {formatNTD(c.totalSpent)}
                                     </td>
-                                    <td className="px-5 py-3 text-center">
-                                      <StatusPill status={c.tier} type="tier" />
+
+                                    <td className="px-4 py-3 align-middle text-right text-amber-700 font-semibold">
+                                      {c.referredCount || 0}
+                                    </td>
+                                    <td className="px-4 py-3 align-middle text-right text-amber-700 font-semibold">
+                                      {formatNTD(c.referralEarned || 0)}
+                                    </td>
+
+                                    {/* 🌟 採用指定的彩色 Badge */}
+                                    <td className="px-4 py-3 align-middle text-center">
+                                      <span
+                                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                                          c.tier.includes("VVIP")
+                                            ? "bg-purple-100 text-purple-700"
+                                            : c.tier.includes("UVIP")
+                                              ? "bg-indigo-100 text-indigo-700"
+                                              : c.tier.includes("金")
+                                                ? "bg-amber-100 text-amber-700"
+                                                : c.tier.includes("銀")
+                                                  ? "bg-slate-100 text-slate-700"
+                                                  : c.tier.includes("銅")
+                                                    ? "bg-orange-100 text-orange-700"
+                                                    : "bg-slate-50 text-slate-400"
+                                        }`}
+                                      >
+                                        {c.tier}
+                                      </span>
+                                    </td>
+
+                                    <td className="px-4 py-3 align-middle text-xs text-slate-500">
+                                      {c.lastOrderDate
+                                        ? new Date(
+                                            c.lastOrderDate,
+                                          ).toLocaleDateString("zh-TW")
+                                        : "—"}
                                     </td>
                                   </tr>
+
                                   {expandedId === c.id && (
-                                    <tr className="bg-[#f9fafb]">
+                                    <tr className="bg-slate-50/60 border-b border-[#c9cccf]">
                                       <td
-                                        colSpan={5}
-                                        className="px-5 py-4 border-b border-[#c9cccf] whitespace-normal"
+                                        colSpan={9}
+                                        className="px-5 pb-5 pt-3 whitespace-normal"
                                       >
-                                        <div className="font-semibold text-[#202223] mb-2">
-                                          會員分析與訂單
+                                        <div className="pt-2 text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                          <Users
+                                            size={16}
+                                            className="text-[#008060]"
+                                          />
+                                          {c.name || c.username}{" "}
+                                          的詳細分析與訂單
                                         </div>
-                                        {renderExpandedOrders()}
+
+                                        {/* 🌟 採用指定的圖表元件 */}
                                         <MemberAnalytics
                                           orders={expandedOrders}
                                           customer={c}
                                         />
+
+                                        <div className="mt-6">
+                                          <div className="font-semibold text-[#202223] mb-3 text-sm">
+                                            訂單明細列表
+                                          </div>
+                                          {renderExpandedOrdersAdmin()}
+                                        </div>
                                       </td>
                                     </tr>
                                   )}
@@ -1673,215 +2032,10 @@ export default function AccountPage() {
                           </table>
                         </div>
                       )}
-                  </ShellCard>
-                )}
-
-                {activeTab === "admin" && !isAdmin && (
-                  <ShellCard title="權限不足">
-                    <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200">
-                      權限不足（僅網站管理員可查看此區塊）。
-                    </p>
-                  </ShellCard>
+                  </>
                 )}
               </div>
-
-              {/* 右側資訊區塊 (1/3) */}
-              <div className="lg:col-span-1 flex flex-col gap-5">
-                {/* 狀態卡片 */}
-                <ShellCard title="狀態與詳情">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
-                      <span className="text-[#6d7175] text-sm">帳戶狀態</span>
-                      <StatusPill status="正常運作" type="account" />
-                    </div>
-                    <div className="flex justify-between items-center border-b border-[#ebebeb] pb-3">
-                      <span className="text-[#6d7175] text-sm">折扣優惠</span>
-                      <span className="font-bold text-emerald-600 text-sm">
-                        {membership?.discountLabel || "—"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[#6d7175] text-sm block mb-2">
-                        生日
-                      </span>
-                      {!customer?.birthday ? (
-                        !isSettingBirthday ? (
-                          <button
-                            onClick={() => setIsSettingBirthday(true)}
-                            className="w-full border border-dashed border-[#c9cccf] bg-[#f9fafb] hover:bg-white text-[#202223] py-1.5 rounded-md text-sm font-medium transition-colors"
-                          >
-                            設定生日
-                          </button>
-                        ) : (
-                          <div className="flex flex-col gap-2">
-                            <input
-                              type="date"
-                              value={birthdayInput}
-                              onChange={(e) => setBirthdayInput(e.target.value)}
-                              className="w-full border border-[#c9cccf] rounded-md px-3 py-1.5 text-sm outline-none"
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={handleUpdateBirthday}
-                                disabled={birthdayLoading}
-                                className="flex-1 bg-[#008060] text-white text-sm py-1.5 rounded-md hover:bg-[#006e52]"
-                              >
-                                {birthdayLoading ? "..." : "儲存"}
-                              </button>
-                              <button
-                                onClick={() => setIsSettingBirthday(false)}
-                                className="flex-1 bg-white border border-[#c9cccf] text-[#202223] text-sm py-1.5 rounded-md hover:bg-[#f6f6f7]"
-                              >
-                                取消
-                              </button>
-                            </div>
-                            <p className="text-[10px] text-rose-500 italic">
-                              * 生日填寫後將無法修改
-                            </p>
-                          </div>
-                        )
-                      ) : (
-                        <div className="font-bold text-[#202223] text-sm bg-gray-50 px-3 py-1.5 rounded border border-gray-100 flex items-center gap-2">
-                          <span className="text-rose-400">🎂</span>{" "}
-                          {customer.birthday}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </ShellCard>
-
-                {/* 獎勵與折價券卡片 */}
-                <ShellCard title="獎勵與優惠券">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
-                      <div>
-                        <p className="text-sm font-medium text-[#202223]">
-                          升等禮
-                        </p>
-                        <p className="text-xs font-bold text-amber-600">
-                          {membership?.upgradeGift ?? 0} 元
-                        </p>
-                      </div>
-                      {membership?.upgradeGift ? (
-                        <button
-                          onClick={() => handleClaim("upgrade")}
-                          disabled={claimLoading.upgrade || claimed.upgrade}
-                          className={cn(
-                            "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
-                            claimed.upgrade
-                              ? "bg-gray-100 text-gray-400 border-gray-200"
-                              : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
-                          )}
-                        >
-                          {claimed.upgrade ? "已領取" : "領取禮物"}
-                        </button>
-                      ) : (
-                        <span className="text-xs text-[#6d7175]">—</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between border-b border-[#ebebeb] pb-3">
-                      <div>
-                        <p className="text-sm font-medium text-[#202223]">
-                          生日禮
-                        </p>
-                        <p className="text-xs font-bold text-rose-600">
-                          {membership?.birthdayCredit ?? 0} 元
-                        </p>
-                      </div>
-                      {customer?.birthday && membership?.birthdayCredit ? (
-                        isCurrentMonthBirthday ? (
-                          <button
-                            onClick={() => handleClaim("birthday")}
-                            disabled={claimLoading.birthday || claimed.birthday}
-                            className={cn(
-                              "px-3 py-1.5 rounded-md text-xs font-bold transition-all border shadow-sm",
-                              claimed.birthday
-                                ? "bg-gray-100 text-gray-400 border-gray-200"
-                                : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#9c9ea1]",
-                            )}
-                          >
-                            {claimed.birthday ? "已領取" : "領取好禮"}
-                          </button>
-                        ) : (
-                          <span className="text-[10px] bg-[#f9fafb] border border-[#e1e3e5] text-[#6d7175] px-2 py-1 rounded">
-                            限 {getBirthMonthLabel(customer.birthday)} 領取
-                          </span>
-                        )
-                      ) : null}
-                    </div>
-
-                    {claimMessage && (
-                      <div
-                        className={cn(
-                          "p-3 rounded-md border text-sm animate-in fade-in slide-in-from-top-1",
-                          claimStatus === "success"
-                            ? "bg-[#cbe5cc]/30 border-[#1c5c27]/20 text-[#1c5c27]"
-                            : "bg-rose-50 border-rose-200 text-rose-700",
-                        )}
-                      >
-                        <p className="font-bold">{claimMessage}</p>
-                        {claimedCode && (
-                          <p className="text-xs mt-1 font-mono bg-white/50 px-1.5 py-0.5 rounded border border-current w-fit">
-                            折扣碼: {claimedCode}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="mt-2">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-bold text-[#202223]">
-                          可用優惠券
-                        </span>
-                        <button
-                          onClick={loadAvailableCoupons}
-                          className="text-xs text-[#2c6ecb] hover:underline"
-                        >
-                          刷新清單
-                        </button>
-                      </div>
-
-                      {availableLoading ? (
-                        <p className="text-xs text-[#6d7175]">讀取中...</p>
-                      ) : filteredCoupons.length === 0 ? (
-                        <p className="text-xs text-[#6d7175] bg-[#f9fafb] p-3 rounded-md border border-[#e1e3e5]">
-                          找不到可用折扣碼
-                        </p>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {filteredCoupons.map((c) => (
-                            <div
-                              key={c.code}
-                              className="border border-[#c9cccf] rounded-md p-3 flex justify-between items-center bg-[#f9fafb] hover:shadow-sm"
-                            >
-                              <div>
-                                <span className="font-bold text-rose-600 text-sm">
-                                  {formatMoneyNT(c.amount)}
-                                </span>
-                                <p className="text-[11px] text-[#6d7175] mt-0.5 font-medium">
-                                  {isAmbassadorCoupon(c.code, c.kind)
-                                    ? "推薦大使獎勵"
-                                    : "新會員首購獎勵"}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  navigator.clipboard.writeText(c.code)
-                                }
-                                className="text-[#5c5f62] hover:text-[#008060] bg-white border border-[#c9cccf] p-1.5 rounded shadow-sm hover:border-[#008060]"
-                              >
-                                <Copy size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </ShellCard>
-              </div>
-            </div>
+            )}
           </div>
         </main>
       </div>
