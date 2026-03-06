@@ -232,7 +232,7 @@ function StatusPill({
     );
   }
 
-  // 3. 會員等級與權限標籤顏色 (用於個人帳戶頁面)
+  // 3. 會員等級與權限標籤顏色
   const isGold = s.includes("金") || s.includes("gold");
   const isSilver = s.includes("銀") || s.includes("silver");
   const isAdmin = s.includes("管理") || s.includes("admin");
@@ -359,7 +359,7 @@ function MetricBlock({
   );
 }
 
-/* ===================== Admin Analytics Components (採用指定設計) ===================== */
+/* ===================== Admin Analytics Components ===================== */
 function MemberAnalytics({
   orders,
   customer,
@@ -414,38 +414,38 @@ function MemberAnalytics({
     <div className="mt-4 space-y-3">
       {/* 6 個小指標卡片 */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">訂單數</div>
           <div className="mt-1 text-lg font-semibold text-slate-800">
             {orderCount}
           </div>
         </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">累計消費</div>
           <div className="mt-1 text-lg font-semibold text-slate-800">
             {formatNTD(totalAmount)}
           </div>
         </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">平均客單價</div>
           <div className="mt-1 text-lg font-semibold text-slate-800">
             {orderCount === 0 ? "—" : formatNTD(avgAmount)}
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">推薦註冊人數</div>
           <div className="mt-1 text-lg font-semibold text-amber-700">
             {customer.referredCount || 0}
           </div>
         </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">成功首單推薦</div>
           <div className="mt-1 text-lg font-semibold text-amber-700">
             {customer.rewardedCount || 0}
           </div>
         </div>
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">已賺推薦金</div>
           <div className="mt-1 text-lg font-semibold text-amber-700">
             {formatNTD(customer.referralEarned || 0)}
@@ -455,7 +455,7 @@ function MemberAnalytics({
 
       {/* 2 個大圖表卡片 */}
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
             每月消費金額趨勢
           </div>
@@ -480,7 +480,7 @@ function MemberAnalytics({
           )}
         </div>
 
-        <div className="rounded-lg border bg-white px-3 py-2">
+        <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
             最常購買商品 TOP 5
           </div>
@@ -492,7 +492,7 @@ function MemberAnalytics({
                 layout="horizontal"
                 xAxis={[{ label: "購買次數 / 數量" }]}
                 yAxis={[{ scaleType: "band", data: productLabels }]}
-                series={[{ data: productQty, label: "數量" }]}
+                series={[{ data: productQty, label: "數量", color: "#008060" }]}
                 margin={{ left: 80, right: 10, top: 20, bottom: 30 }}
               />
             </div>
@@ -552,7 +552,6 @@ export default function AccountPage() {
   const [adminError, setAdminError] = useState("");
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  // 💡 用於追蹤使用者訂單列表展開狀態
   const [expandedUserOrderId, setExpandedUserOrderId] = useState<number | null>(
     null,
   );
@@ -593,7 +592,7 @@ export default function AccountPage() {
           : [];
         const role: string = String(data?.customer?.role || "");
 
-        // 強化身分判斷
+        // 強化身分判斷：確保中英文皆能判斷為管理員
         const adminFlag =
           Boolean(data?.customer?.isAdmin) ||
           Boolean(data?.isAdmin) ||
@@ -604,6 +603,8 @@ export default function AccountPage() {
           role === "admin" ||
           role === "網站管理員";
 
+        // 💡 如果你的 API 一直抓不到權限，可以暫時解開下一行註解來強制開啟管理員介面測試：
+        // setIsAdmin(true);
         setIsAdmin(adminFlag);
       } else {
         setLoggedIn(false);
@@ -684,7 +685,7 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
-  // ===================== 登入載入完成後，若未設定生日自動彈出提醒 =====================
+  // 登入載入完成後，若未設定生日自動彈出提醒
   useEffect(() => {
     if (!loading && loggedIn && customer && !customer.birthday) {
       const hasPrompted = sessionStorage.getItem("birthdayPrompted");
@@ -790,8 +791,7 @@ export default function AccountPage() {
     }
   };
 
-  /* ===================== Derived (Account) ===================== */
-
+  /* ===================== Derived Data ===================== */
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return orders;
     const q = searchQuery.toLowerCase();
@@ -941,7 +941,6 @@ export default function AccountPage() {
     loadAdminCustomers();
   }, [activeTab, isAdmin, loggedIn, loadAdminCustomers]);
 
-  // ===================== 處理頂部搜尋列過濾 (過濾管理員列表) =====================
   const adminFiltered = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase();
     if (!keyword || activeTab !== "admin") return adminData;
@@ -964,19 +963,15 @@ export default function AccountPage() {
     0,
   );
 
-  // 管理員專用的訂單渲染 (套用指定的 UI)
   const renderExpandedOrdersAdmin = () => {
-    if (expandedOrdersLoading) {
+    if (expandedOrdersLoading)
       return <p className="text-xs text-slate-500 py-2">載入訂單中…</p>;
-    }
-    if (expandedOrdersError) {
+    if (expandedOrdersError)
       return (
         <p className="text-xs text-rose-600 py-2">{expandedOrdersError}</p>
       );
-    }
-    if (expandedOrders.length === 0) {
+    if (expandedOrders.length === 0)
       return <p className="text-xs text-slate-500 py-2">目前尚無任何訂單。</p>;
-    }
 
     return (
       <div className="mt-1 rounded-lg border bg-slate-50">
@@ -1055,7 +1050,6 @@ export default function AccountPage() {
     );
   }
 
-  /* ===================== 動態 Placeholder 判斷 ===================== */
   const getSearchPlaceholder = () => {
     if (activeTab === "orders") return "搜尋訂單編號或狀態...";
     if (activeTab === "admin") return "搜尋會員姓名、Email...";
@@ -1108,7 +1102,7 @@ export default function AccountPage() {
       </header>
 
       {/* 下半部：側邊欄 + 主內容 */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* 左側側邊欄 (Sidebar) */}
         <aside className="w-60 bg-[#ebebeb] border-r border-[#d2d5d8] flex flex-col hidden md:flex shrink-0">
           <div className="p-3 flex flex-col gap-1">
@@ -1201,6 +1195,48 @@ export default function AccountPage() {
           </div>
 
           <div className="max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
+            {/* 🌟 頂部橫向 Tab 切換區 (Desktop & Mobile 均顯示) 🌟 */}
+            <div className="flex border-b border-[#c9cccf] overflow-x-auto mb-2">
+              <button
+                onClick={() => {
+                  setActiveTab("profile");
+                  setSearchQuery("");
+                }}
+                className={`px-5 py-3 text-sm font-medium relative whitespace-nowrap transition-colors ${activeTab === "profile" ? "text-[#202223]" : "text-[#6d7175] hover:text-[#202223]"}`}
+              >
+                帳戶概覽
+                {activeTab === "profile" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#008060] rounded-t-md"></div>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("orders");
+                  setSearchQuery("");
+                }}
+                className={`px-5 py-3 text-sm font-medium relative whitespace-nowrap transition-colors ${activeTab === "orders" ? "text-[#202223]" : "text-[#6d7175] hover:text-[#202223]"}`}
+              >
+                我的訂單
+                {activeTab === "orders" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#008060] rounded-t-md"></div>
+                )}
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setActiveTab("admin");
+                    setSearchQuery("");
+                  }}
+                  className={`px-5 py-3 text-sm font-medium relative whitespace-nowrap transition-colors ${activeTab === "admin" ? "text-[#202223]" : "text-[#6d7175] hover:text-[#202223]"}`}
+                >
+                  會員管理與分析
+                  {activeTab === "admin" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#008060] rounded-t-md"></div>
+                  )}
+                </button>
+              )}
+            </div>
+
             {/* 一般會員頁面區塊 (Profile & Orders) */}
             {activeTab !== "admin" && (
               <>
@@ -1277,32 +1313,9 @@ export default function AccountPage() {
                   </div>
                 )}
 
-                <div className="md:hidden flex border-b border-[#c9cccf] overflow-x-auto pb-[1px]">
-                  {["profile", "orders", ...(isAdmin ? ["admin"] : [])].map(
-                    (tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          setActiveTab(tab as TabKey);
-                          setSearchQuery("");
-                        }}
-                        className={`px-4 py-3 text-sm font-medium relative whitespace-nowrap ${activeTab === tab ? "text-[#202223]" : "text-[#6d7175]"}`}
-                      >
-                        {tab === "profile"
-                          ? "帳戶"
-                          : tab === "orders"
-                            ? "訂單"
-                            : "數據分析"}
-                        {activeTab === tab && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#008060] rounded-t-md"></div>
-                        )}
-                      </button>
-                    ),
-                  )}
-                </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                   <div className="lg:col-span-2 flex flex-col gap-5">
+                    {/* ===== Tab: Profile ===== */}
                     {activeTab === "profile" && (
                       <>
                         <ShellCard
@@ -1357,7 +1370,6 @@ export default function AccountPage() {
                                 </strong>{" "}
                                 抵用金。
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <p className="text-xs text-[#6d7175] mb-1">
@@ -1408,6 +1420,7 @@ export default function AccountPage() {
                       </>
                     )}
 
+                    {/* ===== Tab: Orders ===== */}
                     {activeTab === "orders" && (
                       <ShellCard
                         title={
@@ -1805,52 +1818,9 @@ export default function AccountPage() {
               </>
             )}
 
-            {/* ======================= 管理員專用 UI (全版寬) ======================= */}
+            {/* ======================= 管理員專用 UI ======================= */}
             {activeTab === "admin" && (
               <div className="w-full">
-                <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-[#202223] flex items-center gap-3">
-                      會員管理與分析
-                    </h1>
-                  </div>
-
-                  {isAdmin && !adminError && (
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
-                        <div className="text-xs text-slate-500">會員數</div>
-                        <div className="text-lg font-semibold text-[#202223]">
-                          {totalMembers}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
-                        <div className="text-xs text-slate-500">
-                          累計消費總額
-                        </div>
-                        <div className="text-lg font-semibold text-[#202223]">
-                          {formatNTD(totalRevenue)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
-                        <div className="text-xs text-slate-500">
-                          全站推薦註冊數
-                        </div>
-                        <div className="text-lg font-semibold text-amber-700">
-                          {totalReferred}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white px-4 py-2 shadow-sm border border-[#c9cccf]">
-                        <div className="text-xs text-slate-500">
-                          全站推薦金支出
-                        </div>
-                        <div className="text-lg font-semibold text-amber-700">
-                          {formatNTD(totalReferralEarned)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </header>
-
                 {!isAdmin && (
                   <ShellCard title="權限不足">
                     <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200">
@@ -1864,174 +1834,237 @@ export default function AccountPage() {
 
                 {isAdmin && (
                   <>
-                    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-                      <span className="text-xs font-medium text-[#6d7175] bg-[#e4e5e7] px-3 py-1.5 rounded-full">
-                        顯示 {adminFiltered.length} / {adminData.length} 筆資料
-                      </span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-white border border-[#c9cccf] rounded-lg p-5 shadow-sm flex flex-col gap-1 hover:border-[#8c9196] transition-colors">
+                        <span className="text-xs text-[#6d7175] font-medium uppercase tracking-wider">
+                          總會員數
+                        </span>
+                        <span className="text-2xl font-bold text-[#202223]">
+                          {totalMembers}
+                        </span>
+                      </div>
+                      <div className="bg-white border border-[#c9cccf] rounded-lg p-5 shadow-sm flex flex-col gap-1 hover:border-[#8c9196] transition-colors">
+                        <span className="text-xs text-[#6d7175] font-medium uppercase tracking-wider">
+                          累計總營收
+                        </span>
+                        <span className="text-2xl font-bold text-[#202223]">
+                          {formatNTD(totalRevenue)}
+                        </span>
+                      </div>
+                      <div className="bg-white border border-[#c9cccf] rounded-lg p-5 shadow-sm flex flex-col gap-1 hover:border-[#8c9196] transition-colors">
+                        <span className="text-xs text-[#6d7175] font-medium uppercase tracking-wider">
+                          全站推薦註冊數
+                        </span>
+                        <span className="text-2xl font-bold text-amber-700">
+                          {totalReferred}
+                        </span>
+                      </div>
+                      <div className="bg-white border border-[#c9cccf] rounded-lg p-5 shadow-sm flex flex-col gap-1 hover:border-[#8c9196] transition-colors">
+                        <span className="text-xs text-[#6d7175] font-medium uppercase tracking-wider">
+                          全站推薦金支出
+                        </span>
+                        <span className="text-2xl font-bold text-amber-700">
+                          {formatNTD(totalReferralEarned)}
+                        </span>
+                      </div>
                     </div>
 
-                    {adminLoading && (
-                      <p className="text-sm text-[#6d7175] py-4">載入中...</p>
-                    )}
+                    <div className="bg-white border border-[#c9cccf] rounded-lg shadow-sm overflow-hidden">
+                      <div className="px-5 py-4 border-b border-[#c9cccf] flex items-center justify-between bg-[#f9fafb]">
+                        <h2 className="text-base font-semibold text-[#202223]">
+                          會員列表與詳細分析
+                        </h2>
+                        <span className="text-xs font-medium text-[#6d7175] bg-[#e4e5e7] px-3 py-1.5 rounded-full">
+                          顯示 {adminFiltered.length} / {adminData.length}{" "}
+                          筆資料
+                        </span>
+                      </div>
 
-                    {!adminLoading && adminError && (
-                      <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200 shadow-sm">
-                        <strong>請求拒絕</strong>：{adminError}
-                      </p>
-                    )}
+                      <div className="p-5">
+                        {adminLoading && (
+                          <p className="text-sm text-[#6d7175] py-4 text-center">
+                            載入中...
+                          </p>
+                        )}
 
-                    {!adminLoading &&
-                      !adminError &&
-                      adminFiltered.length === 0 && (
-                        <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-white">
-                          找不到符合條件的會員。
-                        </p>
-                      )}
+                        {!adminLoading && adminError && (
+                          <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200 shadow-sm">
+                            <strong>請求拒絕</strong>：{adminError}
+                          </p>
+                        )}
 
-                    {!adminLoading &&
-                      !adminError &&
-                      adminFiltered.length > 0 && (
-                        <div className="overflow-x-auto rounded-xl border border-[#c9cccf] bg-white shadow-sm">
-                          <table className="min-w-full text-sm">
-                            {/* 🌟 採用指定的粉色表頭與白字 */}
-                            <thead className="bg-[#F58A9C] text-xs uppercase text-slate-50">
-                              <tr>
-                                <th className="px-4 py-3 text-left font-semibold">
-                                  會員
-                                </th>
-                                <th className="px-4 py-3 text-left font-semibold">
-                                  Email
-                                </th>
-                                <th className="px-4 py-3 text-left font-semibold">
-                                  城市
-                                </th>
-                                <th className="px-4 py-3 text-right font-semibold">
-                                  訂單數
-                                </th>
-                                <th className="px-4 py-3 text-right font-semibold">
-                                  累計消費
-                                </th>
-                                <th className="px-4 py-3 text-right font-semibold">
-                                  推薦註冊
-                                </th>
-                                <th className="px-4 py-3 text-right font-semibold">
-                                  推薦金
-                                </th>
-                                <th className="px-4 py-3 text-center font-semibold">
-                                  會員等級
-                                </th>
-                                <th className="px-4 py-3 text-left font-semibold">
-                                  最近訂購
-                                </th>
-                              </tr>
-                            </thead>
+                        {!adminLoading &&
+                          !adminError &&
+                          adminFiltered.length === 0 && (
+                            <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                              找不到符合條件的會員。
+                            </p>
+                          )}
 
-                            <tbody>
-                              {adminFiltered.map((c) => (
-                                <Fragment key={c.id}>
-                                  <tr
-                                    className="border-t border-[#ebebeb] last:border-b hover:bg-slate-50/80 cursor-pointer transition-colors"
-                                    onClick={() =>
-                                      toggleExpandAdminRow(c.id, c.email)
-                                    }
-                                  >
-                                    <td className="px-4 py-3 align-middle">
-                                      <div className="font-medium text-slate-800">
-                                        {c.name || "—"}
-                                      </div>
-                                      {c.username && (
-                                        <div className="text-xs text-slate-500">
-                                          @{c.username}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3 align-middle text-slate-700">
-                                      {c.email}
-                                    </td>
-                                    <td className="px-4 py-3 align-middle text-slate-700">
-                                      {c.billingCountry || ""}{" "}
-                                      {c.billingCity || ""}
-                                    </td>
-                                    <td className="px-4 py-3 align-middle text-right">
-                                      {c.ordersCount}
-                                    </td>
-                                    <td className="px-4 py-3 align-middle text-right font-medium">
-                                      {formatNTD(c.totalSpent)}
-                                    </td>
-
-                                    <td className="px-4 py-3 align-middle text-right text-amber-700 font-semibold">
-                                      {c.referredCount || 0}
-                                    </td>
-                                    <td className="px-4 py-3 align-middle text-right text-amber-700 font-semibold">
-                                      {formatNTD(c.referralEarned || 0)}
-                                    </td>
-
-                                    {/* 🌟 採用指定的彩色 Badge */}
-                                    <td className="px-4 py-3 align-middle text-center">
-                                      <span
-                                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                                          c.tier.includes("VVIP")
-                                            ? "bg-purple-100 text-purple-700"
-                                            : c.tier.includes("UVIP")
-                                              ? "bg-indigo-100 text-indigo-700"
-                                              : c.tier.includes("金")
-                                                ? "bg-amber-100 text-amber-700"
-                                                : c.tier.includes("銀")
-                                                  ? "bg-slate-100 text-slate-700"
-                                                  : c.tier.includes("銅")
-                                                    ? "bg-orange-100 text-orange-700"
-                                                    : "bg-slate-50 text-slate-400"
-                                        }`}
-                                      >
-                                        {c.tier}
-                                      </span>
-                                    </td>
-
-                                    <td className="px-4 py-3 align-middle text-xs text-slate-500">
-                                      {c.lastOrderDate
-                                        ? new Date(
-                                            c.lastOrderDate,
-                                          ).toLocaleDateString("zh-TW")
-                                        : "—"}
-                                    </td>
+                        {!adminLoading &&
+                          !adminError &&
+                          adminFiltered.length > 0 && (
+                            <div className="overflow-x-auto rounded-lg border border-[#c9cccf]">
+                              <table className="min-w-full text-sm">
+                                <thead className="bg-[#F58A9C] text-xs uppercase text-slate-50 border-b border-[#c9cccf]">
+                                  <tr>
+                                    <th className="px-5 py-4 text-left font-semibold tracking-wider">
+                                      會員
+                                    </th>
+                                    <th className="px-5 py-4 text-left font-semibold tracking-wider">
+                                      Email
+                                    </th>
+                                    <th className="px-5 py-4 text-left font-semibold tracking-wider">
+                                      城市
+                                    </th>
+                                    <th className="px-5 py-4 text-right font-semibold tracking-wider">
+                                      訂單數
+                                    </th>
+                                    <th className="px-5 py-4 text-right font-semibold tracking-wider">
+                                      累計消費
+                                    </th>
+                                    <th className="px-5 py-4 text-right font-semibold tracking-wider">
+                                      推薦註冊
+                                    </th>
+                                    <th className="px-5 py-4 text-right font-semibold tracking-wider">
+                                      推薦金
+                                    </th>
+                                    <th className="px-5 py-4 text-center font-semibold tracking-wider">
+                                      會員等級
+                                    </th>
+                                    <th className="px-5 py-4 text-center font-semibold tracking-wider">
+                                      分析圖表
+                                    </th>
                                   </tr>
+                                </thead>
 
-                                  {expandedId === c.id && (
-                                    <tr className="bg-slate-50/60 border-b border-[#c9cccf]">
-                                      <td
-                                        colSpan={9}
-                                        className="px-5 pb-5 pt-3 whitespace-normal"
+                                <tbody className="divide-y divide-[#ebebeb]">
+                                  {adminFiltered.map((c) => (
+                                    <Fragment key={c.id}>
+                                      <tr
+                                        className="hover:bg-[#f9fafb] cursor-pointer transition-colors group"
+                                        onClick={() =>
+                                          toggleExpandAdminRow(c.id, c.email)
+                                        }
                                       >
-                                        <div className="pt-2 text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                          <Users
-                                            size={16}
-                                            className="text-[#008060]"
-                                          />
-                                          {c.name || c.username}{" "}
-                                          的詳細分析與訂單
-                                        </div>
-
-                                        {/* 🌟 採用指定的圖表元件 */}
-                                        <MemberAnalytics
-                                          orders={expandedOrders}
-                                          customer={c}
-                                        />
-
-                                        <div className="mt-6">
-                                          <div className="font-semibold text-[#202223] mb-3 text-sm">
-                                            訂單明細列表
+                                        <td className="px-5 py-4 align-middle">
+                                          <div className="font-semibold text-[#2c6ecb] group-hover:underline">
+                                            {c.name || "—"}
                                           </div>
-                                          {renderExpandedOrdersAdmin()}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  )}
-                                </Fragment>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                                          {c.username && (
+                                            <div className="text-xs text-[#6d7175] mt-0.5">
+                                              @{c.username}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-slate-700">
+                                          {c.email}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-slate-700">
+                                          {c.billingCountry || ""}{" "}
+                                          {c.billingCity || ""}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-right">
+                                          {c.ordersCount}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-right font-bold text-[#202223]">
+                                          {formatNTD(c.totalSpent)}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-right font-semibold text-amber-700">
+                                          {c.referredCount || 0}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-right font-semibold text-amber-700">
+                                          {formatNTD(c.referralEarned || 0)}
+                                        </td>
+                                        <td className="px-5 py-4 align-middle text-center">
+                                          <span
+                                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                                              c.tier.includes("VVIP")
+                                                ? "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm"
+                                                : c.tier.includes("UVIP")
+                                                  ? "bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm"
+                                                  : c.tier.includes("金")
+                                                    ? "bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                                                    : c.tier.includes("銀")
+                                                      ? "bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
+                                                      : c.tier.includes("銅")
+                                                        ? "bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
+                                                        : "bg-slate-50 text-slate-400 border border-slate-200"
+                                            }`}
+                                          >
+                                            {c.tier}
+                                          </span>
+                                        </td>
+
+                                        <td className="px-5 py-4 align-middle text-center">
+                                          <button
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded shadow-sm transition-colors ${expandedId === c.id ? "bg-[#1a1a1a] text-white border-black" : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#8c9196]"}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleExpandAdminRow(
+                                                c.id,
+                                                c.email,
+                                              );
+                                            }}
+                                          >
+                                            <BarChart2
+                                              size={14}
+                                              className={
+                                                expandedId === c.id
+                                                  ? "text-white"
+                                                  : "text-[#008060]"
+                                              }
+                                            />
+                                            {expandedId === c.id
+                                              ? "收起"
+                                              : "分析"}
+                                          </button>
+                                        </td>
+                                      </tr>
+
+                                      {expandedId === c.id && (
+                                        <tr className="bg-slate-50/60">
+                                          <td
+                                            colSpan={9}
+                                            className="p-6 whitespace-normal border-t border-[#c9cccf]"
+                                          >
+                                            <div className="bg-white border border-[#c9cccf] rounded-lg p-5 shadow-sm">
+                                              <div className="font-bold text-[#202223] text-lg mb-2 flex items-center gap-2 border-b border-[#ebebeb] pb-3">
+                                                <Users
+                                                  size={20}
+                                                  className="text-[#008060]"
+                                                />
+                                                {c.name || c.username}{" "}
+                                                的圖表分析與訂單資料
+                                              </div>
+
+                                              <MemberAnalytics
+                                                orders={expandedOrders}
+                                                customer={c}
+                                              />
+
+                                              <div className="mt-8 border-t border-[#ebebeb] pt-6">
+                                                <div className="font-bold text-[#202223] mb-4 text-base flex items-center gap-2">
+                                                  <Package
+                                                    size={18}
+                                                    className="text-gray-500"
+                                                  />
+                                                  詳細訂單列表
+                                                </div>
+                                                {renderExpandedOrdersAdmin()}
+                                              </div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </Fragment>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                      </div>
+                    </div>
                   </>
                 )}
               </div>
@@ -2070,19 +2103,19 @@ export default function AccountPage() {
                 type="date"
                 value={modalBirthdayInput}
                 onChange={(e) => setModalBirthdayInput(e.target.value)}
-                className="w-full border border-[#c9cccf] rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#008060] mb-6 font-medium"
+                className="w-full border border-[#c9cccf] rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#008060] mb-6 font-medium text-[#202223]"
               />
               <div className="flex justify-end gap-3 pt-2 border-t border-[#ebebeb]">
                 <button
                   onClick={() => setShowBirthdayModal(false)}
-                  className="px-4 py-2 border border-[#c9cccf] bg-white rounded-md text-sm font-bold text-[#202223] hover:bg-[#f6f6f7]"
+                  className="px-4 py-2 border border-[#c9cccf] bg-white rounded-md text-sm font-bold text-[#202223] hover:bg-[#f6f6f7] shadow-sm"
                 >
                   稍後再說
                 </button>
                 <button
                   onClick={handleModalSubmit}
                   disabled={birthdayLoading || !modalBirthdayInput}
-                  className="px-4 py-2 bg-[#008060] text-white rounded-md text-sm font-bold hover:bg-[#006e52]"
+                  className="px-4 py-2 bg-[#008060] text-white rounded-md text-sm font-bold hover:bg-[#006e52] shadow-[0_1px_0_rgba(0,0,0,0.15)] disabled:opacity-50"
                 >
                   確認送出
                 </button>
