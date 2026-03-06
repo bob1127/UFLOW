@@ -1,5 +1,5 @@
 "use client";
-// import styles from "./page.module.scss";
+
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "next-view-transitions";
 import Carousel from "../components/FactaryCarousel/index";
@@ -18,7 +18,6 @@ const FeatureCarousel = dynamic(
 import { ReactLenis } from "@studio-freight/react-lenis";
 import Image from "next/image";
 import Marquee from "react-fast-marquee";
-// import { Link } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 const backgroundImage = "/images/S__23085150.png";
@@ -40,6 +39,8 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  const carouselRef = useRef(null);
+
   useEffect(() => {
     const font = new FontFace(
       "ResourceHanRoundedCN-Heavy",
@@ -60,7 +61,6 @@ export default function Home() {
       });
   }, []);
 
-  // ... (省略 testimonials 資料，保持原樣) ...
   const testimonials = [
     {
       quote:
@@ -91,7 +91,7 @@ export default function Home() {
       src: "/images/kv.webp",
     },
   ];
-  const imageRefs = useRef([]);
+
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -181,20 +181,17 @@ export default function Home() {
 
   return (
     <ReactLenis root>
-      <div className="w-screen ">
-        {/* ✅ 修改後的：右下角懸浮廣告影片區塊 (開始) */}
+      <div className="w-screen " ref={containerRef}>
+        {/* ✅ 右下角懸浮廣告影片區塊 */}
         <AnimatePresence>
           {showModal && (
             <motion.div
-              // 動畫改為從右下角滑入
               initial={{ opacity: 0, y: 100, x: 20 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
               exit={{ opacity: 0, y: 100, x: 20 }}
               transition={{ type: "tween", ease: "easeOut", duration: 0.5 }}
-              // 樣式修改：固定定位右下角、IG直式比例、無圓角、白邊框、陰影
               className="fixed bottom-4 right-4 z-[9999] w-60 sm:w-72 md:w-80 aspect-[9/16] overflow-hidden border-4 border-white shadow-2xl bg-black"
             >
-              {/* 關閉按鈕：樣式調整為適合深色背景的簡潔按鈕 */}
               <button
                 onClick={() => setShowModal(false)}
                 className="absolute top-2 right-2 z-20 group bg-black/50 hover:bg-black text-white/80 hover:text-white rounded-full p-1.5 transition-all duration-300"
@@ -216,33 +213,28 @@ export default function Home() {
                 </svg>
               </button>
 
-              {/* 影片播放器 */}
               <video
                 src="/video/UFLOW.mp4"
                 autoPlay
                 loop
-                muted // ⚠️ 必須靜音才能在大多數瀏覽器自動播放
+                muted
                 playsInline
-                // 確保影片填滿容器並保持比例
                 className="w-full h-full object-cover"
               />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ✅ 修改後的：右下角懸浮廣告影片區塊 (結束) */}
-
         <MainScrollCard />
-
-        {/* ... (以下原本的 sections 程式碼保持不變，請確保完整複製) ... */}
 
         <section className="section-two-column  xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Card 2 */}
-            <div className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5">
-              {/* 白色邊框框 */}
+            {/* Card 1 */}
+            <Link
+              href="/products/peptide-crystal-hibiscus"
+              className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
+            >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
-              {/* 文字區塊 */}
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
@@ -261,7 +253,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              {/* 背景圖片 */}
               <Image
                 src="/images/DSCF7894.jpg"
                 alt="img"
@@ -270,13 +261,14 @@ export default function Home() {
                 loading="lazy"
                 fill
               />
-            </div>
+            </Link>
 
             {/* Card 2 */}
-            <div className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5">
-              {/* 白色邊框框 */}
+            <Link
+              href="/products/gaba-magnesium"
+              className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
+            >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
-              {/* 文字區塊 */}
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
@@ -296,7 +288,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              {/* 背景圖片 */}
               <Image
                 src="/images/DSCF7801.jpg"
                 alt="img"
@@ -305,14 +296,10 @@ export default function Home() {
                 loading="lazy"
                 fill
               />
-            </div>
+            </Link>
           </div>
         </section>
-        {/* <section className="bg-white w-full    min-h-[80vh] pt-32    relative">
-          <div className="absolute  w-[90%] max-w-[1750px]  right-[-7%]  xl:right-[0%] top-1/2 z-20 -translate-y-1/2">
-            <TestimonialsSection />
-          </div>
-        </section> */}
+
         <section className="section-main-products w-full pt-16 sm:pt-20">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* 文字區 */}
@@ -365,7 +352,10 @@ export default function Home() {
           </div>
 
           {/* 下方輪播 */}
-          <div className="w-full overflow-hidden mt-4 sm:mt-6">
+          <div
+            className="w-full overflow-hidden mt-4 sm:mt-6"
+            ref={carouselRef}
+          >
             <Carousel />
           </div>
         </section>

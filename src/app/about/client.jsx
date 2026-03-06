@@ -5,23 +5,16 @@ import { motion } from "framer-motion";
 import { Leaf, FlaskConical, ShieldCheck, HeartHandshake } from "lucide-react";
 import Link from "next/link";
 import ScrollAnimate from "../../components/ScrollAnimation/page.jsx";
-// import SvgImg from "../../components/SVGImage.jsx";
-// import HeroSlider from "../../components/HeroSlideContact/page";
-import { Accordion, AccordionItem } from "@heroui/react";
 import Character from "../../components/TextOpacityScroll/Character.jsx";
 import GsapText from "../../components/RevealText/index";
 import MotionImage from "../../components/MotionImage.jsx";
-
 import Swiper from "../../components/SwiperCarousel/SwiperCardFood.jsx";
 
-// import HoverCard from "../../components/HoverCardBuild/index";
-
-// import { PlaceholdersAndVanishInput } from "../../components/ui/placeholders-and-vanish-input.js";
-// import { useGSAP } from "@gsap/react";
 import { CustomEase } from "gsap/CustomEase";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
+
 // 動畫設定
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -38,7 +31,7 @@ const staggerContainer = {
   },
 };
 
-// 核心價值資料 [cite: 16-21]
+// 核心價值資料
 const values = [
   {
     title: "植萃天然",
@@ -66,34 +59,12 @@ const values = [
   },
 ];
 
-// 專業團隊名單 [cite: 41-50]
-// 註：圖片路徑請替換為您實際的專家照片
-const teamMembers = [
-  { name: "林智亨", title: "中醫師", image: "/images/people/1.jpg" },
-  {
-    name: "鄭玲君",
-    title: "營養師",
-    image: "/images/people/2.jpg",
-  },
-  { name: "林奎妙", title: "藥師", image: "/images/people/3.jpg" },
-  {
-    name: "陳安浚",
-    title: "驗光師",
-    image: "/images/people/4.jpg",
-  },
-  { name: "戴淑娟", title: "藥師", image: "/images/people/5.jpg" },
-  {
-    name: "葉孟娟",
-    title: "諮商心理師",
-    image: "/images/people/6.jpg",
-  },
-];
-
-export default function AboutPage() {
-  const imageRefs = useRef([]);
+export default function AboutClient() {
   const containerRef = useRef(null);
 
   useEffect(() => {
+    gsap.registerPlugin(CustomEase, ScrollTrigger);
+
     const initGSAPAnimations = () => {
       const ctx = gsap.context(() => {
         const images = document.querySelectorAll(".animate-image-wrapper");
@@ -178,43 +149,25 @@ export default function AboutPage() {
     };
   }, []);
 
-  gsap.registerPlugin(CustomEase);
-
-  const placeholders = [
-    "理想的家，該具備哪些元素？",
-    "選擇房子時，你最在意什麼？",
-    "如何找到兼具品質與舒適的住宅？",
-    "買房是投資還是生活選擇？",
-    "未來的家，會是什麼模樣？",
-  ];
-
-  const handleChange = (e) => {
-    console.log(e.target.value);
-  };
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-    console.log("submitted");
-  };
   return (
-    <main className="w-full bg-white text-[#2b3742] overflow-hidden pt-20">
+    <main
+      ref={containerRef}
+      className="w-full bg-white text-[#2b3742] overflow-hidden pt-20"
+    >
       <section>
         <div>
           <ScrollAnimate />
         </div>
       </section>
+
       {/* 輪播區 */}
       <section className="section-padding">
         <Swiper />
       </section>
 
-      {/* 動畫區 */}
-
-      {/* 室內設計問題 區 */}
+      {/* 問題區 */}
       <section className="flex flex-col w-full max-w-[1120px] mx-auto px-4 md:px-8 py-12 md:py-24">
-        {/* 頂部標題區塊：使用 justify-between 確保左右貼齊邊界 */}
         <div className="flex flex-col md:flex-row justify-between md:items-end w-full mb-12 lg:mb-16 gap-8">
-          {/* 左側主標 + 說明 */}
           <div className="w-full md:w-3/4 flex flex-col">
             <h2 className="text-4xl md:text-[2.6rem] leading-tight text-gray-900 font-normal">
               養分循環補給
@@ -228,7 +181,6 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* 右側標籤：使用文字直排 (writing-mode) 完美貼齊右側緣 */}
           <div className="w-full md:w-1/4 flex justify-start md:justify-end md:pb-2">
             <span className="text-[1rem] md:text-[1.1rem] text-gray-500 tracking-widest uppercase md:[writing-mode:vertical-rl] md:rotate-180">
               LIFE - Healthy
@@ -236,28 +188,27 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* QA 卡片區塊：使用 Grid 網格系統，保證三張卡片自動撐滿並貼齊左右緣 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 w-full">
           {[
             {
               title1: "植粹與天然",
               title2: "植粹與天然",
               tag: "Natural",
-              desc: "我們的每一款產品都選用最純粹、最自然的成分，確保每一位 顧客都能享受天然的健康益處。",
+              desc: "我們的每一款產品都選用最純粹、最自然的成分，確保每一位顧客都能享受天然的健康益處。",
               img: "/images/DSCF7801.jpg",
             },
             {
               title1: "創新與科學",
               title2: "創新與科學",
               tag: "創新",
-              desc: "我們致力於將創新的科技與天然成分相結合， 通過科學研究為顧客提供更加有效的健康解決方案。",
+              desc: "我們致力於將創新的科技與天然成分相結合，通過科學研究為顧客提供更加有效的健康解決方案。",
               img: "/images/DSCF7878.jpg",
             },
             {
               title1: "透明與信任",
               title2: "透明與信任",
               tag: "Trust",
-              desc: "我們相信誠實與透明是建立品牌信任的基礎， 會讓每一位顧客了解產品來源、成分及使用方式。",
+              desc: "我們相信誠實與透明是建立品牌信任的基礎，會讓每一位顧客了解產品來源、成分及使用方式。",
               img: "/images/DSCF7850.jpg",
             },
           ].map((item, i) => (
@@ -265,7 +216,6 @@ export default function AboutPage() {
               key={i}
               className="group flex flex-col items-start w-full overflow-hidden cursor-pointer"
             >
-              {/* 圖片容器：設定 aspect ratio 讓圖片高度統一 */}
               <div className="overflow-hidden w-full aspect-[4/5] relative bg-gray-100">
                 <Image
                   src={item.img}
@@ -276,7 +226,6 @@ export default function AboutPage() {
                 />
               </div>
 
-              {/* 文字說明區塊：移除左右 px，緊貼圖片邊緣 */}
               <div className="flex flex-col py-6 items-start w-full">
                 <span className="text-gray-400 tracking-wider text-sm mb-2 font-medium">
                   - {item.tag}
@@ -303,12 +252,9 @@ export default function AboutPage() {
       </section>
 
       <section className="section_features w-full pt-16 sm:pt-20">
-        {/* 下半：圖片＋說明區塊 */}
         <div className="flex flex-col md:flex-row w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* 左側圖片區 */}
           <div className="flex flex-col w-full">
             <div className="img w-full mx-auto sm:mx-3 h-auto md:h-[70vh] xl:h-[80vh] overflow-hidden">
-              {/* ✅ 保留動畫 class，不動效果 */}
               <div className="animate-image-wrapper relative w-full aspect-[4/5] md:h-full overflow-hidden">
                 <div className="overlay absolute inset-0 bg-black z-10" />
                 <div className="image-container relative w-full h-full overflow-hidden">
@@ -326,9 +272,7 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* 文字 + 按鈕區 */}
             <div className="flex flex-col md:flex-row justify-between gap-6 sm:gap-4 mt-4 sm:mt-6">
-              {/* 左文案 */}
               <div className="w-full md:w-1/2">
                 <div className="flex flex-col pl-1 sm:pl-3 py-6 sm:py-10">
                   <p className="text-base sm:text-lg lg:text-[1.3rem] font-light leading-relaxed">
@@ -340,7 +284,6 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              {/* 右文案 + 按鈕 */}
               <div className="w-full md:w-1/2">
                 <div className="flex items-end md:items-end justify-end flex-col text-right">
                   <span className="mt-2 sm:mt-5 leading-relaxed text-gray-500 font-light text-sm sm:text-[0.95rem] max-w-md">
@@ -348,23 +291,26 @@ export default function AboutPage() {
                     我們的研發精神在於將科學方法應用於天然原料，以科技養護身心。
                   </span>
 
-                  <button className="group mt-6 sm:mt-10 relative inline-flex h-10 sm:h-12 items-center justify-center overflow-hidden rounded-full px-5 sm:px-6 text-sm sm:text-base text-neutral-950">
-                    <span className="relative inline-flex overflow-hidden">
-                      <div className="absolute origin-bottom transition duration-500 [transform:translateX(-150%)_skewX(33deg)] group-hover:[transform:translateX(0)_skewX(0deg)]">
-                        Go Product →
-                      </div>
-                      <div className="transition duration-500 [transform:translateX(0%)_skewX(0deg)] group-hover:[transform:translateX(150%)_skewX(33deg)]">
-                        Go Product →
-                      </div>
-                    </span>
-                  </button>
+                  <Link href="/products">
+                    <button className="group mt-6 sm:mt-10 relative inline-flex h-10 sm:h-12 items-center justify-center overflow-hidden rounded-full px-5 sm:px-6 text-sm sm:text-base text-neutral-950 border border-gray-300 hover:bg-gray-50 transition">
+                      <span className="relative inline-flex overflow-hidden">
+                        <div className="absolute origin-bottom transition duration-500 [transform:translateX(-150%)_skewX(33deg)] group-hover:[transform:translateX(0)_skewX(0deg)]">
+                          Go Product →
+                        </div>
+                        <div className="transition duration-500 [transform:translateX(0%)_skewX(0deg)] group-hover:[transform:translateX(150%)_skewX(33deg)]">
+                          Go Product →
+                        </div>
+                      </span>
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-      {/* 2. 品牌故事：左圖右文 [cite: 7, 9, 10] */}
+
+      {/* 品牌故事 */}
       <section className="py-24 container mx-auto px-6 lg:px-12">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <motion.div
@@ -372,9 +318,8 @@ export default function AboutPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="w-full lg:w-1/2 relative aspect-[4/3]  overflow-hidden"
+            className="w-full lg:w-1/2 relative aspect-[4/3] overflow-hidden rounded-xl"
           >
-            {/* 請替換為 PDF P.2 的雙人形象照或類似風格照片 */}
             <Image
               src="/images/about/抗氧封存：PUREWAY-C® 複方維生素 C.png"
               alt="UFLOW Brand Story"
@@ -413,7 +358,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-24 bg-white">
+      {/* UFLOW 新概念 */}
+      <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <motion.div
             className="text-center mb-20"
@@ -440,15 +386,12 @@ export default function AboutPage() {
                 transition={{ delay: index * 0.1 }}
                 className="group flex flex-col items-center text-center"
               >
-                {/* 圖示區塊：拿掉卡片，保留純粹的圓形與圖示 */}
                 <div
-                  className={`w-20 h-20 rounded-full ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 ease-out`}
+                  className={`w-20 h-20 rounded-full ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 ease-out shadow-sm`}
                 >
-                  {/* 稍微調整 Icon 大小以符合新的比例 */}
                   <div className="scale-110">{item.icon}</div>
                 </div>
 
-                {/* 文字內容 */}
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                   {item.title}
                 </h3>
@@ -461,7 +404,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 5. CTA 區塊 */}
+      {/* CTA 區塊 */}
       <section className="py-20 bg-[#2b3742] text-white text-center">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-6">
