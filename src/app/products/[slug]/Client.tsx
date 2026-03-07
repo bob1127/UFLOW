@@ -35,7 +35,12 @@ interface ProductProps {
 }
 // ==============================================================================
 
-function AccordionItem({ title, children, isOpen, onClick }: AccordionItemProps) {
+function AccordionItem({
+  title,
+  children,
+  isOpen,
+  onClick,
+}: AccordionItemProps) {
   return (
     <div className="border-t border-gray-200">
       <button
@@ -74,7 +79,7 @@ const FLAVOR_COLORS = [
 // 🌟 加上 ProductProps 型別
 export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const router = useRouter();
-  
+
   // 🌟 加上 Zustand state 型別 (s: any)
   const addItem = useCartStore((s: any) => s.addItem);
   const openCart = useCartStore((s: any) => s.open);
@@ -84,13 +89,15 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const [qty, setQty] = useState<number>(1);
   const [showAdded, setShowAdded] = useState<boolean>(false);
   const [tab, setTab] = useState<string>("desc");
-  const [displayPrice, setDisplayPrice] = useState<number>(Number(product.price || 0));
+  const [displayPrice, setDisplayPrice] = useState<number>(
+    Number(product.price || 0),
+  );
 
   const [openAccordion, setOpenAccordion] = useState<string>("desc");
 
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [initialSlide, setInitialSlide] = useState<number>(0);
-  
+
   // 🌟 給予正確的 Swiper 型別
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
 
@@ -510,12 +517,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
           </div>
         </div>
       </div>
-
       {/* ──────────────────────────────────────────────────
           下方詳細說明區
          ────────────────────────────────────────────────── */}
       <div className="w-full bg-white mt-16 pt-10 pb-20 border-t border-gray-200">
-        <div className="w-[95%] mx-auto px-4 lg:px-16">
+        <div className="w-[100%] mx-auto px-4 lg:px-16">
           <div className="flex gap-8 border-b border-gray-200 mb-8 justify-center">
             <button
               className={`pb-4 text-lg font-medium transition border-b-2 px-2 ${
@@ -538,286 +544,36 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               購買須知
             </button>
           </div>
-          <div className="mx-auto max-w-[1300px]">
-            <div className="flex ">
-              <Image
-                src="/images/維他菌合生元/001.png"
-                className="max-w-[350px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-              <div>
-                <h3 className="font-extrabold text-stone-800 text-[50px]">
-                  維他菌合生元
-                </h3>
-                <Image
-                  src="/images/維他菌合生元/維他菌合生元-01.png"
-                  className="max-w-[250px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <div className="flex flex-col justify-center items-center">
-              <p className="text-[22px]">
-                不是吃下一堆菌，而是要會{" "}
-                <span className="font-bold text-rose-500">選</span> 菌
-              </p>
-              <p className="text-[22px]">
-                真正對你影響的不是數量，而是{" "}
-                <span className="font-bold text-rose-500">
-                  菌株是否有目的性
-                </span>
-              </p>
-              <p className="text-[22px]">
-                <span className="font-bold text-[32px] text-stone-800">
-                  UFLOW
-                </span>{" "}
-                嚴格挑選{" "}
-                <span className="font-bold text-rose-500">
-                  4 株有功能分工的原廠菌株
-                </span>
-              </p>
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
-              【菌株】才是真正幫助保養的關鍵
-            </h3>
-            <ul className="pl-6">
-              <li className="text-stone-800 text-[20px] mt-3">
-                {" "}
-                <span className="font-bold ">
-                  Lactobacillus plantarum LPL28：
-                </span>{" "}
-                調整蠕動節奏，調節氣脹感
-              </li>
-              <li className="text-stone-800 text-[20px] mt-3">
-                {" "}
-                <span className="font-bold ">
-                  Lactobacillus salivarius AP-32：
-                </span>{" "}
-                協助抑制不良菌生長，支持消化道的菌相平衡
-              </li>
-              <li className="text-stone-800 text-[20px] mt-3">
-                {" "}
-                <span className="font-bold ">
-                  Lactobacillus rhamnosus F-1
-                </span>{" "}
-                協助消化道防護機制與平衡
-              </li>
-              <li className="text-stone-800 text-[20px] mt-3">
-                {" "}
-                <span className="font-bold ">
-                  Bifidobacterium animalis subsp. Lactis CP-9:
-                </span>{" "}
-                支持菌種經過消化道的耐受性與菌相穩定
-              </li>
-            </ul>
-            <div className="flex mt-5">
-              <div className="mx-3">
-                <Image
-                  src="/images/維他菌合生元/002.png"
-                  className="max-w-[350px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
-              <div className="mx-3">
-                <Image
-                  src="/images/維他菌合生元/005.png"
-                  className="max-w-[250px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
-              單補益生菌，很多人吃了「沒感覺」， <br></br>原因不是菌不好，而是
-              <span className="text-rose-500"> 消化道環境不適合它留下來</span>
-            </h3>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/006.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
-              合生元 (Synbiotics) 是{" "}
-              <span className="text-rose-500"> 益生菌</span>與
-              <span className="text-rose-500"> 益生元</span>、
-              <span className="text-rose-500"> 後生元</span>結合，
-              <br></br> 並添加提升益生菌存活
-              <span className="text-rose-500"> 專利益萃質®</span>
-              <br></br>
-              <span className="text-rose-500"> 維持</span>細菌叢停留體內的{" "}
-              <span className="text-rose-500">續航力</span>
-            </h3>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/006.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/text.png"
-                className="max-w-[200px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-            <div className="flex mt-5">
-              <div className="mx-3">
-                <Image
-                  src="/images/維他菌合生元/007.png"
-                  className="max-w-[550px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
-              <div className="mx-3">
-                <Image
-                  src="/images/維他菌合生元/008.png"
-                  className="max-w-[550px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
-              漢方調理
-            </h3>
-            <h4 className=" lg:text-[24px] text-[20px] 2xl:text-[32px] font-bold text-stone-800">
-              UFLOW 維他菌合生元 於益生菌配方中搭配漢方提供<br></br>
-              更完整的營養補充設計，作為日常規律調理的輔助元素。
-            </h4>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/漢方溫和調理.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-          </div>
-          <div className="mx-auto max-w-[1300px] my-10">
-            <h3 className=" lg:text-[32px] text-[24px] 2xl:text-[45px] font-bold text-stone-800">
-              採用專利三層包埋凍晶技術，
-            </h3>
-            <h4 className=" lg:text-[24px] text-[20px] 2xl:text-[32px] font-bold text-stone-800">
-              提升益生菌在儲存與消化道環境中的穩定與存活率。
-            </h4>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/專利技術.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/維他菌合生元.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-            <div className="mx-3">
-              <Image
-                src="/images/維他菌合生元/專利技術.png"
-                className="max-w-[850px] w-full"
-                alt=""
-                width={1500}
-                height={800}
-              />
-            </div>
-          </div>
-          <div className="max-w-7xl w-full mx-auto">
+
+          <div className="max-w-4xl w-full mx-auto">
             {tab === "desc" && (
-              <div className="flex flex-col justify-center items-center gap-0">
-                <Image
-                  src="/images/products/鎂鎂香蜂草.png"
-                  className="max-w-[950px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-                <div className="max-w-[950px] w-full py-8">
-                  <h3 className="text-3xl font-bold mb-4">適用族群：</h3>
-                  <p className="text-lg">
-                    生活步調緊湊、壓力大、飲食不均衡、飲酒、翻來覆去難入眠、運動健身族群
-                  </p>
-                </div>
-                <Image
-                  src="/images/products/香蜂草萃取物.png"
-                  className="max-w-[950px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-                <Image
-                  src="/images/products/GABA-(γ-胺基丁酸).png"
-                  className="max-w-[950px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-                <Image
-                  src="/images/products/配方.png"
-                  className="max-w-[950px] w-full"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-                <Image
-                  src="/images/products/Gemini_Generated_Image_q7zfzxq7zfzxq7zf.png"
-                  className="max-w-[950px] w-full mt-8"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-                <Image
-                  src="/images/products/鎂（Magnesium）是人體必需的重要礦物質.png"
-                  className="max-w-[950px] w-full mt-8"
-                  alt=""
-                  width={1500}
-                  height={800}
-                />
-              </div>
+              // 🌟 核心修改：使用 prose class 渲染後台傳來的 HTML
+              <article
+                className="
+                  prose prose-lg prose-stone max-w-none 
+                  prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6
+                  prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6
+                   prose-img:shadow-md prose-img:mx-auto prose-img:my-10
+                  prose-video:aspect-video prose-video:w-full  prose-video:my-10
+                  prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-rose-500
+                  prose-li:text-slate-600
+                "
+                dangerouslySetInnerHTML={{
+                  // 優先抓取 ACF 自訂欄位，若無則抓取 WooCommerce 預設商品說明
+                  __html:
+                    product.acf?.detailed_content ||
+                    product.description ||
+                    "<p class='text-center text-gray-400'>目前尚無詳細商品說明。</p>",
+                }}
+              />
             )}
+
             {tab === "notice" && (
-              <div className="text-gray-600 leading-7 text-center max-w-2xl mx-auto">
+              <div className="text-gray-600 leading-7 text-center max-w-2xl mx-auto py-10">
                 <p>
-                  若商品包裝破損或內容有異，請於收到後 7
-                  日內聯繫客服。若因個人原因退換貨，商品需保持未拆封狀態。
+                  全館滿 NT$ 2,000 免運費。若商品包裝破損或內容有異，請於收到後
+                  7 日內聯繫客服。若因個人原因退換貨，商品需保持未拆封狀態。
                 </p>
               </div>
             )}
