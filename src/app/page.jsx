@@ -1,10 +1,27 @@
 // app/page.jsx
-import Script from "next/script";
-import Client from "./home"; // 確保此路徑與你的 Client 元件檔名一致
+import Client from "./home";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
-// ===================== 強化 SEO Metadata =====================
+// 🌟 首頁動態 FAQ 資料
+const homeFAQs = [
+  {
+    question: "UFLOW 的保健食品是哪裡製造的？",
+    answer:
+      "我們的產品嚴選國際大廠專利原料，並在台灣符合 ISO22000 與 HACCP 規範的專業廠房製造，全系列產品皆通過第三方公正檢驗，確保安全無虞。",
+  },
+  {
+    question: "訂購後大約幾天可以收到商品？",
+    answer:
+      "現貨商品一般於訂單確認後 1-3 個工作天內出貨（不含例假日），配送時間依物流狀況而定。全館單筆滿 NT$ 2,000 即享免運費優惠。",
+  },
+  {
+    question: "請問有提供退換貨服務嗎？",
+    answer:
+      "有的，我們提供完善的售後服務。若收到商品發現包裝破損或內容有異，請於 7 日內聯繫 UFLOW 客服。若因個人因素申請退換貨，商品必須保持全新未拆封狀態。",
+  },
+];
+
 export const metadata = {
   title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
   description:
@@ -23,9 +40,7 @@ export const metadata = {
     "第三方檢驗",
     "UFLOW",
   ],
-  icons: {
-    icon: "/images/logo/uflow.ico",
-  },
+  icons: { icon: "/images/logo/uflow.ico" },
   openGraph: {
     type: "website",
     locale: "zh_TW",
@@ -43,30 +58,34 @@ export const metadata = {
       },
     ],
   },
-  alternates: {
-    canonical: SITE_URL,
-  },
+  alternates: { canonical: SITE_URL },
 };
 
 export const revalidate = 60;
 
 export default function Page() {
-  // ===================== JSON-LD 首頁專屬結構化資料 =====================
-  // 針對首頁，使用 @graph 包裝 WebSite, Organization 與 WebPage 標記
+  // ===================== 👑 首頁終極 @graph 結構化資料 =====================
   const schemaGraph = {
     "@context": "https://schema.org",
     "@graph": [
-      // 1. 網站標記 (WebSite) - 告訴 Google 這是整個網站的入口，並有利於觸發站內搜尋框
       {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         url: SITE_URL,
         name: "UFLOW",
+        alternateName: "UFLOW 保健食品",
         description:
           "功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
         inLanguage: "zh-TW",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
       },
-      // 2. 品牌實體標記 (Organization) - 建立品牌權威度 (E-E-A-T)
       {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
@@ -74,45 +93,57 @@ export default function Page() {
         url: SITE_URL,
         logo: {
           "@type": "ImageObject",
-          url: `${SITE_URL}/images/logo/uflow.png`, // 建議確認 Logo 實際路徑
+          url: `${SITE_URL}/images/logo/uflow.png`,
         },
+        image: `${SITE_URL}/images/logo/uflow.png`,
         description:
           "UFLOW 專注於功能性保健食品與日常營養補給。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "customer service",
-          availableLanguage: "Traditional Chinese",
+          areaServed: "TW",
+          availableLanguage: ["Traditional Chinese", "English"],
         },
+        sameAs: [
+          "https://www.facebook.com/uflow",
+          "https://www.instagram.com/uflow",
+          "https://line.me/R/ti/p/@uflow",
+        ],
       },
-      // 3. 網頁標記 (WebPage) - 宣告這個具體的頁面是首頁
       {
         "@type": "WebPage",
         "@id": `${SITE_URL}/#webpage`,
         url: SITE_URL,
         name: "UFLOW｜功能性保健食品與營養補給",
-        isPartOf: {
-          "@id": `${SITE_URL}/#website`,
-        },
-        about: {
-          "@id": `${SITE_URL}/#organization`,
-        },
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        about: { "@id": `${SITE_URL}/#organization` },
         description:
           "UFLOW 專注於功能性保健食品與日常營養補給：益生菌、魚油、葉黃素、維生素 D3/K2、關節與睡眠配方等。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${SITE_URL}/#faq`,
+        mainEntity: homeFAQs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
       },
     ],
   };
 
   return (
     <>
-      {/* 埋入首頁結構化資料 */}
-      <Script
-        type="application/ld+json"
-        id="ld-home-schema"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
-      />
-
-      {/* 渲染 Client 動畫與 UI 元件 */}
-      <Client />
+      <div style={{ display: "none" }} aria-hidden="true">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
+        />
+      </div>
+      <Client faqs={homeFAQs} />
     </>
   );
 }

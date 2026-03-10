@@ -1,26 +1,13 @@
-// app/products/[slug]/page.tsx
-import { Metadata } from "next";
+// app/products/[slug]/page.jsx
 import { fetchAllProductSlugs, fetchProductBySlug } from "@/lib/woo";
 import ProductClient from "./Client";
-import Script from "next/script";
 
 export const revalidate = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
-// ===================== TypeScript 型別宣告 =====================
-type PageProps = {
-  params: { slug: string };
-};
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-// =================================================================
-
 // ===================== 動態 FAQ 生成器 =====================
-function getProductFAQs(productName: string): FAQItem[] {
+function getProductFAQs(productName) {
   const name = productName.toLowerCase();
 
   if (name.includes("gaba") || name.includes("香蜂草") || name.includes("鎂")) {
@@ -97,14 +84,12 @@ export async function generateStaticParams() {
     const slugs = await fetchAllProductSlugs({ perPage: 50 });
     return slugs.map((slug) => ({ slug }));
   } catch {
-    return [] as { slug: string }[];
+    return [];
   }
 }
 
 // ===================== Metadata =====================
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }) {
   const p = await fetchProductBySlug(params.slug);
   const siteName = "UFLOW 保健食品官方網站";
 
@@ -116,29 +101,21 @@ export async function generateMetadata({
   }
 
   const title = `${p.name}｜UFLOW 保健食品商品介紹與購買`;
-
   const rawDesc = p.short_description || p.description || "";
   const descText =
     rawDesc
       .replace(/<[^>]+>/g, " ")
       .trim()
       .slice(0, 160) || `${p.name} - UFLOW嚴選高品質保健食品，為您的健康把關。`;
-
   const productUrl = `${SITE_URL}/products/${params.slug}`;
 
-  // 安全提取圖片與分類，強制轉型避免 TypeScript 報錯
-  const safeImages = (p as any)?.images;
-  const images: string[] = Array.isArray(safeImages)
-    ? safeImages
-        .map((i: any) => i?.src)
-        .filter((src): src is string => Boolean(src))
+  const safeImages = p?.images;
+  const images = Array.isArray(safeImages)
+    ? safeImages.map((i) => i?.src).filter(Boolean)
     : [];
-
-  const safeCategories = (p as any)?.categories;
-  const categories: string[] = Array.isArray(safeCategories)
-    ? safeCategories
-        .map((c: any) => c?.name)
-        .filter((name): name is string => Boolean(name))
+  const safeCategories = p?.categories;
+  const categories = Array.isArray(safeCategories)
+    ? safeCategories.map((c) => c?.name).filter(Boolean)
     : [];
 
   return {
@@ -153,7 +130,7 @@ export async function generateMetadata({
       description: descText,
       url: productUrl,
       siteName,
-      images: images.map((src: string) => ({
+      images: images.map((src) => ({
         url: src,
         width: 800,
         height: 800,
@@ -171,8 +148,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params }: PageProps) {
-  let woo: any = null;
+export default async function ProductPage({ params }) {
+  let woo = null;
   try {
     woo = await fetchProductBySlug(params.slug);
   } catch {
@@ -188,21 +165,37 @@ export default async function ProductPage({ params }: PageProps) {
     description: "",
     images: [],
     attributes: [],
+    acf: null,
   };
 
   const productFAQs = woo ? getProductFAQs(woo.name) : [];
-
   const schemaImages =
     woo && Array.isArray(woo.images)
-      ? woo.images.map((i: any) => i?.src).filter(Boolean)
+      ? woo.images.map((i) => i?.src).filter(Boolean)
       : [];
 
-  // 🌟 核心修改：使用 @graph 結構將 Product、FAQPage、BreadcrumbList 完美包裝
+  // ===================== 👑 內頁終極 @graph 結構化資料 =====================
   const schemaGraph = woo
     ? {
         "@context": "https://schema.org",
         "@graph": [
-          // 1. 商品結構化資料 (Product)
+          // 1. 公司實體標記 (Organization)
+          {
+            "@type": "Organization",
+            "@id": `${SITE_URL}/#organization`,
+            name: "UFLOW",
+            url: SITE_URL,
+            logo: {
+              "@type": "ImageObject",
+              url: `${SITE_URL}/images/logo/uflow.png`,
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "customer service",
+              availableLanguage: "Traditional Chinese",
+            },
+          },
+          // 2. 商品結構化資料 (Product)
           {
             "@type": "Product",
             name: woo.name,
@@ -211,7 +204,7 @@ export default async function ProductPage({ params }: PageProps) {
               .replace(/<[^>]+>/g, " ")
               .trim(),
             sku: woo.sku || String(woo.id),
-            brand: { "@type": "Brand", name: "UFLOW" },
+            brand: { "@id": `${SITE_URL}/#organization` }, // 👈 完美連結品牌
             aggregateRating: {
               "@type": "AggregateRating",
               ratingValue: "5.0",
@@ -234,7 +227,7 @@ export default async function ProductPage({ params }: PageProps) {
                 woo.stock_status === "instock"
                   ? "https://schema.org/InStock"
                   : "https://schema.org/OutOfStock",
-              seller: { "@type": "Organization", name: "UFLOW" },
+              seller: { "@id": `${SITE_URL}/#organization` }, // 👈 完美連結販售者
               hasMerchantReturnPolicy: {
                 "@type": "MerchantReturnPolicy",
                 applicableCountry: "TW",
@@ -245,19 +238,16 @@ export default async function ProductPage({ params }: PageProps) {
               },
             },
           },
-          // 2. 常見問題結構化資料 (FAQPage)
+          // 3. 常見問題結構化資料 (FAQPage)
           {
             "@type": "FAQPage",
             mainEntity: productFAQs.map((faq) => ({
               "@type": "Question",
               name: faq.question,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: faq.answer,
-              },
+              acceptedAnswer: { "@type": "Answer", text: faq.answer },
             })),
           },
-          // 3. 麵包屑導覽結構化資料 (BreadcrumbList)
+          // 4. 麵包屑導覽結構化資料 (BreadcrumbList)
           {
             "@type": "BreadcrumbList",
             itemListElement: [
@@ -288,13 +278,13 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <>
       {schemaGraph && (
-        <Script
-          type="application/ld+json"
-          id="ld-schema-graph"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
-        />
+        <div style={{ display: "none" }} aria-hidden="true">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
+          />
+        </div>
       )}
-
       <ProductClient
         faqs={productFAQs}
         product={
@@ -310,6 +300,7 @@ export default async function ProductPage({ params }: PageProps) {
                 description: woo.description || "",
                 images: schemaImages,
                 attributes: woo.attributes || [],
+                acf: woo.acf || null,
               }
             : fallback
         }

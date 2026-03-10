@@ -59,7 +59,8 @@ const values = [
   },
 ];
 
-export default function AboutClient() {
+// 🌟 接收 Server 傳來的 faqs 資料
+export default function AboutClient({ faqs = [] }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -403,6 +404,37 @@ export default function AboutClient() {
           </div>
         </div>
       </section>
+
+      {/* 🌟 新增：品牌常見問題 FAQ 區塊 (符合 Google SEO 可見性規範) */}
+      {faqs && faqs.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="container max-w-4xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                品牌常見問題
+              </h2>
+              <p className="text-gray-500">深入了解 UFLOW 的堅持與承諾</p>
+            </div>
+            <div className="space-y-6">
+              {faqs.map((faq, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gray-50 p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm"
+                >
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-start gap-3">
+                    <span className="text-blue-500 shrink-0">Q.</span>
+                    <span>{faq.question}</span>
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed flex items-start gap-3">
+                    <span className="text-teal-600 font-bold shrink-0">A.</span>
+                    <span>{faq.answer}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA 區塊 */}
       <section className="py-20 bg-[#2b3742] text-white text-center">

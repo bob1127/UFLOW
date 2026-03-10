@@ -1,11 +1,12 @@
-// app/about/page.jsx
-import Client from "./client"; // 確保這裡的路徑與你的 Client 元件檔名一致
+// app/about/page.tsx
+import { Metadata } from "next";
+import Client from "./client"; // 確保檔名大小寫與你的 Client 檔案一致
 
 export const revalidate = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
-// 🌟 品牌專屬動態 FAQ 資料 (提升 E-E-A-T 信任度)
+// 🌟 品牌專屬動態 FAQ 資料 (建立 E-E-A-T 信任度)
 const aboutFAQs = [
   {
     question: "UFLOW 的品牌核心理念是什麼？",
@@ -25,7 +26,7 @@ const aboutFAQs = [
 ];
 
 // ===================== 強化 SEO Metadata =====================
-export const metadata = {
+export const metadata: Metadata = {
   title: "關於 UFLOW｜科學實證保健食品品牌｜研發理念、第三方檢驗與永續承諾",
   description:
     "UFLOW 專注於以科學為本的保健食品與日常營養補給。從原料溯源、配方研發到第三方檢驗與永續包裝，我們以更透明的方式，陪伴每一次有效的日常補給。",
@@ -77,7 +78,7 @@ export default function AboutPage() {
   const schemaGraph = {
     "@context": "https://schema.org",
     "@graph": [
-      // 1. 公司/品牌實體標記 (建立權威性)
+      // 1. 公司/品牌實體標記
       {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
@@ -87,12 +88,14 @@ export default function AboutPage() {
           "@type": "ImageObject",
           url: `${SITE_URL}/images/logo/uflow.png`,
         },
+        image: `${SITE_URL}/images/logo/uflow.png`,
         description:
           "UFLOW 是一家以提供高品質健康產品為核心的品牌。我們的研發精神在於將科學方法應用於天然原料，以科技養護身心。",
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "customer service",
-          availableLanguage: "Traditional Chinese",
+          areaServed: "TW",
+          availableLanguage: ["Traditional Chinese", "English"],
         },
         sameAs: [
           "https://www.facebook.com/uflow",
@@ -100,7 +103,7 @@ export default function AboutPage() {
           "https://line.me/R/ti/p/@uflow",
         ],
       },
-      // 2. 專屬關於頁標記 (宣告頁面主題)
+      // 2. 專屬關於頁標記
       {
         "@type": "AboutPage",
         "@id": `${SITE_URL}/about/#webpage`,
@@ -150,12 +153,15 @@ export default function AboutPage() {
 
   return (
     <>
+      {/* 確保原生 script 穩定輸出於 HTML */}
       <div style={{ display: "none" }} aria-hidden="true">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
         />
       </div>
+
+      {/* 渲染包含動畫的 Client 端元件 */}
       <Client faqs={aboutFAQs} />
     </>
   );

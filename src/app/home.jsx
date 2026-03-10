@@ -25,7 +25,8 @@ const myLoader = ({ src, width, quality, placeholder }) => {
   return `https://www.dot-st.com/static/docs/nikoand/pages/2022_city_creek_v2/assets/images/${src}?w=${width}?p=${placeholder}`;
 };
 
-export default function Home() {
+// 🌟 接收 Server 傳來的 faqs 資料
+export default function Home({ faqs = [] }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // ✅ 新增控制彈窗顯示的狀態
@@ -60,37 +61,6 @@ export default function Home() {
         console.log("字體加載失敗:", error);
       });
   }, []);
-
-  const testimonials = [
-    {
-      quote:
-        "春天輕盈柔軟，讓寶貝自在探索；夏日涼爽透氣，盡情玩耍不悶熱；秋季層次搭配，既保暖又時尚；冬日蓬鬆可愛，溫暖包裹每個童年時光。每個季節都有不同的美好！",
-      name: "四季童趣穿搭，陪伴孩子快樂成長！",
-      designation: "Product Manager at TechFlow",
-      src: "/images/img01.jpg",
-    },
-    {
-      quote:
-        "Implementation was seamless and the results exceeded our expectations. The platform's flexibility is remarkable.",
-      name: "Michael Rodriguez",
-      designation: "CTO at InnovateSphere",
-      src: "/images/slider-banner02.jpg",
-    },
-    {
-      quote:
-        "This solution has significantly improved our team's productivity. The intuitive interface makes complex tasks simple.",
-      name: "Emily Watson",
-      designation: "Operations Director at CloudScale",
-      src: "/images/slider-banner04.jpg",
-    },
-    {
-      quote:
-        "Outstanding support and robust features. It's rare to find a product that delivers on all its promises.",
-      name: "James Kim",
-      designation: "Engineering Lead at DataPro",
-      src: "/images/kv.webp",
-    },
-  ];
 
   const containerRef = useRef(null);
 
@@ -359,6 +329,42 @@ export default function Home() {
             <Carousel />
           </div>
         </section>
+
+        {/* 🌟 為了符合 Google FAQ 結構化資料規範，新增的極簡視覺化 FAQ 區塊 */}
+        {faqs && faqs.length > 0 && (
+          <section className="w-full bg-gray-50 pt-20 pb-24">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  常見問題 FAQ
+                </h2>
+                <p className="text-gray-500">
+                  了解更多關於 UFLOW 的購物與產品資訊
+                </p>
+              </div>
+              <div className="space-y-6">
+                {faqs.map((faq, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100"
+                  >
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 flex items-start gap-3">
+                      <span className="text-rose-500 shrink-0">Q.</span>
+                      <span>{faq.question}</span>
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed flex items-start gap-3">
+                      <span className="text-emerald-600 font-bold shrink-0">
+                        A.
+                      </span>
+                      <span>{faq.answer}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+        {/* FAQ 區塊結束 */}
       </div>
     </ReactLenis>
   );
