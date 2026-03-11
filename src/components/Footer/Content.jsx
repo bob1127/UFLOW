@@ -8,26 +8,72 @@ import { Link } from "next-view-transitions";
 // ============================================================================
 const Icons = {
   Instagram: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
   ),
   X: (props) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
   ),
   Facebook: (props) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
   ),
   YouTube: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" stroke="none"/></svg>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+      <polygon
+        points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
   ),
   TikTok: (props) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}><path d="M9 0h1.98c.144.715.54 1.617 1.093 2.512C12.84 3.76 14.12 4.5 16 4v5.51c-.69.198-1.34.22-2 .07V9.7c-.52.05-1.04-.15-1.3-.53-.19-.27-.26-.62-.2-1v-5.6c-.03-2.06-1.35-3.8-3.3-4.37C7.4 1.5 5.25 2.5 4 4.37c-.77 1.15-1.18 2.5-1.19 3.9 0 4.42 3.58 8 8 8 2.15 0 4.1-.85 5.54-2.22l.3-.32V18c-1.6 1.4-3.7 2.25-5.84 2.25-5.1 0-9.25-4.14-9.25-9.25C1.75 5.86 5.9 1.75 11 1.75c.67 0 1.33.07 1.98.2L13 0H9z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
+      <path d="M9 0h1.98c.144.715.54 1.617 1.093 2.512C12.84 3.76 14.12 4.5 16 4v5.51c-.69.198-1.34.22-2 .07V9.7c-.52.05-1.04-.15-1.3-.53-.19-.27-.26-.62-.2-1v-5.6c-.03-2.06-1.35-3.8-3.3-4.37C7.4 1.5 5.25 2.5 4 4.37c-.77 1.15-1.18 2.5-1.19 3.9 0 4.42 3.58 8 8 8 2.15 0 4.1-.85 5.54-2.22l.3-.32V18c-1.6 1.4-3.7 2.25-5.84 2.25-5.1 0-9.25-4.14-9.25-9.25C1.75 5.86 5.9 1.75 11 1.75c.67 0 1.33.07 1.98.2L13 0H9z" />
+    </svg>
   ),
   Line: (props) => (
-     <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}><path d="M20.2 11.5c0-4.6-4.6-8.5-10.2-8.5S0 6.9 0 11.5c0 4.2 3.7 7.7 8.5 8.3v4.1c0 .5.5.7.8.4l4.5-4c2.8-.5 6.4-3 6.4-8.8zM6.5 13.5h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5s.5.2.5.5v2.5h1.5c.3 0 .5.2.5.5s-.2.5-.5.5zm4 0h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v3c0 .3-.2.5-.5.5zm1.5-3.5c0-.3.2-.5.5-.5s.5.2.5.5v3c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3zm5.5 1.5c0 .3-.2.5-.5.5h-1.5v1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v1h1.5c.3 0 .5.2.5.5z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
+      <path d="M20.2 11.5c0-4.6-4.6-8.5-10.2-8.5S0 6.9 0 11.5c0 4.2 3.7 7.7 8.5 8.3v4.1c0 .5.5.7.8.4l4.5-4c2.8-.5 6.4-3 6.4-8.8zM6.5 13.5h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5s.5.2.5.5v2.5h1.5c.3 0 .5.2.5.5s-.2.5-.5.5zm4 0h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v3c0 .3-.2.5-.5.5zm1.5-3.5c0-.3.2-.5.5-.5s.5.2.5.5v3c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3zm5.5 1.5c0 .3-.2.5-.5.5h-1.5v1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v1h1.5c.3 0 .5.2.5.5z" />
+    </svg>
   ),
   Mail: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-  )
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  ),
 };
 
 export default function Content() {
@@ -54,13 +100,11 @@ const Section2 = () => {
   return (
     <footer className="w-full bg-[#EDEEEF] pt-16 pb-32 lg:pt-24 lg:pb-32 px-6 sm:px-10 lg:px-20 xl:px-32">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-        
         {/* === 左側：連結導覽區 (佔 8 欄) === */}
         <div className="lg:col-span-8 flex flex-col gap-12 border-b border-slate-300 lg:border-none pb-10 lg:pb-0">
-          
           {/* Section 1: BRAND SITE */}
-          <FooterSection 
-            title="BRAND SITE" 
+          <FooterSection
+            title="BRAND SITE"
             links={[
               { label: "首頁", href: "/" },
               { label: "關於 UFLOW", href: "/about" },
@@ -79,53 +123,79 @@ const Section2 = () => {
               { label: "網站地圖", href: "/sitemap" },
               { label: "網站使用條款", href: "/terms-of-use" },
               { label: "隱私權政策", href: "/privacy" },
-            ]} 
+            ]}
           />
 
           {/* Section 2: OFFICIAL ONLINE SHOP */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
-          <FooterSection 
-            title="OFFICIAL ONLINE SHOP" 
+          <FooterSection
+            title="OFFICIAL ONLINE SHOP"
             links={[
               { label: "商城首頁", href: "/shop" },
               { label: "產品列表", href: "/products" },
               { label: "UFLOW FAMILY", href: "/family" },
-            ]} 
+            ]}
           />
 
           {/* Section 3: ACTIVITY LOGOS */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
-        {/* Section 3: HEALTHY UFLOW (已修改為保健食品相關) */}
+          {/* Section 3: HEALTHY UFLOW (已修改為保健食品相關) */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
-          <FooterSection 
-            title="HEALTHY UFLOW" 
+          <FooterSection
+            title="HEALTHY UFLOW - 保健小知識"
             links={[
-              { label: "保健小知識", href: "/health-tips" },
-              { label: "益生菌百科", href: "/probiotics-info" },
-              { label: "營養補充指南", href: "/nutrition-guide" },
-              { label: "維他菌合生元", href: "/products/probiotics" },
-              { label: "鎂鎂香蜂草", href: "/products/magnesium" },
-              { label: "SGS 檢驗報告", href: "/reports" },
-              { label: "常見問題 FAQ", href: "/faq" },
-              { label: "健康生活誌", href: "/wellness-blog" },
-            ]} 
+              {
+                label: "熬夜、日曬族的養顏美容營養補給新選擇",
+                href: "https://gcm.org.tw/blog/uflow-tjfl-cfy/",
+              },
+              {
+                label: "幫助維持消化道機能",
+                href: "https://gcm.org.tw/blog/uflow-synbiotics-cya/",
+              },
+              {
+                label: "幫助入睡兼顧調整體質",
+                href: "https://gcm.org.tw/blog/uflow-gaba-lzh/",
+              },
+              {
+                label: "韓國專利成分安全又幫助入睡",
+                href: "https://gcm.org.tw/blog/uflow-gaba-lkm/",
+              },
+              {
+                label: "忙碌上班族的日常營養補給策略",
+                href: "https://gcm.org.tw/blog/uflow-synbiotics-lxm/",
+              },
+              {
+                label: "營養補給複方安心選擇",
+                href: "https://gcm.org.tw/blog/uflow-tjfl-cay/",
+              },
+              {
+                label: "四大專利複方養顏好吸收",
+                href: "https://gcm.org.tw/blog/uflow-clj/",
+              },
+              {
+                label: "溫和幫助入睡採大廠頂尖原料",
+                href: "https://gcm.org.tw/blog/uflow-gaba-dsj/",
+              },
+              {
+                label: "營養師專業視角下的選擇",
+                href: "https://gcm.org.tw/blog/uflow-synbiotics-ljx/",
+              },
+            ]}
           />
         </div>
 
         {/* === 右側：SNS 與 APP (佔 4 欄) === */}
         <div className="lg:col-span-4 flex flex-col items-start lg:items-center pt-4 lg:pt-0 lg:border-l lg:border-slate-300 lg:pl-10">
-          
           {/* OFFICIAL SNS */}
           <div className="mb-12 text-center w-full">
             <h3 className="font-serif text-[15px] font-bold tracking-widest text-slate-800 mb-6 uppercase">
               Official SNS
             </h3>
             <div className="flex justify-center gap-6 sm:gap-8">
-               <SocialIcon icon={Icons.Instagram} label="Instagram" />
-          
-               <SocialIcon icon={Icons.Facebook} label="Facebook" />
-               <SocialIcon icon={Icons.YouTube} label="YouTube" />
-           
+              <SocialIcon icon={Icons.Instagram} label="Instagram" />
+
+              <SocialIcon icon={Icons.Facebook} label="Facebook" />
+              <SocialIcon icon={Icons.YouTube} label="YouTube" />
             </div>
           </div>
 
@@ -142,16 +212,23 @@ const Section2 = () => {
           </div>
 
           {/* English */}
-          
         </div>
       </div>
-      
+
       {/* 底部版權聲明 */}
       <div className="mt-20 text-center text-[10px] text-slate-500 tracking-wider">
-        COPYRIGHT © {new Date().getFullYear()} UFLOW CORPORATION. ALL RIGHTS RESERVED.
+        COPYRIGHT © {new Date().getFullYear()} UFLOW CORPORATION. ALL RIGHTS
+        RESERVED.
       </div>
-            <div className="mt-4 text-center text-[13px] text-slate-500 tracking-wider">
-       Design By <Link className="font-bold  hover:text-stone-900" href='https://www.jeek-webdesign.com.tw' target="_blank">極客網頁設計.Jeek-WebDeisgn</Link>
+      <div className="mt-4 text-center text-[13px] text-slate-500 tracking-wider">
+        Design By{" "}
+        <Link
+          className="font-bold  hover:text-stone-900"
+          href="https://www.jeek-webdesign.com.tw"
+          target="_blank"
+        >
+          極客網頁設計.Jeek-WebDeisgn
+        </Link>
       </div>
     </footer>
   );
@@ -171,8 +248,9 @@ function FooterSection({ title, links }) {
       <div className="flex flex-wrap gap-x-0 gap-y-2 text-[11px] sm:text-[12px] font-medium text-slate-600 leading-relaxed">
         {links.map((link, idx) => (
           <React.Fragment key={link.href + idx}>
-            <Link 
-              href={link.href} 
+            <Link
+              href={link.href}
+              target="_blank"
               className="hover:text-black transition-colors px-2 first:pl-0"
             >
               {link.label}
@@ -202,7 +280,6 @@ function SocialIcon({ icon: Icon, label }) {
   );
 }
 
-
 // ============================================================================
 // Share Widget (互動式分享條)
 // ============================================================================
@@ -220,91 +297,99 @@ function ShareWidget() {
   }, [isOpen]);
 
   return (
-    <div 
-       id="share-widget-container"
-       className="fixed bottom-0 left-0 w-full z-[9999] flex flex-col items-center justify-end pointer-events-none"
+    <div
+      id="share-widget-container"
+      className="fixed bottom-0 left-0 w-full z-[9999] flex flex-col items-center justify-end pointer-events-none"
     >
-       <AnimatePresence mode="wait">
-          {!isOpen ? (
-             // --- 狀態 A: 懸浮按鈕 (Share +) ---
-             <motion.div
-                key="share-button"
-                className="pointer-events-auto pb-6"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 20, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-             >
-                <button
-                   onClick={(e) => {
-                      e.stopPropagation();
-                      setIsOpen(true);
-                   }}
-                   // 樣式修正：確保陰影與毛玻璃質感
-                   className="flex items-center gap-2 bg-[#EBEBEB]/90 border border-white/50 backdrop-blur-md px-6 py-2.5 rounded-full hover:bg-white hover:scale-105 transition-all duration-300 group"
-                   style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
-                >
-                   <span className="font-serif font-bold text-slate-800 tracking-wider text-sm group-hover:text-black">Share</span>
-                   <div className="bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
-                      <span className="text-slate-800 text-xs font-bold leading-none mt-[1px]">+</span>
-                   </div>
-                </button>
-             </motion.div>
-          ) : (
-             // --- 狀態 B: 展開的全寬色塊條 (帶陰影) ---
-             <motion.div
-                key="share-bar"
-                className="pointer-events-auto w-full h-[60px] md:h-[70px] grid grid-cols-4"
-                style={{ boxShadow: "0 -4px 30px rgba(0,0,0,0.15)" }} // 添加頂部陰影
-                initial={{ y: "100%" }}
-                animate={{ y: "0%" }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                onClick={(e) => e.stopPropagation()} 
-             >
-                {/* 1. X (Twitter) */}
-                <ShareBlock 
-                   bg="bg-[#2C9BE5]" 
-                   icon={<Icons.X width={28} height={28} className="text-white" />} 
-                   onClick={() => console.log("Share X")}
-                />
-                
-                {/* 2. LINE */}
-                <ShareBlock 
-                   bg="bg-[#00B900]" 
-                   icon={<Icons.Line width={28} height={28} className="text-white" />} 
-                   onClick={() => console.log("Share Line")}
-                />
-                
-                {/* 3. Facebook */}
-                <ShareBlock 
-                   bg="bg-[#3B5998]" 
-                   icon={<Icons.Facebook width={28} height={28} className="text-white" />} 
-                   onClick={() => console.log("Share FB")}
-                />
-                
-                {/* 4. Mail (點擊後關閉/或分享) */}
-                <div 
-                   className="relative bg-[#E04F3F] flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95"
-                   onClick={() => setIsOpen(false)} 
-                >
-                   <Icons.Mail width={28} height={28} className="text-white" />
-                </div>
-             </motion.div>
-          )}
-       </AnimatePresence>
+      <AnimatePresence mode="wait">
+        {!isOpen ? (
+          // --- 狀態 A: 懸浮按鈕 (Share +) ---
+          <motion.div
+            key="share-button"
+            className="pointer-events-auto pb-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(true);
+              }}
+              // 樣式修正：確保陰影與毛玻璃質感
+              className="flex items-center gap-2 bg-[#EBEBEB]/90 border border-white/50 backdrop-blur-md px-6 py-2.5 rounded-full hover:bg-white hover:scale-105 transition-all duration-300 group"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+            >
+              <span className="font-serif font-bold text-slate-800 tracking-wider text-sm group-hover:text-black">
+                Share
+              </span>
+              <div className="bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+                <span className="text-slate-800 text-xs font-bold leading-none mt-[1px]">
+                  +
+                </span>
+              </div>
+            </button>
+          </motion.div>
+        ) : (
+          // --- 狀態 B: 展開的全寬色塊條 (帶陰影) ---
+          <motion.div
+            key="share-bar"
+            className="pointer-events-auto w-full h-[60px] md:h-[70px] grid grid-cols-4"
+            style={{ boxShadow: "0 -4px 30px rgba(0,0,0,0.15)" }} // 添加頂部陰影
+            initial={{ y: "100%" }}
+            animate={{ y: "0%" }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 1. X (Twitter) */}
+            <ShareBlock
+              bg="bg-[#2C9BE5]"
+              icon={<Icons.X width={28} height={28} className="text-white" />}
+              onClick={() => console.log("Share X")}
+            />
+
+            {/* 2. LINE */}
+            <ShareBlock
+              bg="bg-[#00B900]"
+              icon={
+                <Icons.Line width={28} height={28} className="text-white" />
+              }
+              onClick={() => console.log("Share Line")}
+            />
+
+            {/* 3. Facebook */}
+            <ShareBlock
+              bg="bg-[#3B5998]"
+              icon={
+                <Icons.Facebook width={28} height={28} className="text-white" />
+              }
+              onClick={() => console.log("Share FB")}
+            />
+
+            {/* 4. Mail (點擊後關閉/或分享) */}
+            <div
+              className="relative bg-[#E04F3F] flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95"
+              onClick={() => setIsOpen(false)}
+            >
+              <Icons.Mail width={28} height={28} className="text-white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 /** 分享條的單個色塊 */
 function ShareBlock({ bg, icon, onClick }) {
-   return (
-      <div 
-         className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95`}
-         onClick={onClick}
-      >
-         {icon}
-      </div>
-   );
+  return (
+    <div
+      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95`}
+      onClick={onClick}
+    >
+      {icon}
+    </div>
+  );
 }
