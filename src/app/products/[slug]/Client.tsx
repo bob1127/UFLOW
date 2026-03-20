@@ -1,10 +1,11 @@
+// app/products/[slug]/Client.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-// 🌟 新增：引入 Swiper 的型別，解決 thumbsSwiper 的紅底線報錯
+// 🌟 引入 Swiper 的型別，解決 thumbsSwiper 的紅底線報錯
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation, Pagination, Thumbs, FreeMode } from "swiper/modules";
 
@@ -16,7 +17,7 @@ import "swiper/css/thumbs";
 
 import { useCartStore } from "@/lib/cartStore";
 
-// ===================== 型別宣告區 (解決所有 Props 的紅底線) =====================
+// ===================== 型別宣告區 =====================
 interface AccordionItemProps {
   title: string;
   children: React.ReactNode;
@@ -33,7 +34,7 @@ interface ProductProps {
   product: any; // WooCommerce 商品物件
   faqs?: FAQ[];
 }
-// ==============================================================================
+// =======================================================
 
 function AccordionItem({
   title,
@@ -80,21 +81,26 @@ const FLAVOR_COLORS = [
 export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const router = useRouter();
 
-  // 🌟 加上 Zustand state 型別 (s: any)
+  // 加上 Zustand state 型別
   const addItem = useCartStore((s: any) => s.addItem);
   const openCart = useCartStore((s: any) => s.open);
+
+  const safeProduct = product || {};
 
   const [flavor, setFlavor] = useState<string>("");
   const [pkg, setPkg] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
   const [showAdded, setShowAdded] = useState<boolean>(false);
   const [tab, setTab] = useState<string>("desc");
+
   const [displayPrice, setDisplayPrice] = useState<number>(
-    Number(product.price || 0),
+    Number(safeProduct.price || 0),
+  );
+  const [displayRegularPrice, setDisplayRegularPrice] = useState<number>(
+    Number(safeProduct.regularPrice || safeProduct.price || 0),
   );
 
   const [openAccordion, setOpenAccordion] = useState<string>("desc");
-
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [initialSlide, setInitialSlide] = useState<number>(0);
 
@@ -102,53 +108,46 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
 
   const flavorOptions = useMemo(() => {
-    if (!product.attributes) return [];
-    // 🌟 加上 a: any
-    const attr = product.attributes.find((a: any) =>
+    if (!safeProduct.attributes) return [];
+    const attr = safeProduct.attributes.find((a: any) =>
       ["口味", "Flavor", "Flavors"].includes(a.name),
     );
     return attr?.options || [];
-  }, [product]);
+  }, [safeProduct]);
 
+  // 取得規格選項 (雖然畫面上只顯示一個，但購物車還是需要這個資料)
   const pkgOptions = useMemo(() => {
-    if (!product.attributes) return [];
-    // 🌟 加上 a: any
-    const attr = product.attributes.find((a: any) =>
+    if (!safeProduct.attributes) return [];
+    const attr = safeProduct.attributes.find((a: any) =>
       ["優惠方案", "規格", "Size", "Package"].includes(a.name),
     );
     return attr?.options || [];
-  }, [product]);
+  }, [safeProduct]);
 
   useEffect(() => {
     if (flavorOptions.length > 0 && !flavor) {
       setFlavor(flavorOptions[0]);
     }
-    if (pkgOptions.length > 0 && !pkg) {
-      setPkg(pkgOptions[0]);
+    // 永遠預設選擇第一個規格，如果沒有就預設 "1盒 (單件組)"
+    if (!pkg) {
+      setPkg(pkgOptions.length > 0 ? pkgOptions[0] : "1盒 (單件組)");
     }
   }, [flavorOptions, pkgOptions, flavor, pkg]);
 
   useEffect(() => {
-    if (!pkg) {
-      setDisplayPrice(Number(product.price || 0));
-      return;
-    }
+    // 因為現在只有單一選項，直接抓取主商品的價格
+    setDisplayPrice(Number(safeProduct.price || 0));
+    setDisplayRegularPrice(
+      Number(safeProduct.regularPrice || safeProduct.price || 0),
+    );
+  }, [safeProduct]);
 
-    let newPrice = Number(product.price || 0);
-    if (pkg.includes("1盒") || pkg.includes("新品")) {
-      newPrice = 1380;
-    } else if (pkg.includes("買三送一") || pkg.includes("4盒")) {
-      newPrice = 4140;
-    } else if (pkg.includes("6盒")) {
-      newPrice = 5940;
-    } else if (pkg.includes("12盒")) {
-      newPrice = 9600;
-    }
-    setDisplayPrice(newPrice);
-  }, [pkg, product.price]);
+  const currentDiscount =
+    displayRegularPrice > displayPrice
+      ? Math.round((1 - displayPrice / displayRegularPrice) * 100)
+      : 0;
 
-  const canBuy =
-    (flavorOptions.length === 0 || flavor) && (pkgOptions.length === 0 || pkg);
+  const canBuy = (flavorOptions.length === 0 || flavor) && pkg !== "";
 
   useEffect(() => {
     if (!showAdded) return;
@@ -159,11 +158,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
   function handleBuyNow() {
     const optionVariant = [flavor, pkg].filter(Boolean).join(" / ");
     const cartItem = {
-      id: product.id,
-      wcProductId: product.id,
-      name: `${product.name}｜${product.subname || ""}`,
+      id: safeProduct.id,
+      wcProductId: safeProduct.id,
+      name: `${safeProduct.name}｜${safeProduct.subname || ""}`,
       price: displayPrice,
-      image: product.images?.[0],
+      image: safeProduct.images?.[0],
       options: { 口味: flavor, 規格: pkg },
       qty: qty,
       variant: optionVariant,
@@ -178,7 +177,15 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     setLightboxOpen(true);
   };
 
-  const images: string[] = product.images || [];
+  const images: string[] = safeProduct.images || [];
+
+  if (!safeProduct.name) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500 bg-slate-50">
+        商品資料載入中...
+      </div>
+    );
+  }
 
   return (
     <main className="bg-white pt-10 pb-20 text-[#2b2b2b] mt-[60px] min-h-screen">
@@ -204,7 +211,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   >
                     <Image
                       src={src}
-                      alt={`${product.name} - ${i}`}
+                      alt={`${safeProduct.name} - ${i}`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 60vw"
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
@@ -268,12 +275,24 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
           {/* 右側：商品資訊 & 購買區 */}
           <div className="w-full lg:w-2/5 flex flex-col p-4 sm:p-8 lg:sticky lg:top-24 lg:self-start h-fit">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
-              {product.name}
+              {safeProduct.name}
             </h1>
-            <p className="text-gray-500 text-lg mb-4">{product.subname}</p>
+            <p className="text-gray-500 text-lg mb-4">{safeProduct.subname}</p>
 
-            <div className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-              NT$ {displayPrice.toLocaleString()}
+            <div className="flex items-end gap-3 mb-6">
+              <div className="text-3xl font-bold text-gray-900 leading-none">
+                NT$ {displayPrice.toLocaleString()}
+              </div>
+              {currentDiscount > 0 && (
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-lg line-through text-gray-400 font-medium">
+                    NT$ {displayRegularPrice.toLocaleString()}
+                  </span>
+                  <span className="bg-rose-100 text-rose-600 text-xs px-2 py-1 rounded-md font-bold tracking-wider">
+                    {currentDiscount}% OFF
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2 mb-6 text-sm font-medium text-gray-600 bg-gray-50 w-fit px-3 py-1.5 rounded-md">
@@ -294,82 +313,46 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               全館滿 NT$ 2,000 免運費
             </div>
 
-            {/* 規格選擇 */}
-            {pkgOptions.length > 0 ? (
-              <div className="mb-8 rounded-xl border border-rose-100 bg-rose-500 p-4">
-                <div className="mb-3 flex items-center justify-between border-b border-rose-100 pb-2">
-                  <span className="text-sm font-bold text-slate-50">
-                    選擇優惠方案
-                  </span>
-                  <span className="text-xs font-medium bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
-                    2026 新春限定
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {pkgOptions.map((opt: string) => {
-                    const isSelected = pkg === opt;
-                    const isHot = opt.includes("買三送一");
-                    return (
-                      <button
-                        key={opt}
-                        onClick={() => setPkg(opt)}
-                        className={`relative flex items-center justify-between p-3 rounded-lg border transition-all text-left ${
-                          isSelected
-                            ? "bg-white border-rose-500 shadow-md ring-1 ring-rose-500 z-10"
-                            : "bg-white/60 border-rose-100 hover:border-rose-300 hover:bg-white text-gray-600"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? "border-rose-500" : "border-gray-300"}`}
-                          >
-                            {isSelected && (
-                              <div className="w-2 h-2 rounded-full bg-rose-500" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-sm ${isSelected ? "font-bold text-gray-900" : ""}`}
-                          >
-                            {opt}
-                          </span>
-                          {isHot && (
-                            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
-                              熱銷
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          {opt.includes("1盒") && (
-                            <span className="text-sm font-medium">
-                              NT$ 1,380
-                            </span>
-                          )}
-                          {opt.includes("買三送一") && (
-                            <span className="text-sm font-bold text-rose-600">
-                              NT$ 4,140
-                            </span>
-                          )}
-                          {opt.includes("6盒") && (
-                            <span className="text-sm font-medium">
-                              NT$ 5,940
-                            </span>
-                          )}
-                          {opt.includes("12盒") && (
-                            <span className="text-sm font-medium">
-                              NT$ 9,600
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+            {/* 🌟 規格選擇：只保留單一選項 */}
+            <div className="mb-8 rounded-xl border border-rose-100 bg-rose-500 p-4">
+              <div className="mb-3 flex items-center justify-between border-b border-rose-100 pb-2">
+                <span className="text-sm font-bold text-slate-50">
+                  商品規格
+                </span>
+                <span className="text-xs font-medium bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
+                  期間限定五折折扣
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="relative flex items-center justify-between p-3 rounded-lg border bg-white border-rose-500 shadow-md ring-1 ring-rose-500 z-10 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full border border-rose-500 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-rose-500" />
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">
+                      {pkg}
+                    </span>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                    <div className="flex items-center gap-2">
+                      {currentDiscount > 0 && (
+                        <span className="bg-rose-50 text-rose-600 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                          {currentDiscount}% OFF
+                        </span>
+                      )}
+                      <span className="text-sm font-bold text-gray-900">
+                        NT$ {displayPrice.toLocaleString()}
+                      </span>
+                    </div>
+                    {currentDiscount > 0 && (
+                      <span className="text-[11px] line-through text-gray-400 mt-0.5">
+                        NT$ {displayRegularPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="p-4 bg-gray-50 text-gray-400 text-sm mb-6 rounded border border-gray-100">
-                載入規格中...
-              </div>
-            )}
+            </div>
 
             {/* 口味選擇 */}
             {flavorOptions.length > 0 && (
@@ -452,7 +435,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               </button>
             </div>
 
-            {/* 4. 折疊資訊區 (Accordion) */}
+            {/* 折疊資訊區 (Accordion) */}
             <div className="border-b border-gray-200 mt-4">
               <AccordionItem
                 title="商品簡介"
@@ -462,11 +445,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                 }
               >
                 <div
-                  dangerouslySetInnerHTML={{ __html: product.shortDescription }}
+                  dangerouslySetInnerHTML={{
+                    __html: safeProduct.shortDescription,
+                  }}
                 />
               </AccordionItem>
 
-              {/* 🌟 渲染外部傳入的 FAQ */}
               {faqs && faqs.length > 0 && (
                 <AccordionItem
                   title="常見問題 (FAQ)"
@@ -517,28 +501,19 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
           </div>
         </div>
       </div>
-      {/* ──────────────────────────────────────────────────
-          下方詳細說明區
-         ────────────────────────────────────────────────── */}
+
+      {/* 下方詳細說明區 */}
       <div className="w-full bg-white mt-16 pt-10 pb-20 border-t border-gray-200">
         <div className="w-[100%] mx-auto px-4 lg:px-16">
           <div className="flex gap-8 border-b border-gray-200 mb-8 justify-center">
             <button
-              className={`pb-4 text-lg font-medium transition border-b-2 px-2 ${
-                tab === "desc"
-                  ? "border-black text-black"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
-              }`}
+              className={`pb-4 text-lg font-medium transition border-b-2 px-2 ${tab === "desc" ? "border-black text-black" : "border-transparent text-gray-400 hover:text-gray-600"}`}
               onClick={() => setTab("desc")}
             >
               商品詳細說明
             </button>
             <button
-              className={`pb-4 text-lg font-medium transition border-b-2 px-2 ${
-                tab === "notice"
-                  ? "border-black text-black"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
-              }`}
+              className={`pb-4 text-lg font-medium transition border-b-2 px-2 ${tab === "notice" ? "border-black text-black" : "border-transparent text-gray-400 hover:text-gray-600"}`}
               onClick={() => setTab("notice")}
             >
               購買須知
@@ -547,23 +522,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
           <div className="max-w-4xl w-full mx-auto">
             {tab === "desc" && (
-              // 🌟 核心修改：使用 prose class 渲染後台傳來的 HTML
               <article
-                className="
-                  prose prose-lg prose-stone max-w-none 
-                  prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6
-                  prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6
-                   prose-img:shadow-md prose-img:mx-auto prose-img:my-10
-                  prose-video:aspect-video prose-video:w-full  prose-video:my-10
-                  prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline
-                  prose-strong:text-rose-500
-                  prose-li:text-slate-600
-                "
+                className="prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
                 dangerouslySetInnerHTML={{
-                  // 優先抓取 ACF 自訂欄位，若無則抓取 WooCommerce 預設商品說明
                   __html:
-                    product.acf?.detailed_content ||
-                    product.description ||
+                    safeProduct.acf?.detailed_content ||
+                    safeProduct.description ||
                     "<p class='text-center text-gray-400'>目前尚無詳細商品說明。</p>",
                 }}
               />
@@ -581,9 +545,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
         </div>
       </div>
 
-      {/* ──────────────────────────────────────────────────
-          全螢幕 Lightbox
-         ────────────────────────────────────────────────── */}
+      {/* 全螢幕 Lightbox */}
       {lightboxOpen && (
         <div className="fixed inset-0 z-[999999999999999999] bg-black/80 flex items-center justify-center animate-fade-in">
           <button

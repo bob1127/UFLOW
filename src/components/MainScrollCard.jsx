@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/all";
 import dynamic from "next/dynamic";
 import { ReactLenis } from "lenis/react";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import Image from "next/image";
 const Slider = dynamic(
   () => import("../components/SwiperCarousel/SwiperCardAbout"),
@@ -41,7 +41,7 @@ const CardWrapper = ({ children, index, totalCards, className = "" }) => {
 
   return (
     <div
-      className={`card sticky top-0 flex w-full min-h-screen flex-col ${className}`}
+      className={`card sticky top-0 flex w-full  h-screen flex-col ${className}`}
       id={`card-${index + 1}`}
       style={cardStyle}
     >
@@ -285,7 +285,7 @@ export default function Home() {
                     alt="Rusk"
                   />
                 </div>
-                <div className="relative md:absolute md:top-8 md:left-48 z-10 w-[200px] md:w-[300px]">
+                <div className="relative md:absolute md:bottom-[-50%] left-[-45%] xl:left-[-10%] z-10 w-[400px] md:w-[750px]">
                   <img
                     src="/images/DSCF7664.png"
                     className="w-full h-auto object-contain"
@@ -313,9 +313,11 @@ export default function Home() {
                     <br />
                     日間補充提振精神 +夜間補充助眠 +壓力時刻可緩解焦慮。
                   </p>
-                  <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#eddf40] hover:text-white transition">
-                    VIEW MORE
-                  </button>
+                  <Link href="http://localhost:3000/products/gaba%e9%8e%82%e9%8e%82%e9%a6%99%e8%9c%82%e8%8d%89">
+                    <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-stone-800 transition">
+                      MORE
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -358,6 +360,11 @@ export default function Home() {
                     將益生菌與益生元結合，提升益生菌存活
                     添加專利益萃質®維護細菌叢健康幫助消化
                   </p>
+                  <Link href="https://www.uflow.space/products/synbiotics">
+                    <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-stone-800 transition">
+                      MORE
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -395,6 +402,11 @@ export default function Home() {
                     ；搭配 24 小時長效維生素 C 與比利時正矽酸
                     ，由內而外撐起肌膚的「彈、緊、嫩」。
                   </p>
+                  <Link href="https://www.uflow.space/products/%e8%82%bd%e6%99%b6%e8%8a%99%e8%93%89">
+                    <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-stone-800 transition">
+                      MORE
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
