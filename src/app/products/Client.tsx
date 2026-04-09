@@ -46,7 +46,7 @@ export default function Client({ items }: { items: Product[] }) {
       <main className="mx-auto max-w-6xl px-4 py-16">
         {/* 標題 + 說明 */}
         <h1
-          className="text-3xl xl:text-5xl font-semibold tracking-wide text-[#111]"
+          className="text-3xl xl:text-5xl font-semibold tracking-wide text-stone-700"
           style={{ letterSpacing: ".02em" }}
         >
           熱銷產品

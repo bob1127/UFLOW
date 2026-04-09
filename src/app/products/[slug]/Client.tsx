@@ -192,7 +192,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-12 xl:gap-20">
           {/* 左側：商品大圖與小圖輪播 */}
-          <div className="w-full lg:w-1/2 select-none sm:p-6 p-3 lg:p-10 lg:sticky lg:top-24 lg:self-start h-fit">
+          <div className="w-full lg:w-[40%] select-none sm:p-6 p-3 lg:p-10 lg:sticky lg:top-24 lg:self-start h-fit">
             <Swiper
               spaceBetween={10}
               navigation={true}
@@ -201,12 +201,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
               }}
               modules={[FreeMode, Navigation, Thumbs]}
-              className="w-full mb-4 rounded-xl overflow-hidden group main-image-swiper"
+              className="w-full mb-4  group main-image-swiper"
             >
               {images.map((src: string, i: number) => (
                 <SwiperSlide key={i}>
                   <div
-                    className="relative w-full aspect-square bg-gray-50 cursor-zoom-in overflow-hidden"
+                    className="relative w-full aspect-[3/4] bg-gray-50 cursor-zoom-in overflow-hidden"
                     onClick={() => openImage(i)}
                   >
                     <Image

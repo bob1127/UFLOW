@@ -108,19 +108,11 @@ const Section2 = () => {
             links={[
               { label: "首頁", href: "/" },
               { label: "關於 UFLOW", href: "/about" },
-              { label: "月刊 UFLOW", href: "/blog" },
-              { label: "專題特集", href: "/features" },
-              { label: "店鋪情報 / 部落格", href: "/stores" },
-              { label: "最新消息", href: "/news" },
-              { label: "型錄・原創雜誌", href: "/catalog" },
-              { label: "素材使用規範", href: "/terms" },
-              { label: "正規網路販售說明", href: "/legal" },
+
               { label: "公司情報", href: "/company" },
-              { label: "人才招募", href: "/careers" },
-              { label: "聯絡我們 (綜合受理)", href: "/contact" },
-              { label: "聯絡我們 (企業客戶)", href: "/cooperate" },
-              { label: "客戶支援", href: "/support" },
-              { label: "網站地圖", href: "/sitemap" },
+
+              { label: "聯絡我們", href: "/cooperate" },
+
               { label: "網站使用條款", href: "/terms-of-use" },
               { label: "隱私權政策", href: "/privacy" },
             ]}

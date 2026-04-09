@@ -20,23 +20,16 @@ import Image from "next/image";
 import Marquee from "react-fast-marquee";
 
 gsap.registerPlugin(ScrollTrigger);
-const backgroundImage = "/images/S__23085150.png";
-const myLoader = ({ src, width, quality, placeholder }) => {
-  return `https://www.dot-st.com/static/docs/nikoand/pages/2022_city_creek_v2/assets/images/${src}?w=${width}?p=${placeholder}`;
-};
 
-// 🌟 接收 Server 傳來的 faqs 資料
+// 🌟 接收 Server (page.jsx) 傳來的 faqs 資料
 export default function Home({ faqs = [] }) {
   const [isLoading, setIsLoading] = useState(true);
-
-  // ✅ 新增控制彈窗顯示的狀態
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ 設定進入頁面後延遲 10 秒開啟彈窗
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowModal(true);
-    }, 10000); // 10000ms = 10秒
+    }, 10000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -127,7 +120,6 @@ export default function Home({ faqs = [] }) {
     };
 
     let ctx;
-
     const onTransitionComplete = () => {
       ctx = initGSAPAnimations();
     };
@@ -182,7 +174,6 @@ export default function Home({ faqs = [] }) {
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
-
               <video
                 src="/video/UFLOW.mp4"
                 autoPlay
@@ -197,9 +188,8 @@ export default function Home({ faqs = [] }) {
 
         <MainScrollCard />
 
-        <section className="section-two-column  xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
+        <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Card 1 */}
             <Link
               href="/products/peptide-crystal-hibiscus"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
@@ -226,14 +216,12 @@ export default function Home({ faqs = [] }) {
               <Image
                 src="/images/DSCF7894.jpg"
                 alt="img"
-                placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
                 loading="lazy"
                 fill
               />
             </Link>
 
-            {/* Card 2 */}
             <Link
               href="/products/gaba-magnesium"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
@@ -261,7 +249,6 @@ export default function Home({ faqs = [] }) {
               <Image
                 src="/images/DSCF7801.jpg"
                 alt="img"
-                placeholder="empty"
                 className="object-cover scale-100 group-hover:scale-110 duration-500"
                 loading="lazy"
                 fill
@@ -272,7 +259,6 @@ export default function Home({ faqs = [] }) {
 
         <section className="section-main-products w-full pt-16 sm:pt-20">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-            {/* 文字區 */}
             <div className="text max-w-xl md:max-w-[500px] pt-4 md:pt-0 pb-4 md:pb-0 md:pr-6">
               <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
                 UFLOW
@@ -286,13 +272,11 @@ export default function Home({ faqs = [] }) {
                 </p>
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
                   堅持「植萃天然」與「科學創新」。
-                  我們選用國際大廠專利原料，以科學實證的足量配方，
-                  為您找回身體原本的循環與平衡，打造簡單且富有活力的健康生活。
+                  我們選用國際大廠專利原料，以科學實證的足量配方，為您找回身體原本的循環與平衡，打造簡單且富有活力的健康生活。
                 </p>
               </div>
             </div>
 
-            {/* 按鈕區 */}
             <div className="flex w-full md:w-auto justify-start md:justify-end md:items-end pb-2 md:pb-0">
               <Link href="/blog">
                 <button className="group mt-5 relative inline-flex h-[calc(48px+8px)] items-center justify-center rounded-full bg-[#f58a9c] py-1 pl-6 pr-14 font-medium text-neutral-50">
@@ -321,7 +305,6 @@ export default function Home({ faqs = [] }) {
             </div>
           </div>
 
-          {/* 下方輪播 */}
           <div
             className="w-full overflow-hidden mt-4 sm:mt-6"
             ref={carouselRef}
@@ -330,7 +313,7 @@ export default function Home({ faqs = [] }) {
           </div>
         </section>
 
-        {/* 🌟 為了符合 Google FAQ 結構化資料規範，新增的極簡視覺化 FAQ 區塊 */}
+        {/* 🌟 Google FAQ 結構化資料對應的實際視覺畫面 */}
         {faqs && faqs.length > 0 && (
           <section className="w-full bg-gray-50 pt-20 pb-24">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -364,7 +347,6 @@ export default function Home({ faqs = [] }) {
             </div>
           </section>
         )}
-        {/* FAQ 區塊結束 */}
       </div>
     </ReactLenis>
   );

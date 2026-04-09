@@ -10,8 +10,6 @@ import { DotButton, useDotButton } from "./EmblaCarosuelDotButton";
 import { gsap } from "gsap";
 import { Link } from "next-view-transitions";
 import Image from "next/image";
-// 如果您希望使用 Next.js 的無刷新跳轉，建議匯入 Link (選用)
-// import Link from "next/link";
 
 const EmblaCarousel = (props) => {
   const { slides, options } = props;
@@ -106,8 +104,8 @@ const EmblaCarousel = (props) => {
                   userSelect: "none",
                 }}
               >
-                {/* ▼▼▼ 修改處：將 href 統一指向 /products/14 ▼▼▼ */}
-                <Link href="/products/14" className="w-full">
+                {/* ▼▼▼ 修改處：動態綁定 slide.link ▼▼▼ */}
+                <Link href={slide.link || "#"} className="w-full">
                   <div className="flex flex-col justify-center items-center">
                     <div>
                       <b className="text-[16px] text-center">{slide.title}</b>
@@ -174,7 +172,7 @@ const EmblaCarousel = (props) => {
               key={index}
               onClick={() => onDotButtonClick(index)}
               className={"embla__dot".concat(
-                index === selectedIndex ? " embla__dot--selected" : ""
+                index === selectedIndex ? " embla__dot--selected" : "",
               )}
             />
           ))}

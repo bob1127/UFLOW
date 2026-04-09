@@ -1,56 +1,44 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 如果你有用 View Transitions 或其他實驗性功能，保留這裡
-  // experimental: { ... }, 
+  // experimental: { ... }, // 如果有其他實驗性功能可以加在這裡
 
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'inf.fjg.mybluehost.me', // 你的 WP 主機
+        hostname: 'inf.fjg.mybluehost.me',
       },
       {
         protocol: 'https',
         hostname: 'd2w53g1q050m78.cloudfront.net',
-        port: '',
-        pathname: '/**', // 允許該網域下的所有圖片路徑
       },
-      // 如果你還有其他外部圖片來源（例如 coralclub.ru），也可以一併加進來：
       {
         protocol: 'https',
         hostname: 'coralclub.ru',
-        port: '',
-        pathname: '/**',
-      },
-      // 👇 新增以下這三行來支援 WordPress CDN (Jetpack)
-      {
-        protocol: 'https',
-        hostname: 'i0.wp.com',
       },
       {
         protocol: 'https',
-        hostname: 'i1.wp.com',
+        hostname: 'ru.coral.club',
       },
       {
         protocol: 'https',
-        hostname: 'i2.wp.com',
+        hostname: 'i0.wp.com', // WordPress Jetpack CDN
       },
-      // 👇 原本的其他網域設定保留
+      {
+        protocol: 'https',
+        hostname: 'i1.wp.com', // WordPress Jetpack CDN
+      },
+      {
+        protocol: 'https',
+        hostname: 'i2.wp.com', // WordPress Jetpack CDN
+      },
       {
         protocol: 'https',
         hostname: 'takidanifudouson.or.jp',
       },
       {
-         protocol: 'https',
-         hostname: 'shiroyamakumano-jinja.jp',
-      },
-      {
-         protocol: 'https',
-         hostname: 'coralclub.ru',
-      },
-       {
-         protocol: 'https',
-         hostname: 'ru.coral.club',
+        protocol: 'https',
+        hostname: 'shiroyamakumano-jinja.jp',
       },
       {
         protocol: 'https',

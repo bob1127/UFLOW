@@ -91,7 +91,7 @@ export default function Home() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold">
                 UFLOW
               </h1>
-              <h2 className="text-xl sm:text-2xl mt-4">
+              <h2 className="text-xl text-stone-700 font-bold sm:text-2xl mt-4">
                 UFLOW是一家以提供高品質健康產品為核心的品牌
               </h2>
               <div className="mt-4">
@@ -132,7 +132,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full gap-4">
                 {/* Card 1 */}
                 <div className="group p-4 lg:p-8">
-                  <Link href="/products/14">
+                  <Link href="/products/gaba鎂鎂香蜂草">
                     <div className="relative aspect-[4/4] w-full overflow-hidden">
                       <Image
                         src="/images/GABA鎂鎂香蜂草.png"
@@ -155,7 +155,7 @@ export default function Home() {
                           原價 $1580/盒
                         </span>
                         <span className="text-red-500 font-bold">
-                          115新春會員價 NT$1230/盒
+                          會員價 NT$1230/盒
                         </span>
                       </div>
                     </div>
