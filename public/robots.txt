@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.uflow.space
+
+# Sitemaps
+Sitemap: https://www.uflow.space/sitemap.xml
