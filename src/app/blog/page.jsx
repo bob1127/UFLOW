@@ -4,20 +4,21 @@ import HomeClient from "./ProjectListClient"; // 確保路徑與你的檔名相�
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
 export const metadata = {
-  title: "首頁 | UFLOW 健康生活",
+  title:
+    "保健知識與健康生活方式 | UFLOW 慶安有福保健食品 ｜ 照顧您生活健康，多種保健產品",
   description: "探索保健知識與健康生活方式",
 };
 
 // 這是伺服器端抓取邏輯
 async function getPosts() {
-  const apiUrl = process.env.WORDPRESS_API_URL;
+  const apiUrl =
+    process.env.WORDPRESS_API_URL ||
+    "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
 
   if (!apiUrl) {
     console.error("❌ 錯誤：找不到環境變數 WORDPRESS_API_URL");
     return [];
   }
-
-  console.log(`🌐 正在嘗試抓取 API: ${apiUrl}/posts?_embed&per_page=10`);
 
   try {
     const res = await fetch(`${apiUrl}/posts?_embed&per_page=10`, {
