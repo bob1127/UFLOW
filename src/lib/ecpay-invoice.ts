@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-// 修正：精準模擬 PHP 的 urlencode 行為，綠界發票專用
+// 精準模擬 PHP 的 urlencode 行為，綠界發票專用
 function ecpayUrlEncode(str: string) {
   return encodeURIComponent(str)
     .replace(/!/g, '%21')
@@ -9,6 +9,10 @@ function ecpayUrlEncode(str: string) {
     .replace(/\)/g, '%29')
     .replace(/\*/g, '%2A')
     .replace(/%20/g, "+");
+}
+
+function ecpayUrlDecode(str: string) {
+  return decodeURIComponent(str.replace(/\+/g, "%20"));
 }
 
 function aesEncryptToBase64(plain: string, key: string, iv: string) {
@@ -65,6 +69,7 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
     MerchantID,
     RelateNumber: input.relateNumber,
     CustomerEmail: input.customerEmail,
+    CustomerName: "UFLOW顧客", // 💡 綠界防呆：即使不列印，也給一個預設名稱防止擋件
     Print: "0",
     Donation: "0",
     CarrierType: "",
@@ -87,14 +92,12 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
 
   const jsonStr = JSON.stringify(dataObj);
   const urlEncodedJson = ecpayUrlEncode(jsonStr);
-  
-  // 🚨 關鍵修復：加密後的 Base64 字串，絕對不可以再做 URL Encode
   const base64Cipher = aesEncryptToBase64(urlEncodedJson, HashKey, HashIV);
 
   const payload = {
     MerchantID,
     RqHeader: { Timestamp: nowTs },
-    Data: base64Cipher, // 直接塞入純 Base64 字串
+    Data: base64Cipher,
   };
 
   const res = await fetch(getInvoiceIssueUrl(), {
@@ -108,7 +111,28 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
   try { result = JSON.parse(raw); } catch {}
 
   if (!res.ok) throw new Error(`Invoice API HTTP ${res.status} :: ${raw}`);
-  if (result?.TransCode !== 1) throw new Error(`Invoice API Failed :: ${raw}`);
+  if (result?.TransCode !== 1) throw new Error(`Invoice API 傳輸失敗 :: ${raw}`);
+
+  // 🚨 終極解密：把綠界藏在 Data 裡的真實結果解開來檢查
+  if (result.Data) {
+    try {
+      const decryptedStr = aesDecryptFromBase64(result.Data, HashKey, HashIV);
+      const decodedJsonStr = ecpayUrlDecode(decryptedStr);
+      const innerResult = JSON.parse(decodedJsonStr);
+
+      console.log("🔍 [綠界發票真實回傳解密]:", innerResult);
+
+      // RtnCode: 1 才是真的開立成功
+      if (innerResult.RtnCode !== 1) {
+        throw new Error(`綠界發票拒絕開立: [${innerResult.RtnCode}] ${innerResult.RtnMsg}`);
+      }
+    } catch (decErr: any) {
+      if (decErr.message.includes("綠界發票拒絕開立")) {
+        throw decErr; // 把真實錯誤往外丟，讓 callback 印出來
+      }
+      console.error("發票 Data 解密發生異常:", decErr);
+    }
+  }
 
   return result;
 }
