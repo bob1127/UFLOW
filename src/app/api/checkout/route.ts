@@ -13,10 +13,9 @@ const CS = process.env.WC_CONSUMER_SECRET;
 const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID || process.env.NEXT_PUBLIC_ECPAY_MERCHANT_ID;
 const HASH_KEY = process.env.ECPAY_HASH_KEY;
 const HASH_IV = process.env.ECPAY_HASH_IV;
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL; // e.g. https://uflow.space
 
-// 正式環境網址 (金流)
-const ECPAY_URL = "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
+// 正式環境網址 (金流) - 加入優先讀取環境變數的防呆
+const ECPAY_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
 
 // ==========================================
 // 1. 型別定義 (TypeScript Interfaces)
@@ -123,14 +122,14 @@ export async function POST(req: Request) {
   try {
     const auth = basicAuth();
 
-    console.log("Config Check:", { MERCHANT_ID, HasKey: !!HASH_KEY, HasIV: !!HASH_IV, BASE_URL });
+    console.log("Config Check:", { MERCHANT_ID, HasKey: !!HASH_KEY, HasIV: !!HASH_IV });
 
     if (!MERCHANT_ID || !HASH_KEY || !HASH_IV) {
       return NextResponse.json({ ok: false, message: "Server Config Error: 金鑰未設定" }, { status: 500 });
     }
 
     const body: RequestBody = await req.json();
-    const { items, contact, addr, total, shipMethod, payMethod, coupon } = body;
+    const { items, contact, addr, total, shipMethod, coupon } = body;
 
     const cleanItemName = items && items.length > 0
       ? items.map((it) => (it.title || "").replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, "")).join("#").slice(0, 150)
@@ -142,7 +141,6 @@ export async function POST(req: Request) {
     let orderId: string | number = tradeNo;
     if (auth && BASE) {
       try {
-        // 🔥 準備 Meta Data (給 RY Tools / 綠界物流看)
         const meta_data: any[] = [
           { key: "_ecpay_trade_no", value: tradeNo },
           { key: "_invoice_email", value: contact.email },
@@ -151,15 +149,10 @@ export async function POST(req: Request) {
         let finalAddress = addr.line1;
         let logisticsSubType = "";
 
-        // 如果是超商取貨
         if ((shipMethod === "CVS" || shipMethod === "711") && addr.storeId) {
-          // 判斷物流類型 (給綠界看)
-          // 7-11: UNIMARTC2C, 全家: FAMIC2C, 萊爾富: HILIFEC2C
-          // 這裡做簡單判斷，建議前端可傳更精確的 provider
-          if (shipMethod === "CVS") logisticsSubType = "FAMIC2C"; // 預設全家
-          else logisticsSubType = "UNIMARTC2C"; // 7-11
+          if (shipMethod === "CVS") logisticsSubType = "FAMIC2C"; 
+          else logisticsSubType = "UNIMARTC2C"; 
 
-          // 寫入 RY Tools / 綠界外掛 常用欄位
           meta_data.push(
             { key: "_shipping_store_id", value: String(addr.storeId) },
             { key: "_shipping_store_name", value: addr.storeName },
@@ -172,7 +165,6 @@ export async function POST(req: Request) {
             { key: "_ecpay_shipping_method", value: logisticsSubType }
           );
 
-          // 優化地址顯示 (讓後台列表一眼看出門市)
           finalAddress = `${addr.storeName} (${addr.storeId}) - ${addr.storeAddr}`;
         }
 
@@ -187,7 +179,7 @@ export async function POST(req: Request) {
           billing: {
             first_name: addr.lastName,
             last_name: addr.firstName,
-            address_1: finalAddress, // 地址欄顯示門市
+            address_1: finalAddress, 
             city: "Taipei",
             country: "TW",
             email: contact.email,
@@ -196,14 +188,14 @@ export async function POST(req: Request) {
           shipping: {
             first_name: addr.lastName,
             last_name: addr.firstName,
-            address_1: finalAddress, // 地址欄顯示門市
+            address_1: finalAddress, 
             country: "TW",
           },
           line_items: items.map((it) => ({
             product_id: it.wcProductId,
             quantity: it.qty,
           })),
-          meta_data: meta_data, // 🔥 寫入 Meta Data
+          meta_data: meta_data, 
         };
 
         const wcRes = await fetch(`${BASE.replace(/\/$/, "")}/wp-json/wc/v3/orders`, {
@@ -226,10 +218,6 @@ export async function POST(req: Request) {
     // ==========================================
     // 4) 綠界 AIO 參數設定
     // ==========================================
-    const invItemName = ecpayEncode("網路商品一批");
-    const invItemWord = ecpayEncode("式");
-    const invCustomerEmail = ecpayEncode(contact.email);
-
     const ecpayParams: Record<string, string> = {
       MerchantID: MERCHANT_ID,
       MerchantTradeNo: tradeNo,
@@ -238,29 +226,18 @@ export async function POST(req: Request) {
       TotalAmount: totalAmountString,
       TradeDesc: ecpayEncode("Uflow_Shop"),
       ItemName: cleanItemName,
-      ReturnURL: `${BASE_URL}/api/ecpay/callback`,
-      OrderResultURL: `${BASE_URL}/thank-you?orderId=${orderId}`,
+      
+      // 🚨 終極防呆：直接寫死正式網址，保證 Vercel 絕對抓得到
+      ReturnURL: `https://www.uflow.space/api/ecpay/callback`,
+      ClientBackURL: `https://www.uflow.space/thank-you?orderId=${orderId}`,
+      
       ChoosePayment: "ALL",
       EncryptType: "1",
       CustomField1: String(orderId),
       CustomField2: contact.email,
       CustomField3: totalAmountString,
-
-      // --- 電子發票 ---
-      InvoiceMark: "Y",
-      RelateNumber: tradeNo,
-      CustomerEmail: invCustomerEmail,
-      TaxType: "1",
-      CarruerType: "1",
-      Donation: "0",
-      Print: "0",
-      InvoiceItemName: invItemName,
-      InvoiceItemCount: "1",
-      InvoiceItemWord: invItemWord,
-      InvoiceItemPrice: totalAmountString,
-      InvoiceItemTaxType: "1",
-      DelayDay: "0",
-      InvType: "07",
+      
+      // 注意：已將 InvoiceMark 等發票參數全部移除，交由 callback 統一處理
     };
 
     const checkMacValue = generateCheckMacValue(ecpayParams);

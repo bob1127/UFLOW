@@ -1,16 +1,14 @@
-// src/lib/ecpay-invoice.ts
 import crypto from "crypto";
 
-function phpUrlEncode(str: string) {
-  // 模擬 PHP urlencode 行為（綠界文件常用）
-  // 空白 => +
-  // * ( ) ! 等保留字處理
+// 修正：精準模擬 PHP 的 urlencode 行為，綠界發票專用
+function ecpayUrlEncode(str: string) {
   return encodeURIComponent(str)
-    .replace(/%20/g, "+")
-    .replace(/%21/g, "!")
-    .replace(/%28/g, "(")
-    .replace(/%29/g, ")")
-    .replace(/%2a/gi, "*");
+    .replace(/!/g, '%21')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\*/g, '%2A')
+    .replace(/%20/g, "+");
 }
 
 function aesEncryptToBase64(plain: string, key: string, iv: string) {
@@ -30,13 +28,7 @@ function aesDecryptFromBase64(base64Cipher: string, key: string, iv: string) {
   return dec.toString("utf8");
 }
 
-function phpUrlDecode(str: string) {
-  // PHP urldecode：+ => 空白
-  return decodeURIComponent(str.replace(/\+/g, "%20"));
-}
-
 export function getInvoiceIssueUrl() {
-  // ✅ 固定走正式環境 (你的 MerchantID 3481459 是正式帳號)
   return "https://einvoice.ecpay.com.tw/B2CInvoice/Issue";
 }
 
@@ -51,40 +43,21 @@ export type InvoiceIssueItem = {
 };
 
 export type IssueInvoiceInput = {
-  relateNumber: string; // 必須唯一、英數、不建議太長（<=30 最安全）
+  relateNumber: string; 
   customerEmail: string;
   salesAmount: number;
   items: InvoiceIssueItem[];
 };
 
 export async function issueEcpayInvoice(input: IssueInvoiceInput) {
-  // 🔴 關鍵修正 1：讀取「發票專用」的變數，而不是金流的
-  const MerchantID = process.env.ECPAY_MERCHANT_ID || "";
-  const HashKey = process.env.ECPAY_INVOICE_HASH_KEY || ""; // 改這裡
-  const HashIV = process.env.ECPAY_INVOICE_HASH_IV || "";   // 改這裡
+  const MerchantID = process.env.ECPAY_INVOICE_MERCHANT_ID || process.env.ECPAY_MERCHANT_ID || "";
+  const HashKey = process.env.ECPAY_INVOICE_HASH_KEY || ""; 
+  const HashIV = process.env.ECPAY_INVOICE_HASH_IV || "";   
 
-  // 🔴 關鍵修正 2：加入除錯 Log，讓你在 Vercel 看得到變數狀態
-  console.log("🔍 [Invoice Debug] 發票開立前檢查:", {
-    MerchantID,
-    // 只印前4碼和長度，確保安全又能比對
-    HashKeyCheck: HashKey ? `${HashKey.substring(0, 4)}*** (Len:${HashKey.length})` : "❌ MISSING",
-    HashIVCheck: HashIV ? `${HashIV.substring(0, 4)}*** (Len:${HashIV.length})` : "❌ MISSING",
-    TargetUrl: getInvoiceIssueUrl(),
-    Amount: input.salesAmount
-  });
+  if (!MerchantID || !HashKey || !HashIV) throw new Error("發票金鑰未設定");
 
-  if (!MerchantID) throw new Error("ECPAY_MERCHANT_ID 未設定");
-  if (!HashKey || !HashIV) throw new Error("ECPAY_INVOICE_HASH_KEY / IV 未設定 (請檢查 Vercel 變數)");
-
-  if (HashKey.length !== 16 || HashIV.length !== 16) {
-    throw new Error(`發票 HashKey/IV 長度錯誤 (目前 Key:${HashKey.length}, IV:${HashIV.length})，AES-128 必須為 16 碼。請確認是否誤填金流 Key？`);
-  }
-
-  // ✅ SalesAmount 要等於 Items 加總（避免後續被打槍）
   const sum = input.items.reduce((s, it) => s + Number(it.ItemAmount), 0);
-  if (sum !== Number(input.salesAmount)) {
-    throw new Error(`SalesAmount(${input.salesAmount}) 必須等於 Items 合計(${sum})`);
-  }
+  if (sum !== Number(input.salesAmount)) throw new Error("SalesAmount 必須等於 Items 合計");
 
   const nowTs = Math.floor(Date.now() / 1000);
 
@@ -92,18 +65,14 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
     MerchantID,
     RelateNumber: input.relateNumber,
     CustomerEmail: input.customerEmail,
-
-    // 你目前需求：寄 email，不列印、不捐贈、無載具
     Print: "0",
     Donation: "0",
     CarrierType: "",
     CarrierNum: "",
-
     TaxType: "1",
     SalesAmount: Number(input.salesAmount),
     InvType: "07",
     vat: "1",
-
     Items: input.items.map((it, idx) => ({
       ItemSeq: idx + 1,
       ItemName: it.ItemName,
@@ -116,22 +85,16 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
     })),
   };
 
-  // 1) JSON
   const jsonStr = JSON.stringify(dataObj);
-
-  // 2) 先 urlencode（PHP 風格）
-  const urlEncodedJson = phpUrlEncode(jsonStr);
-
-  // 3) AES -> base64
+  const urlEncodedJson = ecpayUrlEncode(jsonStr);
+  
+  // 🚨 關鍵修復：加密後的 Base64 字串，絕對不可以再做 URL Encode
   const base64Cipher = aesEncryptToBase64(urlEncodedJson, HashKey, HashIV);
-
-  // 4) ⚠️ base64 再 urlencode（避免 + / = 傳輸被吃）
-  const dataField = phpUrlEncode(base64Cipher);
 
   const payload = {
     MerchantID,
     RqHeader: { Timestamp: nowTs },
-    Data: dataField,
+    Data: base64Cipher, // 直接塞入純 Base64 字串
   };
 
   const res = await fetch(getInvoiceIssueUrl(), {
@@ -142,44 +105,10 @@ export async function issueEcpayInvoice(input: IssueInvoiceInput) {
 
   const raw = await res.text();
   let result: any = {};
-  try {
-    result = JSON.parse(raw);
-  } catch {
-    // ignore
-  }
+  try { result = JSON.parse(raw); } catch {}
 
-  if (!res.ok) {
-    // 這裡會印出綠界回傳的錯誤原文，通常包含 RtnMsg
-    throw new Error(`Invoice API HTTP ${res.status} :: ${raw}`);
-  }
-
-  // ✅ 綠界常常 HTTP 200 但業務失敗，要看 TransCode / TransMsg
-  if (result?.TransCode !== 1) {
-    // 嘗試解密錯誤訊息 (如果有回傳 Data)
-    let extraMsg = "";
-    if (result?.Data) {
-      try {
-        const base64FromApi = phpUrlDecode(String(result.Data));
-        const decrypted = aesDecryptFromBase64(base64FromApi, HashKey, HashIV);
-        extraMsg = `Decrypted: ${decodeURIComponent(decrypted)}`;
-      } catch (e) {
-        extraMsg = " (Data 解密失敗)";
-      }
-    }
-    throw new Error(`Invoice API Failed :: ${raw} ${extraMsg}`);
-  }
-
-  // 若你想在本地直接看到 RtnCode，可以把回傳 Data 解開
-  if (result?.Data) {
-    try {
-      const base64FromApi = phpUrlDecode(String(result.Data));
-      const decrypted = aesDecryptFromBase64(base64FromApi, HashKey, HashIV);
-      const json = JSON.parse(phpUrlDecode(decrypted));
-      result.__decrypted = json; // { RtnCode, RtnMsg, InvoiceNo... }
-    } catch (e) {
-      // 解不開也不影響主流程
-    }
-  }
+  if (!res.ok) throw new Error(`Invoice API HTTP ${res.status} :: ${raw}`);
+  if (result?.TransCode !== 1) throw new Error(`Invoice API Failed :: ${raw}`);
 
   return result;
 }
