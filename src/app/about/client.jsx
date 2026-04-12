@@ -9,7 +9,7 @@ import Character from "../../components/TextOpacityScroll/Character.jsx";
 import GsapText from "../../components/RevealText/index";
 import MotionImage from "../../components/MotionImage.jsx";
 import Swiper from "../../components/SwiperCarousel/SwiperCardFood.jsx";
-
+import FeatureScroll from "../../components/FeatureScrollSection.jsx";
 import { CustomEase } from "gsap/CustomEase";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -151,10 +151,7 @@ export default function AboutClient({ faqs = [] }) {
   }, []);
 
   return (
-    <main
-      ref={containerRef}
-      className="w-full bg-white text-[#2b3742] overflow-hidden pt-20"
-    >
+    <main ref={containerRef} className="w-full bg-white text-[#2b3742] pt-20">
       <section>
         <div>
           <ScrollAnimate />
@@ -311,100 +308,9 @@ export default function AboutClient({ faqs = [] }) {
         </div>
       </section>
 
-      {/* 品牌故事 */}
-      <section className="py-24 container mx-auto px-6 lg:px-12">
-        <div className="flex flex-col lg:flex-row items-center gap-16">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="w-full lg:w-1/2 relative aspect-[4/3] overflow-hidden rounded-xl"
-          >
-            <Image
-              src="/images/about/抗氧封存：PUREWAY-C® 複方維生素 C.png"
-              alt="UFLOW Brand Story"
-              fill
-              className="object-cover hover:scale-105 transition-transform duration-700"
-            />
-          </motion.div>
-
-          <motion.div
-            className="w-full lg:w-1/2 flex flex-col gap-6"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <h2 className="text-3xl font-bold mb-2 relative inline-block">
-              我們的願景
-            </h2>
-            <h3 className="text-xl font-medium text-gray-800">
-              打造每個人在繁忙生活中的健康節奏
-            </h3>
-            <div className="text-gray-600 leading-8 space-y-4">
-              <p>
-                UFLOW
-                是一家以提供高品質健康產品為核心的品牌。我們的研發精神在於將
-                <strong className="text-gray-900 mx-1">
-                  科學方法應用於天然原料
-                </strong>
-                ，以科技養護身心。
-              </p>
-              <p>
-                我們選擇與全球領先的科學研究機構合作，確保每一款產品都符合最嚴格的品質標準，並能有效促進身心健康。從日常生活出發，為您找回身體原本的循環與平衡。
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* UFLOW 新概念 */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              UFLOW 新概念
-            </h2>
-            <div className="w-12 h-1 bg-blue-500 mx-auto my-6 rounded-full"></div>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg">
-              堅持四大原則，以科學與自然的完美平衡，為您的健康嚴格把關。
-            </p>
-          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-            {values.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group flex flex-col items-center text-center"
-              >
-                <div
-                  className={`w-20 h-20 rounded-full ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 ease-out shadow-sm`}
-                >
-                  <div className="scale-110">{item.icon}</div>
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-gray-500 leading-7 text-sm px-2">
-                  {item.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      <FeatureScroll />
       {/* 🌟 新增：品牌常見問題 FAQ 區塊 (符合 Google SEO 可見性規範) */}
       {faqs && faqs.length > 0 && (
         <section className="py-20 bg-white">
@@ -435,24 +341,6 @@ export default function AboutClient({ faqs = [] }) {
           </div>
         </section>
       )}
-
-      {/* CTA 區塊 */}
-      <section className="py-20 bg-[#2b3742] text-white text-center">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-6">
-            準備好找回生活的健康節奏了嗎？
-          </h2>
-          <p className="text-gray-300 mb-8 max-w-xl mx-auto">
-            探索我們為您精心打造的科學營養配方，開始您的 UFLOW 之旅。
-          </p>
-          <Link
-            href="/products"
-            className="inline-block bg-white text-[#2b3742] px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors shadow-lg shadow-white/10"
-          >
-            前往選購商品
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }

@@ -1,0 +1,598 @@
+"use client";
+
+import React, { useState, useRef } from "react";
+import Image from "next/image";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Play,
+  Phone,
+  MapPin,
+  PenLine,
+} from "lucide-react";
+
+// 註冊 GSAP
+gsap.registerPlugin(useGSAP);
+
+// UFLOW 輪播資料
+const slides = [
+  {
+    id: "01",
+    title: "植萃天然\n嚴選全球頂級原料",
+    desc: "回歸純粹的營養補給，給身體最無負擔的呵護。",
+    img: "/images/DSCF7801.jpg",
+  },
+  {
+    id: "02",
+    title: "科學創新\n打造高效吸收配方",
+    desc: "與全球領先科研機構合作，以實證數據為基礎。",
+    img: "/images/DSCF7878.jpg",
+  },
+  {
+    id: "03",
+    title: "透明信任\n全成分公開安心看得見",
+    desc: "通過多項台灣專業機構檢驗，品質嚴格把關。",
+    img: "/images/DSCF7850.jpg",
+  },
+  {
+    id: "04",
+    title: "關懷共鳴\n傾聽您的真實需求",
+    desc: "為您量身打造符合繁忙生活的健康節奏。",
+    img: "/images/DSCF7777.jpg",
+  },
+  {
+    id: "05",
+    title: "專利配方\n醫師與營養師聯合推薦",
+    desc: "結合頂尖科技與天然植萃，重塑身心平衡。",
+    img: "/images/00912.png",
+  },
+  {
+    id: "06",
+    title: "養分循環\n由內而外散發健康光采",
+    desc: "補充日常所需能量，找回最自信的自己。",
+    img: "/images/粉紅.png",
+  },
+];
+
+export default function FeatureShowcase() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef(null);
+  const isAnimating = useRef(false);
+  const total = slides.length;
+
+  // --- 控制邏輯 ---
+  const handleNext = () => {
+    if (isAnimating.current) return;
+    isAnimating.current = true;
+    setCurrentIndex((prev) => (prev + 1) % total);
+  };
+
+  const handlePrev = () => {
+    if (isAnimating.current) return;
+    isAnimating.current = true;
+    setCurrentIndex((prev) => (prev - 1 + total) % total);
+  };
+
+  // --- 核心 GSAP 動畫 (響應式優化) ---
+  useGSAP(
+    () => {
+      // 創建 GSAP MatchMedia 來處理不同螢幕尺寸的動畫
+      let mm = gsap.matchMedia();
+
+      // Desktop (>= 768px): 執行原本的複雜空間計算動畫
+      mm.add("(min-width: 768px)", () => {
+        slides.forEach((_, i) => {
+          let offset = (i - currentIndex + total) % total;
+          if (offset > total / 2) offset -= total;
+
+          const el = `.slide-container-${i}`;
+          const imgInner = `.slide-img-${i}`;
+          const duration = 1.2;
+          const ease = "power3.inOut";
+
+          if (offset === 0) {
+            gsap.to(el, {
+              x: "5vw",
+              y: "15vh",
+              width: "42vw",
+              height: "60vh",
+              opacity: 1,
+              zIndex: 10,
+              duration,
+              ease,
+            });
+            gsap.to(imgInner, { scale: 1, duration, ease });
+          } else if (offset === -1) {
+            gsap.to(el, {
+              x: "-50vw",
+              y: "15vh",
+              width: "42vw",
+              height: "60vh",
+              opacity: 0,
+              zIndex: 5,
+              duration,
+              ease,
+            });
+          } else if (offset > 0) {
+            const thumbWidth = 12;
+            const gap = 1.5;
+            const startLeft = 52;
+
+            let xPos = startLeft + (offset - 1) * (thumbWidth + gap);
+            let opacity = offset <= 3 ? 1 : 0;
+
+            gsap.to(el, {
+              x: `${xPos}vw`,
+              y: "55vh",
+              width: `${thumbWidth}vw`,
+              height: "20vh",
+              opacity: opacity,
+              zIndex: 10 - offset,
+              duration,
+              ease,
+            });
+            gsap.to(imgInner, { scale: 1.1, duration, ease });
+          } else {
+            gsap.to(el, {
+              x: "100vw",
+              y: "55vh",
+              width: "12vw",
+              height: "20vh",
+              opacity: 0,
+              duration,
+              ease,
+            });
+          }
+        });
+      });
+
+      // Mobile (< 768px): 執行簡單的淡入淡出動畫
+      mm.add("(max-width: 767px)", () => {
+        slides.forEach((_, i) => {
+          const el = `.slide-container-${i}`;
+          const duration = 0.8; // 手機版淡入可以快一點
+
+          if (i === currentIndex) {
+            // 目前這張：顯示並確保在最上層
+            gsap.to(el, {
+              opacity: 1,
+              zIndex: 10,
+              duration,
+              ease: "power2.out",
+            });
+          } else {
+            // 其他張：隱藏
+            gsap.to(el, {
+              opacity: 0,
+              zIndex: 1,
+              duration,
+              ease: "power2.inOut",
+            });
+          }
+        });
+      });
+
+      setTimeout(() => {
+        isAnimating.current = false;
+      }, 1200);
+
+      // 清理 matchMedia
+      return () => mm.revert();
+    },
+    { scope: containerRef, dependencies: [currentIndex] },
+  );
+
+  return (
+    // 🚨 移除了所有會破壞 Sticky 的 overflow 設定，回歸最單純的 flex
+    <div className="w-full bg-[#f4f5f7] font-sans flex min-h-screen">
+      {/* ==============================================
+          左側 Sticky 導覽列 (完美恢復 Sticky 效果)
+          ============================================== */}
+      <div className="left-nav w-[60px] md:w-[80px] shrink-0 p-1 relative z-40">
+        {/* top-[100px] 完美避開 Navbar */}
+        <aside className="sticky-nav bg-white rounded-[6px]  h-[calc(100vh-80px)] w-full sticky top-[85px] md:top-[120px] flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 border-2 border-gray-800 rounded-full rounded-tr-none flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+            </div>
+            <p
+              className="text-[8px] md:text-[10px] font-serif tracking-[0.2em] text-gray-500 mt-2"
+              style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+            >
+              UFLOW HEALTH
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <button className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-[6px] hover:bg-gray-100 transition-colors">
+              <Phone size={16} className="text-gray-700" strokeWidth={2} />
+            </button>
+            <button className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-[6px] hover:bg-gray-100 transition-colors">
+              <MapPin size={16} className="text-gray-700" strokeWidth={2} />
+            </button>
+            <button className="w-10 h-10 bg-[#f5a49f] flex items-center justify-center rounded-[6px] hover:bg-[#f87777] transition-colors ">
+              <PenLine size={16} className="text-white" strokeWidth={2} />
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {/* ==============================================
+          右側主要內容區塊 (Main)
+          ============================================== */}
+      <div className="main flex-1 p-1 pl-0 min-w-0">
+        {/* --- 1. Hero Feature Slider 區塊 --- */}
+        <section
+          ref={containerRef}
+          className="relative w-full h-[75vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-white rounded-[6px] border border-gray-100"
+        >
+          {/* Header */}
+          <div className="absolute top-0 left-0 w-full px-6 md:px-10 py-6 flex justify-between items-center z-30 pointer-events-none">
+            <h2 className="text-2xl md:text-3xl font-serif text-gray-800 tracking-wider">
+              Feature
+            </h2>
+            <span className="text-[10px] md:text-xs font-medium text-gray-500 tracking-[0.2em] border-b border-gray-300 pb-1 md:border-none md:pb-0">
+              品牌特色
+            </span>
+          </div>
+
+          {/* 浮水印 */}
+          <div className="hidden md:block absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none select-none">
+            <h1 className="text-[22vw] font-serif text-gray-200/40 tracking-[0.05em] leading-none whitespace-nowrap">
+              UFLOW
+            </h1>
+          </div>
+
+          {/* 控制按鈕 (手機版稍微縮小並靠上) */}
+          <div className="absolute top-[12vh] md:top-[12vh] right-[4vw] md:right-[6vw] z-40 flex gap-2 md:gap-3">
+            <button
+              onClick={handlePrev}
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors bg-white/70 md:bg-white/50 backdrop-blur-sm"
+            >
+              <ArrowLeft size={16} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={handleNext}
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors bg-white/70 md:bg-white/50 backdrop-blur-sm"
+            >
+              <ArrowRight size={16} strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* 動態圖片 DOM 容器 */}
+          {/* 在手機版 (md 以前)，我們讓容器滿版 (inset-0)。
+              在電腦版 (md 以後)，我們透過 GSAP 來控制寬高和位置。
+              我們需要稍微調整一下 GSAP 邏輯，讓他在手機版只做淡入淡出。 */}
+          {slides.map((slide, i) => (
+            <div
+              key={i}
+              // 添加了一層絕對滿版的基礎設定
+              className={`slide-container-${i} absolute inset-0 md:inset-auto md:top-0 md:left-0 overflow-hidden bg-gray-200 cursor-pointer shadow-sm rounded-sm`}
+              style={{
+                // 初始狀態：只有第一張顯示
+                opacity: i === currentIndex ? 1 : 0,
+                zIndex: i === currentIndex ? 10 : 1,
+              }}
+              onClick={() => {
+                if (
+                  i !== currentIndex &&
+                  !isAnimating.current &&
+                  (i - currentIndex + total) % total <= 3
+                ) {
+                  isAnimating.current = true;
+                  setCurrentIndex(i);
+                }
+              }}
+            >
+              {/* 在手機版，我們加上一層漸層遮罩，讓文字好閱讀 */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10 md:hidden pointer-events-none"></div>
+
+              <div className={`slide-img-${i} w-full h-full  relative z-0`}>
+                <Image
+                  src={slide.img}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority={i < 3}
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* 文字資訊區塊 */}
+          {/* 手機版：靠下、置中、文字反白。 電腦版：維持原本右側 */}
+          <div className="absolute bottom-[8vh] left-[6vw] right-[6vw] md:bottom-auto md:top-[20vh] md:left-[52vw] md:right-auto md:w-[35vw] z-30">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-start md:items-start"
+              >
+                <div className="flex items-center gap-4 md:gap-6 text-white/80 md:text-gray-400 font-serif mb-4 md:mb-6 tracking-widest border-b border-white/30 md:border-transparent pb-2 md:pb-0">
+                  <span className="text-lg md:text-xl text-white md:text-gray-800 font-medium">
+                    {slides[currentIndex].id}
+                  </span>
+                  <span className="text-[10px] md:text-xs">0{total}</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-medium text-white md:text-gray-900 leading-[1.4] md:leading-[1.6] whitespace-pre-line mb-6 drop-shadow-md md:drop-shadow-none">
+                  {slides[currentIndex].title}
+                </h2>
+
+                <button className="flex items-center gap-3 md:gap-4 text-xs font-bold text-white md:text-gray-500 hover:text-gray-200 md:hover:text-gray-900 transition-colors group mt-2 md:mt-8">
+                  了解更多
+                  <div className="w-6 h-6 rounded-full border border-white/50 md:border-gray-300 flex items-center justify-center group-hover:border-white md:group-hover:border-gray-900 transition-colors">
+                    <Play
+                      size={8}
+                      className="ml-0.5 fill-current text-white md:text-gray-500 md:group-hover:text-gray-900 transition-colors"
+                    />
+                  </div>
+                </button>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* --- 2. 雙卡片導覽區塊 --- */}
+        <section className="w-full border-t border-gray-100 bg-white mt-1 rounded-[6px] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+            {/* 卡片 1 */}
+            {/* 手機版：flex-col-reverse (文字在下，圖片在上) 或 flex-col */}
+            <div className="group flex flex-col-reverse md:flex-row items-center justify-between p-8 sm:p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer text-center md:text-left gap-8 md:gap-0">
+              <div className="flex-1 md:pr-8 relative z-10 w-full flex flex-col items-center md:items-start">
+                <span className="font-serif text-gray-400 text-lg md:text-xl lg:text-2xl tracking-widest block mb-4 md:mb-6 uppercase">
+                  .Philosophy
+                </span>
+                <h3 className="text-lg sm:text-xl md:text-[22px] font-bold text-gray-900 mb-2 md:mb-3 tracking-wide">
+                  從日常找回健康節奏
+                </h3>
+                <p className="text-xs md:text-[13px] lg:text-sm text-gray-500 mb-8 md:mb-12 tracking-wider">
+                  讓健康成為一種簡單、自然的生活方式
+                </p>
+
+                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                  <span className="text-[10px] md:text-[11px] font-bold text-gray-700 tracking-widest">
+                    了解更多
+                  </span>
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={10} strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 手機版縮小圖片 */}
+              <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                <Image
+                  src="/images/DSCF7801.jpg"
+                  fill
+                  className="object-cover"
+                  alt="Philosophy"
+                />
+              </div>
+            </div>
+
+            {/* 卡片 2 */}
+            <div className="group flex flex-col-reverse md:flex-row items-center justify-between p-8 sm:p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer text-center md:text-left gap-8 md:gap-0">
+              <div className="flex-1 md:pr-8 relative z-10 w-full flex flex-col items-center md:items-start">
+                <span className="font-serif text-gray-400 text-lg md:text-xl lg:text-2xl tracking-widest block mb-4 md:mb-6 uppercase">
+                  .Quality & Safety
+                </span>
+                <h3 className="text-lg sm:text-xl md:text-[22px] font-bold text-gray-900 mb-2 md:mb-3 tracking-wide">
+                  嚴格把關的品質承諾
+                </h3>
+                <p className="text-xs md:text-[13px] lg:text-sm text-gray-500 mb-8 md:mb-12 tracking-wider">
+                  全產品通過多項國際與台灣專業檢驗認證
+                </p>
+
+                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                  <span className="text-[10px] md:text-[11px] font-bold text-gray-700 tracking-widest">
+                    了解更多
+                  </span>
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={10} strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                <Image
+                  src="/images/00912.png"
+                  fill
+                  className="object-cover"
+                  alt="Quality"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+        {/* --- 2. 雙卡片導覽區塊 --- */}
+        <section className="w-full border-t border-gray-100 bg-white mt-1 rounded-[6px]   overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* 卡片 1 */}
+            <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 border-b lg:border-b-0 lg:border-r border-gray-100 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
+              <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
+                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6">
+                  .Philosophy
+                </span>
+                <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
+                  從日常找回健康節奏
+                </h3>
+                <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
+                  讓健康成為一種簡單、自然的生活方式
+                </p>
+
+                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                  <span className="text-[11px] font-bold text-gray-700 tracking-widest">
+                    了解更多
+                  </span>
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={10} strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                <Image
+                  src="/images/DSCF7801.jpg"
+                  fill
+                  className="object-cover"
+                  alt="Philosophy"
+                />
+              </div>
+            </div>
+
+            {/* 卡片 2 */}
+            <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
+              <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
+                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6">
+                  .Quality & Safety
+                </span>
+                <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
+                  嚴格把關的品質承諾
+                </h3>
+                <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
+                  全產品通過多項國際與台灣專業檢驗認證
+                </p>
+
+                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                  <span className="text-[11px] font-bold text-gray-700 tracking-widest">
+                    了解更多
+                  </span>
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                    <ArrowRight size={10} strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                <Image
+                  src="/images/00912.png"
+                  fill
+                  className="object-cover"
+                  alt="Quality"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- 3. Consultation 詳細預約區塊 --- */}
+        <section className="w-full py-24 px-6 md:px-12 lg:px-20 bg-white font-sans overflow-hidden border-t border-gray-100 mt-1 rounded-[6px]  ">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="flex justify-between items-end mb-16 border-b border-gray-200 pb-6">
+              <h2 className="text-5xl md:text-[64px] font-serif text-[#333333] tracking-tight">
+                Consultation
+              </h2>
+              <span className="text-sm font-bold text-gray-700 tracking-widest mb-2">
+                專業營養諮詢
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+              <div className="lg:col-span-5 lg:pr-8 pt-4">
+                <p className="text-gray-800 leading-[2.2] mb-8 font-medium text-[16px] md:text-[18px]">
+                  我們相信，健康是一種生活方式。為了幫助您找到最適合的營養補給，UFLOW
+                  提供專業的一對一健康諮詢服務。
+                </p>
+                <p className="text-gray-600 leading-[2.2] text-[16px] md:text-[18px]">
+                  每個人的體質與生活習慣都不相同，透過深入的了解與評估，我們能為您量身打造專屬的日常保健計畫，讓健康變得更簡單。
+                </p>
+              </div>
+
+              <div className="lg:col-span-7 flex flex-col mt-8 lg:mt-0 relative">
+                <div className="hidden md:block absolute right-[-20px] lg:right-[-60px] top-[45%] -translate-y-1/2 w-64 h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden shadow-lg border-[6px] border-white z-20">
+                  <Image
+                    src="/images/DSCF7850.jpg"
+                    fill
+                    className="object-cover"
+                    alt="Consultation"
+                  />
+                </div>
+
+                <div className="bg-[#f2f6f7] p-8 md:p-12 lg:p-16 relative flex-1 z-10 rounded-t-sm">
+                  <div className="relative z-20 w-full md:max-w-[65%] lg:max-w-[70%]">
+                    <div className="text-center mb-10 relative">
+                      <span className="bg-[#f2f6f7] px-4 text-[11px] font-bold tracking-widest text-gray-800 relative z-10 uppercase">
+                        Nutrition Plan
+                      </span>
+                      <div className="absolute top-1/2 left-0 w-full border-t border-dotted border-gray-400 z-0"></div>
+                    </div>
+
+                    <div className="inline-block bg-[#f57d7d] text-white text-sm font-bold px-6 py-2.5 rounded-full mb-8 tracking-widest">
+                      一對一諮詢
+                    </div>
+
+                    <h3 className="text-lg md:text-[22px] font-bold text-gray-900 leading-[1.8] mb-12">
+                      <span className="border-b-[1.5px] border-gray-800 pb-1">
+                        由專業營養師為您評估
+                      </span>
+                      <br />
+                      <span className="border-b-[1.5px] border-gray-800 pb-1 inline-block mt-3">
+                        並建議專屬保健方案。
+                      </span>
+                    </h3>
+
+                    <div className="flex flex-col mb-10">
+                      <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
+                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
+                          諮詢費用
+                        </span>
+                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
+                          免費
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
+                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
+                          預計時間
+                        </span>
+                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
+                          約 15 - 30 分鐘
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-5 border-t border-b border-dotted border-gray-400">
+                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider leading-relaxed">
+                          個人生活習慣評估・
+                          <br />
+                          飲食建議與保健規劃
+                        </span>
+                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
+                          完整提供
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] md:text-[11px] text-gray-500 leading-[1.8] tracking-wider">
+                      <p>
+                        ※
+                        我們的專業營養師團隊將透過線上客服系統為您提供即時建議。
+                      </p>
+                      <p>
+                        ※ 若您有特殊疾病或正在服用藥物，建議先諮詢您的主治醫師。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full bg-[#f5a49f] hover:bg-[#f87777] transition-colors duration-300 py-6 md:py-8 px-8 md:px-12 flex justify-between items-center group rounded-b-sm relative z-20 ">
+                  <span className="text-gray-900 font-bold text-lg tracking-widest">
+                    立即預約諮詢
+                  </span>
+                  <div className="w-7 h-7 rounded-full bg-[#3b3f42] flex items-center justify-center text-white group-hover:translate-x-2 transition-transform duration-300">
+                    <ArrowRight size={14} strokeWidth={3} />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

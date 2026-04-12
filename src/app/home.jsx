@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import dynamic from "next/dynamic";
+
 import TestimonialsSection from "@/components/TestimonialsSection";
 const FeatureCarousel = dynamic(
   () => import("../components/EmblaCarouselTravel/index"),
@@ -143,7 +144,7 @@ export default function Home({ faqs = [] }) {
 
   return (
     <ReactLenis root>
-      <div className="w-screen " ref={containerRef}>
+      <div className="w-screen   " ref={containerRef}>
         {/* ✅ 右下角懸浮廣告影片區塊 */}
         <AnimatePresence>
           {showModal && (

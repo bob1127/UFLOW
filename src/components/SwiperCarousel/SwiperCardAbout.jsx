@@ -115,7 +115,7 @@ export default function SwiperCardAbout({
          * 2. 加入 md:aspect-[1920/700] (桌機版依照 1920x700 比例)
          * 3. 手機版維持 aspect-[4/3] 或是 aspect-square，以免手機上看圖片變太細長
          */
-        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/800] overflow-hidden"
+        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/849] overflow-hidden"
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
@@ -126,7 +126,7 @@ export default function SwiperCardAbout({
             referrerPolicy="no-referrer"
           />
         </SwiperSlide>
-         <SwiperSlide className="overflow-hidden group relative duration-1000">
+        <SwiperSlide className="overflow-hidden group relative duration-1000">
           <img
             src="/images/鎂鎂香蜂草/節奏管理，不必等臨界線失控--.png"
             className="absolute inset-0 h-full w-full object-cover"
@@ -142,7 +142,6 @@ export default function SwiperCardAbout({
             referrerPolicy="no-referrer"
           />
         </SwiperSlide>
-     
       </Swiper>
     </div>
   );

@@ -428,7 +428,7 @@ export default function App() {
       */}
       <header
         className={`sticky top-0 z-[1000] w-full bg-white transition-shadow duration-300 ${
-          isScrolled ? "shadow-md" : "shadow-sm"
+          isScrolled ? " " : " "
         }`}
       >
         <div className="mx-auto flex w-full justify-between px-4 lg:px-8">

@@ -13,6 +13,7 @@ import Swiper from "../../components/SwiperCarousel/SwiperCardFood.jsx";
 import Image from "next/image";
 // import HoverCard from "../../components/HoverCardBuild/index";
 import gsap from "gsap";
+import MindCarouselBanner from "../../components/MindCarouselBanner.jsx";
 // import { PlaceholdersAndVanishInput } from "../../components/ui/placeholders-and-vanish-input.js";
 // import { useGSAP } from "@gsap/react";
 import { CustomEase } from "gsap/CustomEase";
@@ -41,6 +42,7 @@ const QaClient = () => {
   return (
     <>
       <main className="bg-[#EAEFF1] pt-20">
+        <MindCarouselBanner />
         {/* 上方大圖，稍微加個 padding 比較不會貼邊 */}
         <section className="px-4 lg:px-10">
           <div>
