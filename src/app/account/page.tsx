@@ -35,6 +35,7 @@ import {
   CreditCard,
   Calendar,
   Info,
+  Landmark,
 } from "lucide-react";
 
 /* ===================== Types (Account) ===================== */
@@ -62,6 +63,7 @@ type MembershipInfo = {
 
 type OrderItem = { name: string; quantity: number; total?: string };
 
+// ✅ 修正 Order 型別，加入 meta_data 屬性
 type Order = {
   id: number;
   number: string;
@@ -73,9 +75,11 @@ type Order = {
   payment_method_title?: string;
   payment_info?: {
     cvs_code?: string;
-    expire_date?: string;
     atm_account?: string;
+    bank_code?: string;
+    expire_date?: string;
   };
+  meta_data?: { key: string; value: any }[];
 };
 
 type ClaimKind = "upgrade" | "birthday";
@@ -164,7 +168,7 @@ function pickCouponCreatedAt(c: AvailableCoupon) {
   return Number.isFinite(t) ? t : 0;
 }
 
-/* ===================== UI Atoms (Shopify Style for Normal Tabs) ===================== */
+/* ===================== UI Atoms ===================== */
 function StatusPill({
   status,
   type = "order",
@@ -174,7 +178,6 @@ function StatusPill({
 }) {
   const s = String(status || "").toLowerCase();
 
-  // 1. 訂單狀態顏色
   if (type === "order") {
     let label = status;
     let tone = "bg-[#e4e5e7] text-[#202223] border-transparent";
@@ -209,7 +212,6 @@ function StatusPill({
     );
   }
 
-  // 2. 帳戶狀態顏色
   if (type === "account") {
     const isActive = s === "active" || s === "有效" || s === "正常";
     return (
@@ -232,7 +234,6 @@ function StatusPill({
     );
   }
 
-  // 3. 會員等級與權限標籤顏色
   const isGold = s.includes("金") || s.includes("gold");
   const isSilver = s.includes("銀") || s.includes("silver");
   const isAdmin = s.includes("管理") || s.includes("admin");
@@ -385,10 +386,7 @@ function MemberAnalytics({
   orders.forEach((o) => {
     const d = new Date(o.date_created);
     if (isNaN(d.getTime())) return;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (!monthLabels.includes(key)) monthLabels.push(key);
     monthTotalsMap[key] = (monthTotalsMap[key] || 0) + (o.total || 0);
   });
@@ -406,13 +404,11 @@ function MemberAnalytics({
   const productEntries = Object.entries(productMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
-
   const productLabels = productEntries.map(([name]) => name);
   const productQty = productEntries.map(([, q]) => q);
 
   return (
     <div className="mt-4 space-y-3">
-      {/* 6 個小指標卡片 */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">訂單數</div>
@@ -432,7 +428,6 @@ function MemberAnalytics({
             {orderCount === 0 ? "—" : formatNTD(avgAmount)}
           </div>
         </div>
-
         <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="text-[11px] text-slate-500">推薦註冊人數</div>
           <div className="mt-1 text-lg font-semibold text-amber-700">
@@ -452,8 +447,6 @@ function MemberAnalytics({
           </div>
         </div>
       </div>
-
-      {/* 2 個大圖表卡片 */}
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
@@ -479,7 +472,6 @@ function MemberAnalytics({
             </div>
           )}
         </div>
-
         <div className="rounded-lg border bg-white px-3 py-2 shadow-sm">
           <div className="mb-1 text-[11px] font-semibold text-slate-600">
             最常購買商品 TOP 5
@@ -506,13 +498,9 @@ function MemberAnalytics({
 /* ===================== Page ===================== */
 export default function AccountPage() {
   const router = useRouter();
-
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
-
-  // ================= 全域搜尋狀態 =================
   const [searchQuery, setSearchQuery] = useState("");
 
-  // account data
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -540,13 +528,9 @@ export default function AccountPage() {
     null,
   );
   const [claimedCode, setClaimedCode] = useState<string | null>(null);
-
   const [showAllReferralCoupons, setShowAllReferralCoupons] = useState(false);
 
-  // admin visibility
   const [isAdmin, setIsAdmin] = useState(false);
-
-  /* ===== Admin analytics state ===== */
   const [adminData, setAdminData] = useState<AdminCustomer[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
@@ -559,19 +543,15 @@ export default function AccountPage() {
   const [expandedOrders, setExpandedOrders] = useState<AdminOrder[]>([]);
   const [expandedOrdersLoading, setExpandedOrdersLoading] = useState(false);
   const [expandedOrdersError, setExpandedOrdersError] = useState("");
-
   const adminLoadedOnceRef = useRef(false);
 
-  // 生日相關 State
   const [birthdayInput, setBirthdayInput] = useState("");
   const [isSettingBirthday, setIsSettingBirthday] = useState(false);
   const [birthdayLoading, setBirthdayLoading] = useState(false);
 
-  // 生日自動彈窗 State
   const [showBirthdayModal, setShowBirthdayModal] = useState(false);
   const [modalBirthdayInput, setModalBirthdayInput] = useState("");
 
-  /* ===================== Loaders (Account) ===================== */
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -581,18 +561,14 @@ export default function AccountPage() {
         credentials: "include",
       });
       const data = await res.json();
-
       if (data?.loggedIn) {
         setLoggedIn(true);
         setCustomer(data.customer || {});
         setMembership(data.membership || null);
-
         const roles: string[] = Array.isArray(data?.customer?.roles)
           ? data.customer.roles
           : [];
         const role: string = String(data?.customer?.role || "");
-
-        // 強化身分判斷：確保中英文皆能判斷為管理員
         const adminFlag =
           Boolean(data?.customer?.isAdmin) ||
           Boolean(data?.isAdmin) ||
@@ -602,9 +578,6 @@ export default function AccountPage() {
           role === "administrator" ||
           role === "admin" ||
           role === "網站管理員";
-
-        // 💡 如果你的 API 一直抓不到權限，可以暫時解開下一行註解來強制開啟管理員介面測試：
-        // setIsAdmin(true);
         setIsAdmin(adminFlag);
       } else {
         setLoggedIn(false);
@@ -661,11 +634,9 @@ export default function AccountPage() {
         credentials: "include",
       });
       const data = await res.json();
-      if (res.ok && data?.ok && Array.isArray(data.available)) {
+      if (res.ok && data?.ok && Array.isArray(data.available))
         setAvailableCoupons(data.available);
-      } else {
-        setAvailableCoupons([]);
-      }
+      else setAvailableCoupons([]);
     } catch {
       setAvailableCoupons([]);
     } finally {
@@ -685,7 +656,6 @@ export default function AccountPage() {
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
 
-  // 登入載入完成後，若未設定生日自動彈出提醒
   useEffect(() => {
     if (!loading && loggedIn && customer && !customer.birthday) {
       const hasPrompted = sessionStorage.getItem("birthdayPrompted");
@@ -700,7 +670,6 @@ export default function AccountPage() {
     if (!birthdayInput) return alert("請選擇生日");
     if (!confirm(`您的生日是 ${birthdayInput} 嗎？\n確認後將無法再次修改。`))
       return;
-
     setBirthdayLoading(true);
     try {
       const res = await fetch("/api/account/profile", {
@@ -732,7 +701,6 @@ export default function AccountPage() {
       !confirm(`您的生日是 ${modalBirthdayInput} 嗎？\n確認後將無法再次修改。`)
     )
       return;
-
     setBirthdayLoading(true);
     try {
       const res = await fetch("/api/account/profile", {
@@ -791,7 +759,6 @@ export default function AccountPage() {
     }
   };
 
-  /* ===================== Derived Data ===================== */
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return orders;
     const q = searchQuery.toLowerCase();
@@ -872,14 +839,12 @@ export default function AccountPage() {
     return d.getMonth() === now.getMonth();
   }, [customer?.birthday]);
 
-  /* ===================== Admin Loaders ===================== */
   const loadAdminCustomers = useCallback(async () => {
     setAdminLoading(true);
     setAdminError("");
     try {
       const res = await fetch("/api/admin/customers", { cache: "no-store" });
       const js = await res.json();
-
       if (!res.ok || !js.ok) {
         setAdminData([]);
         setAdminError(
@@ -887,7 +852,6 @@ export default function AccountPage() {
         );
         return;
       }
-
       setAdminData(js.customers || []);
       adminLoadedOnceRef.current = true;
     } catch (e: any) {
@@ -904,12 +868,10 @@ export default function AccountPage() {
       setExpandedOrdersError("");
       return;
     }
-
     setExpandedId(customerId);
     setExpandedOrders([]);
     setExpandedOrdersError("");
     setExpandedOrdersLoading(true);
-
     try {
       const qs = new URLSearchParams({ customerId: String(customerId) });
       if (email) qs.set("email", email);
@@ -917,10 +879,8 @@ export default function AccountPage() {
         cache: "no-store",
       });
       const js = await res.json();
-
-      if (!res.ok || !js.ok) {
+      if (!res.ok || !js.ok)
         throw new Error(`(${res.status}) ${js?.message || "讀取訂單失敗"}`);
-      }
       setExpandedOrders(js.orders || []);
     } catch (e: any) {
       setExpandedOrders([]);
@@ -1012,7 +972,6 @@ export default function AccountPage() {
     );
   };
 
-  /* ===================== UI States ===================== */
   if (loading) {
     return (
       <div className="h-screen bg-[#f6f6f7] flex items-center justify-center">
@@ -1056,10 +1015,8 @@ export default function AccountPage() {
     return "搜尋優惠券代碼...";
   };
 
-  /* ===================== Main Layout ===================== */
   return (
     <div className="min-h-screen flex flex-col pt-20 mt-10 bg-[#f6f6f7] text-[#202223] font-sans">
-      {/* 頂部導航 (Top Bar) */}
       <header className="h-14 bg-[#1a1a1a] flex items-center justify-between px-4 shrink-0 z-10 border-b border-[#000]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
@@ -1101,9 +1058,7 @@ export default function AccountPage() {
         </div>
       </header>
 
-      {/* 下半部：側邊欄 + 主內容 */}
       <div className="flex flex-1 overflow-hidden">
-        {/* 左側側邊欄 (Sidebar) */}
         <aside className="w-60 bg-[#ebebeb] border-r border-[#d2d5d8] flex flex-col hidden md:flex shrink-0">
           <div className="p-3 flex flex-col gap-1">
             <SidebarItem
@@ -1143,7 +1098,6 @@ export default function AccountPage() {
                 setSearchQuery("");
               }}
             />
-
             {isAdmin && (
               <>
                 <div className="mt-4 mb-1 px-3 text-xs font-semibold text-[#6d7175]">
@@ -1161,7 +1115,6 @@ export default function AccountPage() {
               </>
             )}
           </div>
-
           <div className="mt-auto p-3 flex flex-col gap-1 border-t border-[#d2d5d8]">
             <SidebarItem
               label="合作洽談"
@@ -1180,9 +1133,7 @@ export default function AccountPage() {
           </div>
         </aside>
 
-        {/* 主內容區 (Main Content) */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 relative overflow-y-auto w-full">
-          {/* 行動版搜尋框 */}
           <div className="md:hidden mb-4 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8c9196] w-4 h-4" />
             <input
@@ -1195,7 +1146,6 @@ export default function AccountPage() {
           </div>
 
           <div className="max-w-[1200px] mx-auto flex flex-col gap-5 w-full">
-            {/* 🌟 頂部橫向 Tab 切換區 (Desktop & Mobile 均顯示) 🌟 */}
             <div className="flex border-b border-[#c9cccf] overflow-x-auto mb-2">
               <button
                 onClick={() => {
@@ -1237,7 +1187,6 @@ export default function AccountPage() {
               )}
             </div>
 
-            {/* 一般會員頁面區塊 (Profile & Orders) */}
             {activeTab !== "admin" && (
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1315,7 +1264,6 @@ export default function AccountPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                   <div className="lg:col-span-2 flex flex-col gap-5">
-                    {/* ===== Tab: Profile ===== */}
                     {activeTab === "profile" && (
                       <>
                         <ShellCard
@@ -1420,7 +1368,6 @@ export default function AccountPage() {
                       </>
                     )}
 
-                    {/* ===== Tab: Orders ===== */}
                     {activeTab === "orders" && (
                       <ShellCard
                         title={
@@ -1510,6 +1457,7 @@ export default function AccountPage() {
                                                 />{" "}
                                                 付款詳情
                                               </h4>
+
                                               {o.payment_info?.cvs_code ? (
                                                 <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
                                                   <p className="text-xs opacity-80 mb-1">
@@ -1534,11 +1482,56 @@ export default function AccountPage() {
                                                     <div className="flex items-center gap-2 text-xs">
                                                       <Calendar size={14} />{" "}
                                                       繳費期限:{" "}
-                                                      {
-                                                        o.payment_info
-                                                          .expire_date
-                                                      }
+                                                      {o.payment_info
+                                                        .expire_date ||
+                                                        "依綠界規定"}
                                                     </div>
+                                                  </div>
+                                                </div>
+                                              ) : o.payment_info
+                                                  ?.atm_account ? (
+                                                <div className="bg-indigo-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
+                                                  <div className="flex justify-between items-start mb-4">
+                                                    <div>
+                                                      <p className="text-xs opacity-80 mb-1">
+                                                        銀行代碼
+                                                      </p>
+                                                      <div className="text-xl font-bold tracking-wider flex items-center gap-2">
+                                                        <Landmark size={20} />
+                                                        {o.payment_info
+                                                          .bank_code ||
+                                                          "請見綠界通知信"}
+                                                      </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                      <p className="text-xs opacity-80 mb-1">
+                                                        繳費期限
+                                                      </p>
+                                                      <div className="text-sm font-medium flex items-center gap-1 justify-end">
+                                                        <Calendar size={14} />{" "}
+                                                        {o.payment_info
+                                                          .expire_date ||
+                                                          "依綠界規定"}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <p className="text-xs opacity-80 mb-1">
+                                                    ATM 專屬虛擬帳號
+                                                  </p>
+                                                  <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between bg-white/10 px-3 py-2 rounded-md">
+                                                    {o.payment_info.atm_account}
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigator.clipboard.writeText(
+                                                          o.payment_info!
+                                                            .atm_account!,
+                                                        );
+                                                      }}
+                                                      className="hover:scale-110 active:scale-95 transition-transform bg-white/20 p-1.5 rounded"
+                                                    >
+                                                      <Copy size={18} />
+                                                    </button>
                                                   </div>
                                                 </div>
                                               ) : (
@@ -1554,6 +1547,7 @@ export default function AccountPage() {
                                                 </div>
                                               )}
                                             </div>
+
                                             <div className="flex flex-col gap-4">
                                               <h4 className="font-bold text-[#202223] flex items-center gap-2">
                                                 <Info
@@ -1597,6 +1591,20 @@ export default function AccountPage() {
                                                     )}
                                                   </span>
                                                 </div>
+                                              </div>
+
+                                              {/* 🛠️ 系統偵錯區塊 (如果有找不到的欄位可以看這裡) */}
+                                              <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-48">
+                                                <div className="text-white mb-2 font-bold flex items-center gap-2">
+                                                  🛠️ 系統偵錯：尋找綠界隱藏欄位
+                                                </div>
+                                                <pre className="whitespace-pre-wrap leading-relaxed">
+                                                  {JSON.stringify(
+                                                    o.meta_data,
+                                                    null,
+                                                    2,
+                                                  )}
+                                                </pre>
                                               </div>
                                             </div>
                                           </div>
@@ -1774,7 +1782,6 @@ export default function AccountPage() {
                               刷新清單
                             </button>
                           </div>
-
                           {availableLoading ? (
                             <p className="text-xs text-[#6d7175]">讀取中...</p>
                           ) : filteredCoupons.length === 0 ? (
@@ -1818,7 +1825,6 @@ export default function AccountPage() {
               </>
             )}
 
-            {/* ======================= 管理員專用 UI ======================= */}
             {activeTab === "admin" && (
               <div className="w-full">
                 {!isAdmin && (
@@ -1886,13 +1892,11 @@ export default function AccountPage() {
                             載入中...
                           </p>
                         )}
-
                         {!adminLoading && adminError && (
                           <p className="text-sm text-rose-600 bg-rose-50 p-4 rounded-md border border-rose-200 shadow-sm">
                             <strong>請求拒絕</strong>：{adminError}
                           </p>
                         )}
-
                         {!adminLoading &&
                           !adminError &&
                           adminFiltered.length === 0 && (
@@ -1937,7 +1941,6 @@ export default function AccountPage() {
                                     </th>
                                   </tr>
                                 </thead>
-
                                 <tbody className="divide-y divide-[#ebebeb]">
                                   {adminFiltered.map((c) => (
                                     <Fragment key={c.id}>
@@ -1978,24 +1981,11 @@ export default function AccountPage() {
                                         </td>
                                         <td className="px-5 py-4 align-middle text-center">
                                           <span
-                                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-                                              c.tier.includes("VVIP")
-                                                ? "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm"
-                                                : c.tier.includes("UVIP")
-                                                  ? "bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm"
-                                                  : c.tier.includes("金")
-                                                    ? "bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
-                                                    : c.tier.includes("銀")
-                                                      ? "bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
-                                                      : c.tier.includes("銅")
-                                                        ? "bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
-                                                        : "bg-slate-50 text-slate-400 border border-slate-200"
-                                            }`}
+                                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${c.tier.includes("VVIP") ? "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm" : c.tier.includes("UVIP") ? "bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm" : c.tier.includes("金") ? "bg-amber-100 text-amber-700 border border-amber-200 shadow-sm" : c.tier.includes("銀") ? "bg-slate-100 text-slate-700 border border-slate-200 shadow-sm" : c.tier.includes("銅") ? "bg-orange-100 text-orange-700 border border-orange-200 shadow-sm" : "bg-slate-50 text-slate-400 border border-slate-200"}`}
                                           >
                                             {c.tier}
                                           </span>
                                         </td>
-
                                         <td className="px-5 py-4 align-middle text-center">
                                           <button
                                             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded shadow-sm transition-colors ${expandedId === c.id ? "bg-[#1a1a1a] text-white border-black" : "bg-white text-[#202223] border-[#c9cccf] hover:bg-[#f6f6f7] hover:border-[#8c9196]"}`}
@@ -2021,7 +2011,6 @@ export default function AccountPage() {
                                           </button>
                                         </td>
                                       </tr>
-
                                       {expandedId === c.id && (
                                         <tr className="bg-slate-50/60">
                                           <td
@@ -2037,12 +2026,10 @@ export default function AccountPage() {
                                                 {c.name || c.username}{" "}
                                                 的圖表分析與訂單資料
                                               </div>
-
                                               <MemberAnalytics
                                                 orders={expandedOrders}
                                                 customer={c}
                                               />
-
                                               <div className="mt-8 border-t border-[#ebebeb] pt-6">
                                                 <div className="font-bold text-[#202223] mb-4 text-base flex items-center gap-2">
                                                   <Package
@@ -2073,7 +2060,6 @@ export default function AccountPage() {
         </main>
       </div>
 
-      {/* 生日填寫自動彈窗 */}
       {showBirthdayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a]/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">

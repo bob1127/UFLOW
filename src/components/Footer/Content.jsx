@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+// 🚨 確保 Link 正確匯入
 import { Link } from "next-view-transitions";
 
 // ============================================================================
@@ -50,11 +51,6 @@ const Icons = {
       />
     </svg>
   ),
-  TikTok: (props) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
-      <path d="M9 0h1.98c.144.715.54 1.617 1.093 2.512C12.84 3.76 14.12 4.5 16 4v5.51c-.69.198-1.34.22-2 .07V9.7c-.52.05-1.04-.15-1.3-.53-.19-.27-.26-.62-.2-1v-5.6c-.03-2.06-1.35-3.8-3.3-4.37C7.4 1.5 5.25 2.5 4 4.37c-.77 1.15-1.18 2.5-1.19 3.9 0 4.42 3.58 8 8 8 2.15 0 4.1-.85 5.54-2.22l.3-.32V18c-1.6 1.4-3.7 2.25-5.84 2.25-5.1 0-9.25-4.14-9.25-9.25C1.75 5.86 5.9 1.75 11 1.75c.67 0 1.33.07 1.98.2L13 0H9z" />
-    </svg>
-  ),
   Line: (props) => (
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
       <path d="M20.2 11.5c0-4.6-4.6-8.5-10.2-8.5S0 6.9 0 11.5c0 4.2 3.7 7.7 8.5 8.3v4.1c0 .5.5.7.8.4l4.5-4c2.8-.5 6.4-3 6.4-8.8zM6.5 13.5h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5s.5.2.5.5v2.5h1.5c.3 0 .5.2.5.5s-.2.5-.5.5zm4 0h-2c-.3 0-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v3c0 .3-.2.5-.5.5zm1.5-3.5c0-.3.2-.5.5-.5s.5.2.5.5v3c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3zm5.5 1.5c0 .3-.2.5-.5.5h-1.5v1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-3c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5v1h1.5c.3 0 .5.2.5.5z" />
@@ -77,15 +73,13 @@ const Icons = {
 };
 
 export default function Content() {
-  // 清除頁面轉場狀態的邏輯保持不變
+  // 清除頁面轉場狀態
   useEffect(() => {
     document.body.classList.remove("page-transition");
     sessionStorage.removeItem("transitioning");
   }, []);
 
   return (
-    // 修正：移除所有 bg-cover, bg-fixed, pt-[300px] 等視覺差屬性
-    // 改為標準的相對定位容器，背景純色，自然堆疊
     <div className="relative w-full bg-[#EDEEEF] text-slate-800">
       <Section2 />
       <ShareWidget />
@@ -100,25 +94,20 @@ const Section2 = () => {
   return (
     <footer className="w-full bg-[#EDEEEF] pt-16 pb-32 lg:pt-24 lg:pb-32 px-6 sm:px-10 lg:px-20 xl:px-32">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-        {/* === 左側：連結導覽區 (佔 8 欄) === */}
+        {/* === 左側：連結導覽區 === */}
         <div className="lg:col-span-8 flex flex-col gap-12 border-b border-slate-300 lg:border-none pb-10 lg:pb-0">
-          {/* Section 1: BRAND SITE */}
           <FooterSection
             title="BRAND SITE"
             links={[
               { label: "首頁", href: "/" },
               { label: "關於 UFLOW", href: "/about" },
-
-              { label: "公司情報", href: "/company" },
-
-              { label: "聯絡我們", href: "/cooperate" },
-
+              { label: "檢驗認證｜公司情報", href: "/inspection" },
+              { label: "聯絡我們", href: "/contact" },
               { label: "網站使用條款", href: "/terms-of-use" },
               { label: "隱私權政策", href: "/privacy" },
             ]}
           />
 
-          {/* Section 2: OFFICIAL ONLINE SHOP */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
           <FooterSection
             title="OFFICIAL ONLINE SHOP"
@@ -129,9 +118,6 @@ const Section2 = () => {
             ]}
           />
 
-          {/* Section 3: ACTIVITY LOGOS */}
-          <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
-          {/* Section 3: HEALTHY UFLOW (已修改為保健食品相關) */}
           <div className="border-t border-slate-300 w-full opacity-60 my-2 lg:hidden"></div>
           <FooterSection
             title="HEALTHY UFLOW - 保健小知識"
@@ -176,34 +162,37 @@ const Section2 = () => {
           />
         </div>
 
-        {/* === 右側：SNS 與 APP (佔 4 欄) === */}
+        {/* === 右側：SNS 與 APP === */}
         <div className="lg:col-span-4 flex flex-col items-start lg:items-center pt-4 lg:pt-0 lg:border-l lg:border-slate-300 lg:pl-10">
-          {/* OFFICIAL SNS */}
           <div className="mb-12 text-center w-full">
             <h3 className="font-serif text-[15px] font-bold tracking-widest text-slate-800 mb-6 uppercase">
               Official SNS
             </h3>
             <div className="flex justify-center gap-6 sm:gap-8">
-              <SocialIcon icon={Icons.Instagram} label="Instagram" />
-
-              <SocialIcon icon={Icons.Facebook} label="Facebook" />
-              <SocialIcon icon={Icons.YouTube} label="YouTube" />
+              {/* 🌟 補上真實的連結 href */}
+              <SocialIcon
+                href="https://www.instagram.com/uflow"
+                icon={Icons.Instagram}
+                label="Instagram"
+              />
+              <SocialIcon
+                href="https://www.facebook.com/uflow"
+                icon={Icons.Facebook}
+                label="Facebook"
+              />
+              <SocialIcon
+                href="https://www.youtube.com/@uflow"
+                icon={Icons.YouTube}
+                label="YouTube"
+              />
             </div>
           </div>
 
-          {/* LOGOS FAMILY APP */}
           <div className="mb-12 text-center w-full">
             <h3 className="font-serif text-[15px] font-bold tracking-widest text-slate-800 mb-4 uppercase">
               UFLOW FAMILY APP
             </h3>
-            {/* <div className="flex justify-center items-center gap-6 text-sm font-bold text-slate-700">
-               <span className="cursor-pointer hover:text-slate-500 transition-colors">iOS</span>
-               <span className="h-4 w-[1px] bg-slate-400"></span>
-               <span className="cursor-pointer hover:text-slate-500 transition-colors">Android</span>
-            </div> */}
           </div>
-
-          {/* English */}
         </div>
       </div>
 
@@ -215,7 +204,7 @@ const Section2 = () => {
       <div className="mt-4 text-center text-[13px] text-slate-500 tracking-wider">
         Design By{" "}
         <Link
-          className="font-bold  hover:text-stone-900"
+          className="font-bold hover:text-stone-900"
           href="https://www.jeek-webdesign.com.tw"
           target="_blank"
         >
@@ -230,50 +219,55 @@ const Section2 = () => {
 // Helper Components
 // ============================================================================
 
-/** 連結區塊組件 */
+/** 🌟 SEO 優化：改用 <nav> 標籤 */
 function FooterSection({ title, links }) {
   return (
     <div className="w-full">
       <h3 className="font-serif text-[15px] font-bold tracking-widest text-slate-800 mb-4 uppercase">
         {title}
       </h3>
-      <div className="flex flex-wrap gap-x-0 gap-y-2 text-[11px] sm:text-[12px] font-medium text-slate-600 leading-relaxed">
+      <nav className="flex flex-wrap gap-x-0 gap-y-2 text-[11px] sm:text-[12px] font-medium text-slate-600 leading-relaxed">
         {links.map((link, idx) => (
           <React.Fragment key={link.href + idx}>
             <Link
               href={link.href}
-              target="_blank"
+              target={link.href.startsWith("http") ? "_blank" : "_self"}
               className="hover:text-black transition-colors px-2 first:pl-0"
             >
               {link.label}
             </Link>
-            {/* 分隔線：不是最後一個時顯示 */}
             {idx !== links.length - 1 && (
               <span className="text-slate-300">|</span>
             )}
           </React.Fragment>
         ))}
-      </div>
+      </nav>
     </div>
   );
 }
 
-/** SNS Icon 組件 */
-function SocialIcon({ icon: Icon, label }) {
+/** 🌟 a11y 優化：改用 <a> 標籤並加上 aria-label */
+function SocialIcon({ icon: Icon, label, href }) {
   return (
-    <div className="flex flex-col items-center gap-2 group cursor-pointer">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`前往 UFLOW 的 ${label}`}
+      className="flex flex-col items-center gap-2 group cursor-pointer"
+    >
       <div className="text-slate-800 group-hover:text-slate-500 transition-colors">
         <Icon width={24} height={24} />
       </div>
       <span className="text-[10px] font-medium text-slate-800 tracking-wide group-hover:text-slate-500 transition-colors">
         {label}
       </span>
-    </div>
+    </a>
   );
 }
 
 // ============================================================================
-// Share Widget (互動式分享條)
+// Share Widget (真實分享邏輯)
 // ============================================================================
 function ShareWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -288,6 +282,32 @@ function ShareWidget() {
     return () => window.removeEventListener("click", handleClick);
   }, [isOpen]);
 
+  // 實作真實分享邏輯
+  const handleShare = (platform) => {
+    const currentUrl = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent("來看看 UFLOW 專業保健食品！");
+
+    if (platform === "facebook")
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`,
+        "_blank",
+      );
+    if (platform === "line")
+      window.open(
+        `https://line.me/R/msg/text/?${text}%0D%0A${currentUrl}`,
+        "_blank",
+      );
+    if (platform === "x")
+      window.open(
+        `https://twitter.com/intent/tweet?url=${currentUrl}&text=${text}`,
+        "_blank",
+      );
+    if (platform === "mail")
+      window.location.href = `mailto:?subject=${text}&body=${currentUrl}`;
+
+    setIsOpen(false);
+  };
+
   return (
     <div
       id="share-widget-container"
@@ -295,7 +315,6 @@ function ShareWidget() {
     >
       <AnimatePresence mode="wait">
         {!isOpen ? (
-          // --- 狀態 A: 懸浮按鈕 (Share +) ---
           <motion.div
             key="share-button"
             className="pointer-events-auto pb-6"
@@ -309,7 +328,6 @@ function ShareWidget() {
                 e.stopPropagation();
                 setIsOpen(true);
               }}
-              // 樣式修正：確保陰影與毛玻璃質感
               className="flex items-center gap-2 bg-[#EBEBEB]/90 border border-white/50 backdrop-blur-md px-6 py-2.5 rounded-full hover:bg-white hover:scale-105 transition-all duration-300 group"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
             >
@@ -324,49 +342,46 @@ function ShareWidget() {
             </button>
           </motion.div>
         ) : (
-          // --- 狀態 B: 展開的全寬色塊條 (帶陰影) ---
           <motion.div
             key="share-bar"
             className="pointer-events-auto w-full h-[60px] md:h-[70px] grid grid-cols-4"
-            style={{ boxShadow: "0 -4px 30px rgba(0,0,0,0.15)" }} // 添加頂部陰影
+            style={{ boxShadow: "0 -4px 30px rgba(0,0,0,0.15)" }}
             initial={{ y: "100%" }}
             animate={{ y: "0%" }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 1. X (Twitter) */}
             <ShareBlock
               bg="bg-[#2C9BE5]"
               icon={<Icons.X width={28} height={28} className="text-white" />}
-              onClick={() => console.log("Share X")}
+              ariaLabel="分享至 X (Twitter)"
+              onClick={() => handleShare("x")}
             />
-
-            {/* 2. LINE */}
             <ShareBlock
               bg="bg-[#00B900]"
               icon={
                 <Icons.Line width={28} height={28} className="text-white" />
               }
-              onClick={() => console.log("Share Line")}
+              ariaLabel="分享至 LINE"
+              onClick={() => handleShare("line")}
             />
-
-            {/* 3. Facebook */}
             <ShareBlock
               bg="bg-[#3B5998]"
               icon={
                 <Icons.Facebook width={28} height={28} className="text-white" />
               }
-              onClick={() => console.log("Share FB")}
+              ariaLabel="分享至 Facebook"
+              onClick={() => handleShare("facebook")}
             />
-
-            {/* 4. Mail (點擊後關閉/或分享) */}
-            <div
-              className="relative bg-[#E04F3F] flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95"
-              onClick={() => setIsOpen(false)}
-            >
-              <Icons.Mail width={28} height={28} className="text-white" />
-            </div>
+            <ShareBlock
+              bg="bg-[#E04F3F]"
+              icon={
+                <Icons.Mail width={28} height={28} className="text-white" />
+              }
+              ariaLabel="透過 Email 分享"
+              onClick={() => handleShare("mail")}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -374,14 +389,15 @@ function ShareWidget() {
   );
 }
 
-/** 分享條的單個色塊 */
-function ShareBlock({ bg, icon, onClick }) {
+/** 🌟 改為 button 標籤並加上 aria-label */
+function ShareBlock({ bg, icon, onClick, ariaLabel }) {
   return (
-    <div
-      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95`}
+    <button
+      aria-label={ariaLabel}
+      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95 w-full h-full border-none`}
       onClick={onClick}
     >
       {icon}
-    </div>
+    </button>
   );
 }

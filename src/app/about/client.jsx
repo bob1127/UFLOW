@@ -14,7 +14,7 @@ import { CustomEase } from "gsap/CustomEase";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import React, { useRef, useEffect } from "react";
-
+import { ReactLenis } from "@studio-freight/react-lenis";
 // 動畫設定
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },

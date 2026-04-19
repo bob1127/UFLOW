@@ -22,6 +22,24 @@ export default function HomeClient({ posts }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 🚀 【圖片萃取邏輯】獨立抽出來，不影響排版
+  const getCleanImageUrl = (post) => {
+    const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
+    let rawUrl =
+      post.jetpack_featured_media_url ||
+      featuredMedia?.media_details?.sizes?.large?.source_url ||
+      featuredMedia?.media_details?.sizes?.full?.source_url ||
+      featuredMedia?.source_url;
+
+    if (!rawUrl && post.content?.rendered) {
+      const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
+      if (imgMatch && imgMatch[1]) {
+        rawUrl = imgMatch[1];
+      }
+    }
+    return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
+  };
+
   return (
     <ReactLenis
       root
@@ -53,39 +71,8 @@ export default function HomeClient({ posts }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {posts && posts.length > 0 ? (
-              posts.map((post) => {
-                // 🚀 【終極防彈版圖片萃取 3.0】 🚀
-                const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-
-                // 步驟 1：先嘗試抓取正規的精選圖片
-                let rawUrl =
-                  post.jetpack_featured_media_url ||
-                  featuredMedia?.media_details?.sizes?.large?.source_url ||
-                  featuredMedia?.media_details?.sizes?.full?.source_url ||
-                  featuredMedia?.source_url;
-
-                // 步驟 2：【內容萃取術】如果沒有精選圖片，就去文章 HTML 內容裡面挖第一張圖！
-                if (!rawUrl && post.content?.rendered) {
-                  const imgMatch = post.content.rendered.match(
-                    /<img[^>]+src="([^">]+)"/,
-                  );
-                  if (imgMatch && imgMatch[1]) {
-                    rawUrl = imgMatch[1];
-                  }
-                }
-
-                // 步驟 3：【淨化網址】移除 Jetpack 搞鬼的參數 (?fit=...&ssl=1)，保留乾淨原圖
-                let imageUrl = "/images/logo/uflow.png"; // 預設底線
-                if (rawUrl) {
-                  imageUrl = rawUrl.split("?")[0]; // 把問號後面的東西全部切掉
-                }
-
-                console.log(
-                  `✅ [${post.title.rendered}] 最終乾淨網址:`,
-                  imageUrl,
-                );
-
-                // 處理日期與摘要...
+              posts.map((post, idx) => {
+                const imageUrl = getCleanImageUrl(post);
                 const date = new Date(post.date).toLocaleDateString("zh-TW");
                 const rawExcerpt = post.excerpt?.rendered || "";
                 const cleanExcerpt =
@@ -105,6 +92,7 @@ export default function HomeClient({ posts }) {
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          priority={idx < 4} // SEO優化：前四張圖片優先載入，不影響視覺
                         />
                       </div>
                       <div className="card-conetent group px-5 py-3 flex flex-col flex-1">

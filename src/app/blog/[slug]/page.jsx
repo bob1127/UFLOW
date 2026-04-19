@@ -133,7 +133,7 @@ export default async function BlogPostPage({ params }) {
   };
 
   return (
-    <article className="bg-[#FAF9F7] min-h-screen pt-24 pb-32 font-sans text-slate-800 selection:bg-[#f58a9c] selection:text-white">
+    <article className="bg-[#FAF9F7] mt-5 sm:mt-20 min-h-screen pt-24 pb-32 font-sans text-slate-800 selection:bg-[#f58a9c] selection:text-white">
       {/* 注入 SEO 結構化資料 */}
       <div style={{ display: "none" }} aria-hidden="true">
         <script

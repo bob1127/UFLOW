@@ -230,13 +230,8 @@ export default function TermsPage() {
   const currentTabContent = INSPECTION_DATA.find((tab) => tab.id === activeTab);
 
   return (
-    <div className="pt-20 bg-gray-50 min-h-screen">
+    <div className="pt-20 mt-20 bg-gray-50 min-h-screen">
       {/* 上方 Banner (維持電腦版顯示) */}
-      <section className="bg-white w-full   min-h-[100vh] pt-32 relative overflow-hidden  ">
-        <div className="absolute w-[90%] max-w-[1750px] right-[-7%] xl:right-[0%] top-1/2 z-20 -translate-y-1/2">
-          <TestimonialsSection />
-        </div>
-      </section>
 
       {/* 主要內容區域 */}
       <section className="mx-auto max-w-[1400px] px-4 md:px-8 pb-20 pt-10 md:pt-0">

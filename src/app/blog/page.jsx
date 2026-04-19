@@ -1,52 +1,57 @@
-// app/page.js
-import HomeClient from "./ProjectListClient"; // 確保路徑與你的檔名相符
+import HomeClient from "./ProjectListClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
+
+// 🏆 核心設定：開啟 ISR 模式，每小時自動在背景重新生成頁面
+export const revalidate = 3600;
 
 export const metadata = {
   title:
     "保健知識與健康生活方式 | UFLOW 慶安有福保健食品 ｜ 照顧您生活健康，多種保健產品",
-  description: "探索保健知識與健康生活方式",
+  description:
+    "探索由 UFLOW 專業營養團隊撰寫的保健知識，包含益生菌、穀胱甘肽、GABA 等專業營養補充指南。",
+  alternates: {
+    canonical: `${SITE_URL}/blog`,
+  },
 };
 
-// 這是伺服器端抓取邏輯
 async function getPosts() {
-  const apiUrl =
+  const rawBase =
     process.env.WORDPRESS_API_URL ||
     "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+  const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
+  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=10`;
 
-  if (!apiUrl) {
-    console.error("❌ 錯誤：找不到環境變數 WORDPRESS_API_URL");
-    return [];
-  }
+  console.log(`🌐 [ISR 生成中] 正在抓取數據以建立靜態頁面: ${fetchUrl}`);
 
   try {
-    const res = await fetch(`${apiUrl}/posts?_embed&per_page=10`, {
+    const res = await fetch(fetchUrl, {
+      // 這裡不寫 cache: "no-store"，改用 next.revalidate 讓它變成 ISR
       next: { revalidate: 3600 },
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         Accept: "application/json",
       },
     });
 
     if (!res.ok) {
-      console.error(`❌ Fetch 失敗，狀態碼: ${res.status}`);
+      console.error(`❌ WP API 響應錯誤: ${res.status}`);
       return [];
     }
 
     const posts = await res.json();
-    return posts;
+    return Array.isArray(posts) ? posts : [];
   } catch (error) {
-    console.error("❌ 抓取過程發生嚴重錯誤:", error);
+    console.error("❌ ISR 抓取失敗，將回傳上次快取的內容:", error);
     return [];
   }
 }
 
-export default async function Page() {
+export default async function BlogPage() {
   const posts = await getPosts();
 
-  // ===================== 👑 動態產生 Blog 列表的結構化資料 =====================
+  // ===================== 👑 SEO 結構化資料 (JSON-LD) =====================
   const schemaGraph = {
     "@context": "https://schema.org",
     "@graph": [
@@ -55,70 +60,40 @@ export default async function Page() {
         "@id": `${SITE_URL}/blog/#webpage`,
         url: `${SITE_URL}/blog`,
         name: "UFLOW 保健知識與營養專欄",
-        description:
-          "專業營養師與健康專家撰寫的保健食品知識、日常營養補充指南。",
+        description: "由專業營養師撰寫的保健知識、日常營養補充指南。",
+        publisher: {
+          "@type": "Organization",
+          name: "UFLOW 慶安有福",
+          logo: {
+            "@type": "ImageObject",
+            url: `${SITE_URL}/images/logo/uflow.png`,
+          },
+        },
         inLanguage: "zh-TW",
       },
       {
         "@type": "Blog",
         "@id": `${SITE_URL}/blog/#blog`,
-        name: "UFLOW 保健知識",
-        // 動態將抓到的 WP 文章 Mapping 成 Google 規定的 BlogPosting 格式
-        blogPost: posts.map((post) => {
-          const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-          const imgUrl =
-            featuredMedia?.media_details?.sizes?.large?.source_url ||
-            featuredMedia?.source_url ||
-            `${SITE_URL}/images/logo/uflow.png`;
-
-          return {
-            "@type": "BlogPosting",
-            "@id": `${SITE_URL}/blog/${post.slug}/#article`,
-            url: `${SITE_URL}/blog/${post.slug}`,
-            headline: post.title.rendered,
-            image: imgUrl,
-            datePublished: new Date(post.date).toISOString(),
-            dateModified: new Date(post.modified).toISOString(),
-            author: {
-              "@type": "Organization",
-              name: "UFLOW 專業營養團隊",
-              url: SITE_URL,
-            },
-            publisher: {
-              "@type": "Organization",
-              name: "UFLOW",
-              logo: {
-                "@type": "ImageObject",
-                url: `${SITE_URL}/images/logo/uflow.png`,
-              },
-            },
-            description: post.excerpt?.rendered
-              .replace(/<[^>]+>/g, "")
-              .substring(0, 150),
-            mainEntityOfPage: {
-              "@type": "WebPage",
-              "@id": `${SITE_URL}/blog/${post.slug}`,
-            },
-            about: {
-              "@type": "Thing",
-              name: "保健食品與營養知識",
-            },
-          };
-        }),
+        name: "UFLOW 健康生活 Blog",
+        blogPost: posts.map((post) => ({
+          "@type": "BlogPosting",
+          headline: post.title.rendered,
+          image:
+            post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+            `${SITE_URL}/images/logo/uflow.png`,
+          datePublished: new Date(post.date).toISOString(),
+          url: `${SITE_URL}/blog/${post.slug}`,
+        })),
       },
     ],
   };
 
   return (
     <main>
-      {/* 注入 SEO 結構化資料 (隱藏在背景給爬蟲看) */}
-      <div style={{ display: "none" }} aria-hidden="true">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
-        />
-      </div>
-
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
+      />
       <HomeClient posts={posts} />
     </main>
   );

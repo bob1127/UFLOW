@@ -47,18 +47,18 @@ export default function ContactPage() {
       <section className="py-20 px-6">
         <div className="max-w-[1000px] mx-auto">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
-            <h1 className="text-4xl mx-auto text-center md:text-5xl font-black tracking-widest mb-4">
+            <h1 className="text-4xl text-stone-700 mx-auto text-center md:text-5xl font-black tracking-widest mb-4">
               聯絡我們
             </h1>
           </motion.div>
           <div className="text-center mb-16">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center justify-center gap-3 text-[#0B1528]">
-              <MessageSquare className="text-blue-600" /> CONTACT FORM
+            <h2 className="text-xl md:text-2xl font-bold flex items-center justify-center gap-3 text-stone-700">
+              CONTACT FORM
             </h2>
-            <p className="mt-6 text-xl font-bold tracking-widest">
+            <p className="mt-6 text-xl text-stone-700 font-bold tracking-widest">
               線上諮詢表單
             </p>
-            <p className="text-gray-500 mt-4 text-sm tracking-wider">
+            <p className="text-stone-700 mt-4 text-sm tracking-wider">
               請填寫以下必填資訊，確認無誤後點擊「確認送出」。
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function ContactPage() {
               <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-8">
                 <CheckCircle size={48} />
               </div>
-              <h3 className="text-3xl font-bold text-[#0B1528] mb-4 tracking-widest">
+              <h3 className="text-3xl font-bold text-[#2e2e2e] mb-4 tracking-widest">
                 訊息已成功送出
               </h3>
               <p className="text-gray-500 mb-10 leading-relaxed">
@@ -82,7 +82,7 @@ export default function ContactPage() {
               </p>
               <button
                 onClick={() => setFormState("idle")}
-                className="px-10 py-4 bg-[#0B1528] text-white rounded-full font-bold tracking-widest hover:bg-blue-700 transition duration-300"
+                className="px-10 py-4 bg-[#2e2e2e] text-white rounded-full font-bold tracking-widest hover:bg-blue-700 transition duration-300"
               >
                 返回表單
               </button>
@@ -94,16 +94,16 @@ export default function ContactPage() {
               viewport={{ once: true, margin: "-100px" }}
               variants={staggerContainer}
               onSubmit={handleSubmit}
-              className="border-t-[3px] border-[#0B1528]"
+              className="border-t-[3px] border-[#2e2e2e]"
             >
               {/* 表單列：姓名 */}
               <motion.div
                 variants={fadeInUp}
                 className="flex flex-col md:flex-row border-b border-gray-200 py-6 md:py-8"
               >
-                <div className="w-full md:w-[280px] shrink-0 font-bold text-gray-800 flex items-center gap-3 mb-4 md:mb-0">
+                <div className="w-full md:w-[280px] shrink-0 font-bold text-stone-800 flex items-center gap-3 mb-4 md:mb-0">
                   姓名
-                  <span className="bg-[#0B1528] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
+                  <span className="bg-[#2e2e2e] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
                     必填
                   </span>
                 </div>
@@ -122,9 +122,9 @@ export default function ContactPage() {
                 variants={fadeInUp}
                 className="flex flex-col md:flex-row border-b border-gray-200 py-6 md:py-8"
               >
-                <div className="w-full md:w-[280px] shrink-0 font-bold text-gray-800 flex items-center gap-3 mb-4 md:mb-0">
+                <div className="w-full md:w-[280px] shrink-0 font-bold text-stone-800 flex items-center gap-3 mb-4 md:mb-0">
                   聯絡電話
-                  <span className="bg-[#0B1528] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
+                  <span className="bg-[#2e2e2e] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
                     必填
                   </span>
                 </div>
@@ -143,7 +143,7 @@ export default function ContactPage() {
                 variants={fadeInUp}
                 className="flex flex-col md:flex-row border-b border-gray-200 py-6 md:py-8"
               >
-                <div className="w-full md:w-[280px] shrink-0 font-bold text-gray-800 flex items-center gap-3 mb-4 md:mb-0">
+                <div className="w-full md:w-[280px] shrink-0 font-bold text-stone-800 flex items-center gap-3 mb-4 md:mb-0">
                   電子信箱
                 </div>
                 <div className="flex-1">
@@ -160,7 +160,7 @@ export default function ContactPage() {
                 variants={fadeInUp}
                 className="flex flex-col md:flex-row border-b border-gray-200 py-6 md:py-8"
               >
-                <div className="w-full md:w-[280px] shrink-0 font-bold text-gray-800 flex items-center gap-3 mb-4 md:mb-0">
+                <div className="w-full md:w-[280px] shrink-0 font-bold text-stone-800 flex items-center gap-3 mb-4 md:mb-0">
                   詢問主旨
                 </div>
                 <div className="flex-1">
@@ -179,9 +179,9 @@ export default function ContactPage() {
                 variants={fadeInUp}
                 className="flex flex-col md:flex-row border-b border-gray-200 py-6 md:py-8"
               >
-                <div className="w-full md:w-[280px] shrink-0 font-bold text-gray-800 flex items-start gap-3 mb-4 md:mb-0 pt-2">
+                <div className="w-full md:w-[280px] shrink-0 font-bold text-stone-800 flex items-start gap-3 mb-4 md:mb-0 pt-2">
                   訊息內容
-                  <span className="bg-[#0B1528] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
+                  <span className="bg-[#2e2e2e] text-white text-[11px] px-2 py-1 rounded-sm tracking-widest">
                     必填
                   </span>
                 </div>
@@ -204,7 +204,7 @@ export default function ContactPage() {
                   送出表單前，請確認您已了解並同意我們的
                   <a
                     href="/privacy"
-                    className="text-blue-600 underline underline-offset-4 mx-1 hover:text-[#0B1528]"
+                    className="text-blue-600 underline underline-offset-4 mx-1 hover:text-[#2e2e2e]"
                   >
                     隱私權政策
                   </a>
@@ -213,7 +213,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={formState === "submitting"}
-                  className="group relative overflow-hidden bg-[#0B1528] text-white font-bold tracking-widest text-lg px-16 py-5 rounded-full hover:bg-blue-700 transition-all duration-300 shadow-xl flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto"
+                  className="group relative overflow-hidden bg-[#F5A49F] text-white font-bold tracking-widest text-lg px-16 py-5 rounded-full hover:bg-[#c06762] transition-all duration-300 shadow-xl flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto"
                 >
                   {formState === "submitting" ? (
                     <>
@@ -241,7 +241,7 @@ export default function ContactPage() {
         {/* 浮動的 PAGE TOP 按鈕 */}
         <div
           onClick={scrollToTop}
-          className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 bg-white text-[#0B1528] flex flex-col items-center justify-center rounded-full shadow-lg cursor-pointer hover:-translate-y-2 transition-transform duration-300 z-10 group"
+          className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 bg-white text-[#2e2e2e] flex flex-col items-center justify-center rounded-full shadow-lg cursor-pointer hover:-translate-y-2 transition-transform duration-300 z-10 group"
         >
           <ChevronUp
             size={20}

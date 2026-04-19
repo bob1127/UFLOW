@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-// 強制宣告為動態路由，因為使用了 cookies()
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -19,27 +18,33 @@ function basicAuth() {
 }
 
 /**
- * 💡 新增：從 meta_data 中提取綠界或其他金流的支付資訊
+ * 💡 終極強化版：用模糊比對抓取綠界支付資訊，同時保留原始 meta_data
  */
 function extractPaymentDetails(metaData: any[]) {
   const info: any = {};
   if (!Array.isArray(metaData)) return undefined;
 
   metaData.forEach((item: any) => {
-    const key = String(item.key).toLowerCase();
-    const val = item.value;
+    // 防呆：確保 key 轉小寫方便比對
+    const key = String(item.key || "").toLowerCase();
+    // 防呆：有時候 value 會被外掛包成陣列，強制轉為字串
+    const val = Array.isArray(item.value) ? String(item.value[0]) : String(item.value || "");
 
-    // 匹配超商繳費代碼 (綠界常見 Key: _PaymentNo, _payment_no)
-    if (key.includes("payment_no") || key === "_paymentno") {
+    // 1. ATM 虛擬帳號 (攔截常見外掛命名)
+    if (key.includes("vaccount") || key.includes("virtual_account") || key.includes("atm_account")) {
+      info.atm_account = val;
+    }
+    // 2. ATM 銀行代碼
+    if (key.includes("bankcode") || key.includes("bank_code") || key.includes("atm_bank")) {
+      info.bank_code = val;
+    }
+    // 3. 超商繳費代碼
+    if (key.includes("paymentno") || key.includes("cvs_payment") || key.includes("cvscode")) {
       info.cvs_code = val;
     }
-    // 匹配繳費期限 (綠界常見 Key: _ExpireDate, _expire_date)
-    if (key.includes("expire_date") || key === "_expiredate") {
+    // 4. 繳費期限
+    if (key.includes("expiredate") || key.includes("expire_date") || key.includes("duedate")) {
       info.expire_date = val;
-    }
-    // 匹配 ATM 虛擬帳號
-    if (key.includes("vaccount") || key === "_atmbankcode") {
-      info.atm_account = val;
     }
   });
 
@@ -181,7 +186,7 @@ export async function GET() {
       }
     }
 
-    // 💡 關鍵修改：在回傳前，將支付方式標題與 meta_data 中的支付資訊提取出來
+    // 💡 回傳給前端
     const orders = (ordersRaw || []).map((o: any) => ({
       id: o.id,
       number: o.number,
@@ -189,14 +194,16 @@ export async function GET() {
       date_created: o.date_created,
       total: o.total,
       currency: o.currency,
-      // 新增：提取支付方式名稱（如：綠界科技 ECPay）
       payment_method_title: o.payment_method_title || "標準支付",
-      // 新增：掃描 meta_data 提取繳費代碼與期限
+      
+      // ✅ 執行超強模糊比對提取
       payment_info: extractPaymentDetails(o.meta_data || []),
+      // ✅ 原封不動保留完整 meta_data 給前端
+      meta_data: o.meta_data || [],
+
       line_items: (o.line_items || []).map((it: any) => ({
         name: it.name,
         quantity: it.quantity,
-        // 加入金額，讓前端展開時可以顯示品項小計
         total: it.total,
       })),
     }));

@@ -72,7 +72,7 @@ const TextParallaxContentExample = () => {
         {/* 第一段：產品 + 文案 (已修復 RWD 並改用背景圖) */}
         <section
           // ✨ 改用 CSS 背景圖片，設定 cover 與 center
-          className="relative w-full min-h-screen overflow-hidden flex flex-col justify-center items-center bg-[url('/images/鎂鎂香峰草-0331.jpg')] bg-cover bg-[center_top] lg:bg-center bg-no-repeat"
+          className="relative w-full min-h-screen   mt-20 overflow-hidden flex flex-col justify-center items-center bg-[url('/images/三種02.png')] bg-cover bg-[center_center] md:bg-[center_top] lg:bg-center bg-no-repeat"
         >
           {/* ✨ 新增：手機版專用黑色半透明遮罩，提升文字可讀性，電腦版隱藏 */}
           <div className="absolute inset-0 bg-black/60 lg:hidden z-0"></div>

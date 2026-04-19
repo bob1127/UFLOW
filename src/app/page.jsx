@@ -3,52 +3,53 @@ import Client from "./home";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
-// 🌟 首頁動態 FAQ 資料
+// 🌟 首頁動態 FAQ 資料 (融入品牌核心關鍵字，提升語意豐富度)
 const homeFAQs = [
   {
-    question: "UFLOW 的保健食品是哪裡製造的？",
+    question: "UFLOW 的保健食品與市售產品有何不同？",
     answer:
-      "我們的產品嚴選國際大廠專利原料，並在台灣符合 ISO22000 與 HACCP 規範的專業廠房製造，全系列產品皆通過第三方公正檢驗，確保安全無虞。",
+      "我們堅持「科學調配、足量攝取」與成分全透明。嚴選如微脂體穀胱甘肽、韓國 GABAEX、義大利速可包覆鎂、專利益萃質等國際大廠專利原料，拒絕無效添加，針對亞洲體質打造有感的健康輔助方案。",
   },
   {
-    question: "訂購後大約幾天可以收到商品？",
+    question: "產品是哪裡製造的？食用安全嗎？",
     answer:
-      "現貨商品一般於訂單確認後 1-3 個工作天內出貨（不含例假日），配送時間依物流狀況而定。全館單筆滿 NT$ 2,000 即享免運費優惠。",
+      "我們的產品皆在台灣符合 ISO22000 與 HACCP 規範的專業廠房製造，全系列產品皆通過第三方公正檢驗，不含西藥與重金屬，確保您每日食用安全無虞。",
   },
   {
-    question: "請問有提供退換貨服務嗎？",
+    question: "訂購後大約幾天可以收到商品？有退換貨服務嗎？",
     answer:
-      "有的，我們提供完善的售後服務。若收到商品發現包裝破損或內容有異，請於 7 日內聯繫 UFLOW 客服。若因個人因素申請退換貨，商品必須保持全新未拆封狀態。",
+      "現貨商品一般於訂單確認後 1-3 個工作天內出貨。全館單筆滿 NT$ 2,000 即享免運費。若收到商品包裝破損或內容有異，請於 7 日內聯繫 UFLOW 客服進行退換貨。",
   },
 ];
 
 export const metadata = {
-  title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
+  title: "UFLOW 慶安有福｜功能性保健食品｜肽晶芙蓉・GABA鎂鎂・維他菌合生元",
   description:
-    "UFLOW 專注於功能性保健食品與日常營養補給：益生菌、魚油、葉黃素、維生素 D3/K2、關節與睡眠配方等。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
+    "UFLOW 專注於功能性保健食品，堅持「國際原廠、專利足量」。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，全系列通過第三方檢驗，為您打造科學營養補給。",
   keywords: [
     "保健食品",
-    "營養補充品",
-    "益生菌",
-    "魚油",
-    "葉黃素",
-    "維生素D3",
-    "維生素K2",
-    "關節保健",
-    "睡眠保健",
-    "機能飲品",
-    "第三方檢驗",
+    "慶安有福",
     "UFLOW",
+    "肽晶芙蓉",
+    "微脂體穀胱甘肽",
+    "冰晶番茄",
+    "GABA鎂鎂香蜂草",
+    "專利GABA",
+    "速可包覆鎂",
+    "維他菌合生元",
+    "專利益生菌",
+    "益萃質",
+    "第三方檢驗",
   ],
   icons: { icon: "/images/logo/uflow.ico" },
   openGraph: {
     type: "website",
     locale: "zh_TW",
     url: SITE_URL,
-    siteName: "UFLOW",
-    title: "UFLOW｜功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
+    siteName: "UFLOW 慶安有福",
+    title: "UFLOW 慶安有福｜功能性保健食品｜專為亞洲體質研發",
     description:
-      "嚴選原料、無多餘添加，並通過第三方檢驗的功能性保健食品。從視力、腸道、關節到睡眠，UFLOW 讓日常補給更有效率。",
+      "堅持國際原廠、專利足量！從養顏美容(肽晶芙蓉)、日夜放鬆(GABA鎂鎂香蜂草)到消化道健康(維他菌合生元)，UFLOW 讓日常補給更科學、更有效率。",
     images: [
       {
         url: `${SITE_URL}/images/肽晶芙蓉/重返17歲の元氣-850.png`,
@@ -68,14 +69,16 @@ export default function Page() {
   const schemaGraph = {
     "@context": "https://schema.org",
     "@graph": [
+      // 1. 網站基礎資訊 (WebSite)
       {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         url: SITE_URL,
         name: "UFLOW",
-        alternateName: "UFLOW 保健食品",
+        alternateName: "UFLOW 慶安有福保健食品",
         description:
           "功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
+        publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "zh-TW",
         potentialAction: {
           "@type": "SearchAction",
@@ -86,10 +89,12 @@ export default function Page() {
           "query-input": "required name=search_term_string",
         },
       },
+      // 2. 公司/品牌實體 (Organization)
       {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
-        name: "UFLOW",
+        name: "慶安有福有限公司",
+        alternateName: "UFLOW",
         url: SITE_URL,
         logo: {
           "@type": "ImageObject",
@@ -97,10 +102,14 @@ export default function Page() {
         },
         image: `${SITE_URL}/images/logo/uflow.png`,
         description:
-          "UFLOW 專注於功能性保健食品與日常營養補給。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
+          "UFLOW 專注於功能性保健食品與日常營養補給。主打科學調配、足量攝取，嚴選國際大廠專利原料，全系列通過第三方檢驗。",
+        email: "uflowspace@gmail.com",
+        telephone: "+886-978-138-979",
         contactPoint: {
           "@type": "ContactPoint",
+          telephone: "+886-978-138-979",
           contactType: "customer service",
+          email: "uflowspace@gmail.com",
           areaServed: "TW",
           availableLanguage: ["Traditional Chinese", "English"],
         },
@@ -110,16 +119,18 @@ export default function Page() {
           "https://line.me/R/ti/p/@uflow",
         ],
       },
+      // 3. 網頁資訊 (WebPage)
       {
         "@type": "WebPage",
         "@id": `${SITE_URL}/#webpage`,
         url: SITE_URL,
-        name: "UFLOW｜功能性保健食品與營養補給",
+        name: "UFLOW｜科學足量保健食品",
         isPartOf: { "@id": `${SITE_URL}/#website` },
         about: { "@id": `${SITE_URL}/#organization` },
         description:
-          "UFLOW 專注於功能性保健食品與日常營養補給：益生菌、魚油、葉黃素、維生素 D3/K2、關節與睡眠配方等。嚴選原料、無多餘添加，並通過第三方檢驗，讓你補得安心、每日有感。",
+          "UFLOW 專注於功能性保健食品。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，讓你補得安心、每日有感。",
       },
+      // 4. 首頁常見問題 (FAQPage)
       {
         "@type": "FAQPage",
         "@id": `${SITE_URL}/#faq`,
@@ -131,6 +142,34 @@ export default function Page() {
             text: faq.answer,
           },
         })),
+      },
+      // 5. 焦點商品列表 (ItemList) - 將三大天王全部放入
+      {
+        "@type": "ItemList",
+        "@id": `${SITE_URL}/#collection`,
+        name: "UFLOW 主打科學專利保健食品",
+        description:
+          "為您推薦 UFLOW 最受歡迎的養顏美容、日夜調理與消化道健康食品。",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            url: `${SITE_URL}/products/肽晶芙蓉`,
+            name: "肽晶芙蓉",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            url: `${SITE_URL}/products/gaba鎂鎂香蜂草`,
+            name: "GABA 鎂鎂香蜂草",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            url: `${SITE_URL}/products/synbiotics`, // 若網址不同請自行修改 slug
+            name: "維他菌合生元",
+          },
+        ],
       },
     ],
   };
