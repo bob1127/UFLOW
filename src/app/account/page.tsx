@@ -1450,279 +1450,293 @@ export default function AccountPage() {
                           <p className="text-sm text-[#6d7175]">
                             載入訂單中...
                           </p>
-                        ) : filteredOrders.length === 0 ? (
-                          <div className="py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
-                            <p className="text-sm text-[#6d7175] mb-4">
-                              {searchQuery
-                                ? "找不到符合條件的訂單。"
-                                : "目前尚未有任何訂單紀錄。"}
-                            </p>
+                        ) : (
+                          <>
+                            {/* 💡 永遠顯示的 API 除錯黑盒子 */}
                             {ordersDebug && (
-                              <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-64 text-left mx-4">
-                                <div className="text-white mb-2 font-bold">
-                                  🛠️ 訂單 API 偵錯報告 (請截圖給工程師看)
+                              <div className="mb-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-64 text-left border border-emerald-900">
+                                <div className="text-white mb-2 font-bold flex justify-between">
+                                  <span>🛠️ API 搜尋軌跡偵錯報告</span>
                                 </div>
                                 <pre>
                                   {JSON.stringify(ordersDebug, null, 2)}
                                 </pre>
                               </div>
                             )}
-                          </div>
-                        ) : (
-                          <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
-                            <table className="w-full text-sm text-left whitespace-nowrap">
-                              <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
-                                <tr>
-                                  <th className="px-5 py-3 font-medium">
-                                    訂單號碼
-                                  </th>
-                                  <th className="px-5 py-3 font-medium">
-                                    下單日期
-                                  </th>
-                                  <th className="px-5 py-3 font-medium">
-                                    訂單狀態
-                                  </th>
-                                  <th className="px-5 py-3 font-medium text-right">
-                                    總金額
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-[#ebebeb]">
-                                {filteredOrders.map((o) => {
-                                  const parsedMeta = parseMetaDataForPayment(
-                                    o.meta_data || [],
-                                  );
-                                  const noteInfo = extractInfoFromNote(
-                                    o.customer_note || "",
-                                  );
-                                  const cvsCode =
-                                    parsedMeta.cvs_code ||
-                                    o.payment_info?.cvs_code ||
-                                    noteInfo?.cvs_code;
-                                  const atmAccount =
-                                    parsedMeta.atm_account ||
-                                    o.payment_info?.atm_account ||
-                                    noteInfo?.atm_account;
-                                  const bankCode =
-                                    parsedMeta.bank_code ||
-                                    o.payment_info?.bank_code ||
-                                    noteInfo?.bank_code;
-                                  const expireDate =
-                                    parsedMeta.expire_date ||
-                                    o.payment_info?.expire_date ||
-                                    noteInfo?.expire_date ||
-                                    "依綠界規定";
-                                  const pTitle =
-                                    o.payment_method_title || "標準支付";
 
-                                  return (
-                                    <Fragment key={o.id}>
-                                      <tr
-                                        onClick={() =>
-                                          setExpandedUserOrderId(
-                                            expandedUserOrderId === o.id
-                                              ? null
-                                              : o.id,
-                                          )
-                                        }
-                                        className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
-                                      >
-                                        <td className="px-5 py-4 font-semibold text-[#202223] flex items-center gap-2">
-                                          {expandedUserOrderId === o.id ? (
-                                            <ChevronUp size={14} />
-                                          ) : (
-                                            <ChevronDown size={14} />
-                                          )}{" "}
-                                          #{o.number}
-                                        </td>
-                                        <td className="px-5 py-4 text-[#6d7175]">
-                                          {new Date(
-                                            o.date_created,
-                                          ).toLocaleDateString("zh-TW")}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                          <StatusPill
-                                            status={o.status}
-                                            type="order"
-                                          />
-                                        </td>
-                                        <td className="px-5 py-4 font-bold text-[#202223] text-right">
-                                          {formatMoneyNT(Number(o.total))}
-                                        </td>
-                                      </tr>
+                            {filteredOrders.length === 0 ? (
+                              <div className="py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                                <p className="text-sm text-[#6d7175] mb-4">
+                                  {searchQuery
+                                    ? "找不到符合條件的訂單。"
+                                    : "目前尚未有任何訂單紀錄。"}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
+                                <table className="w-full text-sm text-left whitespace-nowrap">
+                                  <thead className="bg-[#f9fafb] text-[#6d7175] border-y border-[#c9cccf]">
+                                    <tr>
+                                      <th className="px-5 py-3 font-medium">
+                                        訂單號碼
+                                      </th>
+                                      <th className="px-5 py-3 font-medium">
+                                        下單日期
+                                      </th>
+                                      <th className="px-5 py-3 font-medium">
+                                        訂單狀態
+                                      </th>
+                                      <th className="px-5 py-3 font-medium text-right">
+                                        總金額
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-[#ebebeb]">
+                                    {filteredOrders.map((o) => {
+                                      const parsedMeta =
+                                        parseMetaDataForPayment(
+                                          o.meta_data || [],
+                                        );
+                                      const noteInfo = extractInfoFromNote(
+                                        o.customer_note || "",
+                                      );
+                                      const cvsCode =
+                                        parsedMeta.cvs_code ||
+                                        o.payment_info?.cvs_code ||
+                                        noteInfo?.cvs_code;
+                                      const atmAccount =
+                                        parsedMeta.atm_account ||
+                                        o.payment_info?.atm_account ||
+                                        noteInfo?.atm_account;
+                                      const bankCode =
+                                        parsedMeta.bank_code ||
+                                        o.payment_info?.bank_code ||
+                                        noteInfo?.bank_code;
+                                      const expireDate =
+                                        parsedMeta.expire_date ||
+                                        o.payment_info?.expire_date ||
+                                        noteInfo?.expire_date ||
+                                        "依綠界規定";
+                                      const pTitle =
+                                        o.payment_method_title || "標準支付";
 
-                                      {expandedUserOrderId === o.id && (
-                                        <tr className="bg-gray-50/50">
-                                          <td
-                                            colSpan={4}
-                                            className="px-8 py-6 border-b border-[#c9cccf]"
+                                      return (
+                                        <Fragment key={o.id}>
+                                          <tr
+                                            onClick={() =>
+                                              setExpandedUserOrderId(
+                                                expandedUserOrderId === o.id
+                                                  ? null
+                                                  : o.id,
+                                              )
+                                            }
+                                            className="hover:bg-[#f9fafb] cursor-pointer transition-colors"
                                           >
-                                            <div className="grid md:grid-cols-2 gap-8">
-                                              <div className="flex flex-col gap-4">
-                                                <h4 className="font-bold text-[#202223] flex items-center gap-2">
-                                                  <CreditCard
-                                                    size={18}
-                                                    className="text-blue-600"
-                                                  />{" "}
-                                                  付款詳情
-                                                </h4>
+                                            <td className="px-5 py-4 font-semibold text-[#202223] flex items-center gap-2">
+                                              {expandedUserOrderId === o.id ? (
+                                                <ChevronUp size={14} />
+                                              ) : (
+                                                <ChevronDown size={14} />
+                                              )}{" "}
+                                              #{o.number}
+                                            </td>
+                                            <td className="px-5 py-4 text-[#6d7175]">
+                                              {new Date(
+                                                o.date_created,
+                                              ).toLocaleDateString("zh-TW")}
+                                            </td>
+                                            <td className="px-5 py-4">
+                                              <StatusPill
+                                                status={o.status}
+                                                type="order"
+                                              />
+                                            </td>
+                                            <td className="px-5 py-4 font-bold text-[#202223] text-right">
+                                              {formatMoneyNT(Number(o.total))}
+                                            </td>
+                                          </tr>
 
-                                                {cvsCode ? (
-                                                  <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
-                                                    <p className="text-xs opacity-80 mb-1">
-                                                      超商繳費代碼 (CVS)
-                                                    </p>
-                                                    <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
-                                                      {cvsCode}
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          navigator.clipboard.writeText(
-                                                            cvsCode,
-                                                          );
-                                                        }}
-                                                        className="hover:scale-110 active:scale-95 transition-transform"
-                                                      >
-                                                        <Copy size={20} />
-                                                      </button>
-                                                    </div>
-                                                    <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
-                                                      <div className="flex items-center gap-2 text-xs">
-                                                        <Calendar size={14} />{" "}
-                                                        繳費期限: {expireDate}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                ) : atmAccount ? (
-                                                  <div className="bg-indigo-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                      <div>
+                                          {expandedUserOrderId === o.id && (
+                                            <tr className="bg-gray-50/50">
+                                              <td
+                                                colSpan={4}
+                                                className="px-8 py-6 border-b border-[#c9cccf]"
+                                              >
+                                                <div className="grid md:grid-cols-2 gap-8">
+                                                  <div className="flex flex-col gap-4">
+                                                    <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                                      <CreditCard
+                                                        size={18}
+                                                        className="text-blue-600"
+                                                      />{" "}
+                                                      付款詳情
+                                                    </h4>
+
+                                                    {cvsCode ? (
+                                                      <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
                                                         <p className="text-xs opacity-80 mb-1">
-                                                          銀行代碼
+                                                          超商繳費代碼 (CVS)
                                                         </p>
-                                                        <div className="text-xl font-bold tracking-wider flex items-center gap-2">
-                                                          <Landmark size={20} />
-                                                          {bankCode ||
-                                                            "請見綠界通知信"}
+                                                        <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
+                                                          {cvsCode}
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              navigator.clipboard.writeText(
+                                                                cvsCode,
+                                                              );
+                                                            }}
+                                                            className="hover:scale-110 active:scale-95 transition-transform"
+                                                          >
+                                                            <Copy size={20} />
+                                                          </button>
+                                                        </div>
+                                                        <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                          <div className="flex items-center gap-2 text-xs">
+                                                            <Calendar
+                                                              size={14}
+                                                            />{" "}
+                                                            繳費期限:{" "}
+                                                            {expireDate}
+                                                          </div>
                                                         </div>
                                                       </div>
-                                                      <div className="text-right">
+                                                    ) : atmAccount ? (
+                                                      <div className="bg-indigo-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                          <div>
+                                                            <p className="text-xs opacity-80 mb-1">
+                                                              銀行代碼
+                                                            </p>
+                                                            <div className="text-xl font-bold tracking-wider flex items-center gap-2">
+                                                              <Landmark
+                                                                size={20}
+                                                              />
+                                                              {bankCode ||
+                                                                "請見綠界通知信"}
+                                                            </div>
+                                                          </div>
+                                                          <div className="text-right">
+                                                            <p className="text-xs opacity-80 mb-1">
+                                                              繳費期限
+                                                            </p>
+                                                            <div className="text-sm font-medium flex items-center gap-1 justify-end">
+                                                              <Calendar
+                                                                size={14}
+                                                              />{" "}
+                                                              {expireDate}
+                                                            </div>
+                                                          </div>
+                                                        </div>
                                                         <p className="text-xs opacity-80 mb-1">
-                                                          繳費期限
+                                                          ATM 專屬虛擬帳號
                                                         </p>
-                                                        <div className="text-sm font-medium flex items-center gap-1 justify-end">
-                                                          <Calendar size={14} />{" "}
-                                                          {expireDate}
+                                                        <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between bg-white/10 px-3 py-2 rounded-md">
+                                                          {atmAccount}
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              navigator.clipboard.writeText(
+                                                                atmAccount,
+                                                              );
+                                                            }}
+                                                            className="hover:scale-110 active:scale-95 transition-transform bg-white/20 p-1.5 rounded"
+                                                          >
+                                                            <Copy size={18} />
+                                                          </button>
                                                         </div>
                                                       </div>
-                                                    </div>
-                                                    <p className="text-xs opacity-80 mb-1">
-                                                      ATM 專屬虛擬帳號
-                                                    </p>
-                                                    <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between bg-white/10 px-3 py-2 rounded-md">
-                                                      {atmAccount}
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          navigator.clipboard.writeText(
-                                                            atmAccount,
-                                                          );
-                                                        }}
-                                                        className="hover:scale-110 active:scale-95 transition-transform bg-white/20 p-1.5 rounded"
-                                                      >
-                                                        <Copy size={18} />
-                                                      </button>
-                                                    </div>
-                                                  </div>
-                                                ) : (
-                                                  <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
-                                                    付款方式:{" "}
-                                                    <span className="font-medium text-gray-900">
-                                                      {pTitle}
-                                                    </span>
-                                                    <p className="mt-1 text-xs opacity-70">
-                                                      此訂單目前無須額外代碼，請依系統指示操作。
-                                                    </p>
-                                                  </div>
-                                                )}
-                                              </div>
-
-                                              <div className="flex flex-col gap-4">
-                                                <h4 className="font-bold text-[#202223] flex items-center gap-2">
-                                                  <Info
-                                                    size={18}
-                                                    className="text-gray-600"
-                                                  />{" "}
-                                                  訂單品項
-                                                </h4>
-                                                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                                                  {o.line_items.map(
-                                                    (item, idx) => (
-                                                      <div
-                                                        key={idx}
-                                                        className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
-                                                      >
-                                                        <div>
-                                                          <p className="text-sm font-bold text-gray-900">
-                                                            {item.name}
-                                                          </p>
-                                                          <p className="text-xs text-gray-500">
-                                                            數量:{" "}
-                                                            {item.quantity}
-                                                          </p>
-                                                        </div>
-                                                        <p className="text-sm font-mono font-medium">
-                                                          {item.total
-                                                            ? formatMoneyNT(
-                                                                Number(
-                                                                  item.total,
-                                                                ),
-                                                              )
-                                                            : ""}
+                                                    ) : (
+                                                      <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
+                                                        付款方式:{" "}
+                                                        <span className="font-medium text-gray-900">
+                                                          {pTitle}
+                                                        </span>
+                                                        <p className="mt-1 text-xs opacity-70">
+                                                          此訂單目前無須額外代碼，請依系統指示操作。
                                                         </p>
                                                       </div>
-                                                    ),
-                                                  )}
-                                                  <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
-                                                    <span>總計金額</span>
-                                                    <span className="text-lg text-emerald-700">
-                                                      {formatMoneyNT(
-                                                        Number(o.total),
-                                                      )}
-                                                    </span>
-                                                  </div>
-                                                </div>
-
-                                                <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-48">
-                                                  <div className="text-white mb-2 font-bold flex items-center gap-2">
-                                                    🛠️
-                                                    系統偵錯：尋找綠界隱藏欄位
-                                                  </div>
-                                                  <div className="mb-2 text-yellow-400 border-b border-white/20 pb-2">
-                                                    [Customer Note]:
-                                                    <br />
-                                                    {o.customer_note ||
-                                                      "無備註內容"}
-                                                  </div>
-                                                  <pre className="whitespace-pre-wrap leading-relaxed">
-                                                    {JSON.stringify(
-                                                      o.meta_data,
-                                                      null,
-                                                      2,
                                                     )}
-                                                  </pre>
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-4">
+                                                    <h4 className="font-bold text-[#202223] flex items-center gap-2">
+                                                      <Info
+                                                        size={18}
+                                                        className="text-gray-600"
+                                                      />{" "}
+                                                      訂單品項
+                                                    </h4>
+                                                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                                      {o.line_items.map(
+                                                        (item, idx) => (
+                                                          <div
+                                                            key={idx}
+                                                            className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                                                          >
+                                                            <div>
+                                                              <p className="text-sm font-bold text-gray-900">
+                                                                {item.name}
+                                                              </p>
+                                                              <p className="text-xs text-gray-500">
+                                                                數量:{" "}
+                                                                {item.quantity}
+                                                              </p>
+                                                            </div>
+                                                            <p className="text-sm font-mono font-medium">
+                                                              {item.total
+                                                                ? formatMoneyNT(
+                                                                    Number(
+                                                                      item.total,
+                                                                    ),
+                                                                  )
+                                                                : ""}
+                                                            </p>
+                                                          </div>
+                                                        ),
+                                                      )}
+                                                      <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
+                                                        <span>總計金額</span>
+                                                        <span className="text-lg text-emerald-700">
+                                                          {formatMoneyNT(
+                                                            Number(o.total),
+                                                          )}
+                                                        </span>
+                                                      </div>
+                                                    </div>
+
+                                                    <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-48">
+                                                      <div className="text-white mb-2 font-bold flex items-center gap-2">
+                                                        🛠️
+                                                        系統偵錯：尋找綠界隱藏欄位
+                                                      </div>
+                                                      <div className="mb-2 text-yellow-400 border-b border-white/20 pb-2">
+                                                        [Customer Note]:
+                                                        <br />
+                                                        {o.customer_note ||
+                                                          "無備註內容"}
+                                                      </div>
+                                                      <pre className="whitespace-pre-wrap leading-relaxed">
+                                                        {JSON.stringify(
+                                                          o.meta_data,
+                                                          null,
+                                                          2,
+                                                        )}
+                                                      </pre>
+                                                    </div>
+                                                  </div>
                                                 </div>
-                                              </div>
-                                            </div>
-                                          </td>
-                                        </tr>
-                                      )}
-                                    </Fragment>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </Fragment>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </>
                         )}
                       </ShellCard>
                     )}
