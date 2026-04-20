@@ -75,7 +75,7 @@ export default function ClientLayout({
       `}</style>
 
       <html lang="zh-Hant">
-        <body className="min-h-screen bg-white text-slate-900">
+        <body className="min-h-screen bg-white   text-slate-900">
           <ScrollToTopOnNav />
 
           <div

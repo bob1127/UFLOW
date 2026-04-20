@@ -16,35 +16,403 @@ import {
   Minus,
   CheckCircle2,
   Crown,
+  AlertCircle,
 } from "lucide-react";
 import { useCartStore } from "@/lib/cartStore";
 
-// ✅ 【除錯開關】
-const DEBUG_MODE = true;
-
-const log = (label, data) => {
-  if (DEBUG_MODE) {
-    console.log(
-      `%c[Cart Debug] ${label}:`,
-      "color: #0ea5e9; font-weight: bold;",
-      data,
-    );
-  }
-};
-
-const currency = (n) =>
-  `NT$${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString("zh-TW")}`;
-
-// ✅ 會員折扣表
-const TIER_DISCOUNTS = {
-  銅貴賓: 0.95,
-  銀貴賓: 0.9,
-  金貴賓: 0.88,
-  "VIP 貴賓": 0.85,
-  "VVIP 貴賓": 0.8,
+// ✅ 內建輕量版：台灣縣市與鄉鎮區字典
+const TW_CITIES = {
+  基隆市: [
+    "仁愛區",
+    "信義區",
+    "中正區",
+    "中山區",
+    "安樂區",
+    "暖暖區",
+    "七堵區",
+  ],
+  臺北市: [
+    "中正區",
+    "大同區",
+    "中山區",
+    "松山區",
+    "大安區",
+    "萬華區",
+    "信義區",
+    "士林區",
+    "北投區",
+    "內湖區",
+    "南港區",
+    "文山區",
+  ],
+  新北市: [
+    "板橋區",
+    "三重區",
+    "中和區",
+    "永和區",
+    "新莊區",
+    "新店區",
+    "樹林區",
+    "鶯歌區",
+    "三峽區",
+    "淡水區",
+    "汐止區",
+    "瑞芳區",
+    "土城區",
+    "蘆洲區",
+    "五股區",
+    "泰山區",
+    "林口區",
+    "深坑區",
+    "石碇區",
+    "坪林區",
+    "三芝區",
+    "石門區",
+    "八里區",
+    "平溪區",
+    "雙溪區",
+    "貢寮區",
+    "金山區",
+    "萬里區",
+    "烏來區",
+  ],
+  桃園市: [
+    "桃園區",
+    "中壢區",
+    "大溪區",
+    "楊梅區",
+    "蘆竹區",
+    "大園區",
+    "龜山區",
+    "八德區",
+    "平鎮區",
+    "新屋區",
+    "觀音區",
+    "復興區",
+  ],
+  新竹市: ["東區", "北區", "香山區"],
+  新竹縣: [
+    "竹北市",
+    "竹東鎮",
+    "新埔鎮",
+    "關西鎮",
+    "湖口鄉",
+    "新豐鄉",
+    "芎林鄉",
+    "橫山鄉",
+    "北埔鄉",
+    "寶山鄉",
+    "五峰鄉",
+    "尖石鄉",
+    "峨眉鄉",
+  ],
+  苗栗縣: [
+    "苗栗市",
+    "苑裡鎮",
+    "通霄鎮",
+    "竹南鎮",
+    "頭份市",
+    "後龍鎮",
+    "卓蘭鎮",
+    "大湖鄉",
+    "公館鄉",
+    "銅鑼鄉",
+    "南庄鄉",
+    "頭屋鄉",
+    "三義鄉",
+    "西湖鄉",
+    "造橋鄉",
+    "三灣鄉",
+    "獅潭鄉",
+    "泰安鄉",
+  ],
+  臺中市: [
+    "中區",
+    "東區",
+    "南區",
+    "西區",
+    "北區",
+    "西屯區",
+    "南屯區",
+    "北屯區",
+    "豐原區",
+    "東勢區",
+    "大甲區",
+    "清水區",
+    "沙鹿區",
+    "梧棲區",
+    "后里區",
+    "神岡區",
+    "潭子區",
+    "大雅區",
+    "新社區",
+    "石岡區",
+    "外埔區",
+    "大安區",
+    "烏日區",
+    "大肚區",
+    "龍井區",
+    "霧峰區",
+    "太平區",
+    "大里區",
+    "和平區",
+  ],
+  彰化縣: [
+    "彰化市",
+    "鹿港鎮",
+    "和美鎮",
+    "線西鄉",
+    "伸港鄉",
+    "福興鄉",
+    "秀水鄉",
+    "花壇鄉",
+    "芬園鄉",
+    "員林市",
+    "大村鄉",
+    "埔鹽鄉",
+    "埔心鄉",
+    "永靖鄉",
+    "社頭鄉",
+    "二水鄉",
+    "田尾鄉",
+    "埤頭鄉",
+    "芳苑鄉",
+    "二林鎮",
+    "大城鄉",
+    "竹塘鄉",
+    "溪州鄉",
+    "田中鎮",
+    "北斗鎮",
+    "溪湖鎮",
+  ],
+  南投縣: [
+    "南投市",
+    "埔里鎮",
+    "草屯鎮",
+    "竹山鎮",
+    "集集鎮",
+    "名間鄉",
+    "鹿谷鄉",
+    "中寮鄉",
+    "魚池鄉",
+    "國姓鄉",
+    "水里鄉",
+    "信義鄉",
+    "仁愛鄉",
+  ],
+  雲林縣: [
+    "斗六市",
+    "斗南鎮",
+    "虎尾鎮",
+    "西螺鎮",
+    "土庫鎮",
+    "北港鎮",
+    "古坑鄉",
+    "大埤鄉",
+    "莿桐鄉",
+    "林內鄉",
+    "二崙鄉",
+    "崙背鄉",
+    "麥寮鄉",
+    "東勢鄉",
+    "褒忠鄉",
+    "臺西鄉",
+    "元長鄉",
+    "四湖鄉",
+    "口湖鄉",
+    "水林鄉",
+  ],
+  嘉義市: ["東區", "西區"],
+  嘉義縣: [
+    "太保市",
+    "朴子市",
+    "布袋鎮",
+    "大林鎮",
+    "民雄鄉",
+    "溪口鄉",
+    "新港鄉",
+    "六腳鄉",
+    "東石鄉",
+    "義竹鄉",
+    "鹿草鄉",
+    "水上鄉",
+    "中埔鄉",
+    "竹崎鄉",
+    "梅山鄉",
+    "番路鄉",
+    "大埔鄉",
+    "阿里山鄉",
+  ],
+  臺南市: [
+    "新營區",
+    "鹽水區",
+    "白河區",
+    "柳營區",
+    "後壁區",
+    "東山區",
+    "麻豆區",
+    "下營區",
+    "六甲區",
+    "官田區",
+    "大內區",
+    "佳里區",
+    "學甲區",
+    "西港區",
+    "七股區",
+    "將軍區",
+    "北門區",
+    "新化區",
+    "善化區",
+    "新市區",
+    "安定區",
+    "山上區",
+    "玉井區",
+    "楠西區",
+    "南化區",
+    "左鎮區",
+    "仁德區",
+    "歸仁區",
+    "關廟區",
+    "龍崎區",
+    "永康區",
+    "東區",
+    "南區",
+    "北區",
+    "安南區",
+    "安平區",
+    "中西區",
+  ],
+  高雄市: [
+    "鹽埕區",
+    "鼓山區",
+    "左營區",
+    "楠梓區",
+    "三民區",
+    "新興區",
+    "前金區",
+    "苓雅區",
+    "前鎮區",
+    "旗津區",
+    "小港區",
+    "鳳山區",
+    "林園區",
+    "大寮區",
+    "大樹區",
+    "大社區",
+    "仁武區",
+    "鳥松區",
+    "岡山區",
+    "橋頭區",
+    "燕巢區",
+    "田寮區",
+    "阿蓮區",
+    "路竹區",
+    "湖內區",
+    "茄萣區",
+    "永安區",
+    "彌陀區",
+    "梓官區",
+    "旗山區",
+    "美濃區",
+    "六龜區",
+    "甲仙區",
+    "杉林區",
+    "內門區",
+    "茂林區",
+    "桃源區",
+    "那瑪夏區",
+  ],
+  屏東縣: [
+    "屏東市",
+    "潮州鎮",
+    "東港鎮",
+    "恆春鎮",
+    "萬丹鄉",
+    "長治鄉",
+    "麟洛鄉",
+    "九如鄉",
+    "里港鄉",
+    "鹽埔鄉",
+    "高樹鄉",
+    "萬巒鄉",
+    "內埔鄉",
+    "竹田鄉",
+    "新埤鄉",
+    "枋寮鄉",
+    "新園鄉",
+    "崁頂鄉",
+    "林邊鄉",
+    "南州鄉",
+    "佳冬鄉",
+    "琉球鄉",
+    "車城鄉",
+    "滿州鄉",
+    "枋山鄉",
+    "三地門鄉",
+    "霧臺鄉",
+    "瑪家鄉",
+    "泰武鄉",
+    "來義鄉",
+    "春日鄉",
+    "獅子鄉",
+    "牡丹鄉",
+  ],
+  宜蘭縣: [
+    "宜蘭市",
+    "羅東鎮",
+    "蘇澳鎮",
+    "頭城鎮",
+    "礁溪鄉",
+    "壯圍鄉",
+    "員山鄉",
+    "冬山鄉",
+    "五結鄉",
+    "三星鄉",
+    "大同鄉",
+    "南澳鄉",
+  ],
+  花蓮縣: [
+    "花蓮市",
+    "鳳林鎮",
+    "玉里鎮",
+    "新城鄉",
+    "吉安鄉",
+    "壽豐鄉",
+    "光復鄉",
+    "豐濱鄉",
+    "瑞穗鄉",
+    "富里鄉",
+    "秀林鄉",
+    "萬榮鄉",
+    "卓溪鄉",
+  ],
+  臺東縣: [
+    "臺東市",
+    "成功鎮",
+    "關山鎮",
+    "卑南鄉",
+    "鹿野鄉",
+    "池上鄉",
+    "東河鄉",
+    "長濱鄉",
+    "太麻里鄉",
+    "大武鄉",
+    "綠島鄉",
+    "海端鄉",
+    "延平鄉",
+    "金峰鄉",
+    "達仁鄉",
+    "蘭嶼鄉",
+  ],
+  澎湖縣: ["馬公市", "湖西鄉", "白沙鄉", "西嶼鄉", "望安鄉", "七美鄉"],
+  金門縣: ["金城鎮", "金湖鎮", "金沙鎮", "金寧鄉", "烈嶼鄉", "烏坵鄉"],
+  連江縣: ["南竿鄉", "北竿鄉", "莒光鄉", "東引鄉"],
 };
 
 // 工具函數
+const currency = (n) =>
+  `NT$${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString("zh-TW")}`;
+
 function isUpgradeCode(code) {
   return String(code || "")
     .toLowerCase()
@@ -65,77 +433,48 @@ function isReferralFriendCode(code) {
     .toLowerCase()
     .startsWith("uffrd-");
 }
+
 function couponTitleByKindOrCode(c) {
   const code = String(c?.code || "");
   const kind = String(c?.kind || "").toLowerCase();
   const amount = Number(c?.amount) || 0;
   if (kind === "upgrade" || isUpgradeCode(code))
-    return `升等禮 - ${currency(amount)}`;
+    return `升等禮金 - ${currency(amount)}`;
   if (kind === "birthday" || isBirthdayCode(code))
-    return `生日禮金 - ${currency(amount)}`;
+    return `專屬生日禮 - ${currency(amount)}`;
   if (kind === "ref_ambassador_200" || isReferralAmbCode(code))
-    return `推薦折扣金 - ${currency(amount)}`;
+    return `推薦回饋金 - ${currency(amount)}`;
   if (kind === "ref_friend_50" || isReferralFriendCode(code))
-    return `推薦折扣金 - ${currency(amount)}`;
-  return `${code.toUpperCase()} - ${currency(amount)}`;
+    return `新客註冊禮 - ${currency(amount)}`;
+  return `專屬折扣碼 - ${currency(amount)}`;
 }
 
-// ✅ 判斷要顯示哪一張圖片的邏輯
-function getCouponImage(c) {
-  const code = String(c?.code || "");
-  const kind = String(c?.kind || "").toLowerCase();
-
-  if (kind === "upgrade" || isUpgradeCode(code))
-    return "/images/折扣券/升等禮折扣.png";
-  if (kind === "birthday" || isBirthdayCode(code))
-    return "/images/折扣券/生日禮金折扣券.png";
-  if (kind === "ref_ambassador_200" || isReferralAmbCode(code))
-    return "/images/折扣券/推薦禮折扣200.png";
-  if (kind === "ref_friend_50" || isReferralFriendCode(code))
-    return "/images/折扣券/推薦禮折扣50.png";
-
-  // 預設圖片 (若無對應則先放這張)
-  return "/images/折扣券/推薦禮折扣50.png";
-}
-
-// ✅ 核心計算邏輯
 function calcPricing(
   items,
-  { shippingBase = 80, freeShipThreshold = 1800 },
+  { shippingBase = 80, freeShipThreshold = 1500 },
   couponDiscount = 0,
-  tierDiscountRate = 1, // 預設不打折
+  tierDiscountRate = 1,
 ) {
-  // 1. 商品小計
   const subtotal = items.reduce(
     (s, it) => s + (Number(it.price) || 0) * (Number(it.qty) || 0),
     0,
   );
-
-  // 2. 計算會員折扣金額 (無條件捨去，避免小數點)
   let memberDiscountAmount = 0;
-  if (tierDiscountRate < 1 && subtotal > 0) {
+  if (tierDiscountRate < 1 && subtotal > 0)
     memberDiscountAmount = Math.round(subtotal * (1 - tierDiscountRate));
-  }
 
-  // 3. 扣除會員折扣
   const subtotalAfterMember = Math.max(0, subtotal - memberDiscountAmount);
-
-  // 4. 扣除優惠券
   const safeCouponDiscount = Math.min(
     Math.max(Number(couponDiscount) || 0, 0),
     subtotalAfterMember,
   );
-
-  // 5. 最終商品金額
   const finalSubtotal = Math.max(0, subtotalAfterMember - safeCouponDiscount);
-
-  // 6. 運費計算 (通常是用折抵後的金額判斷免運)
   const shipping =
     finalSubtotal >= freeShipThreshold || finalSubtotal === 0
       ? 0
       : shippingBase;
-
   const total = finalSubtotal + shipping;
+  const needForFreeShip = Math.max(0, freeShipThreshold - finalSubtotal);
 
   return {
     subtotal,
@@ -144,10 +483,61 @@ function calcPricing(
     discountedSubtotal: finalSubtotal,
     shipping,
     total,
+    needForFreeShip,
+    freeShipThreshold,
   };
 }
 
 // UI Components
+function Input({ label, error, ...props }) {
+  return (
+    <div className="w-full">
+      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 ml-1">
+        {label} {props.required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        {...props}
+        className={`w-full bg-white border ${
+          error ? "border-red-500" : "border-gray-200"
+        } rounded-lg px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-[#008060] outline-none ${
+          props.readOnly
+            ? "bg-gray-50 text-gray-500 cursor-not-allowed border-dashed"
+            : ""
+        }`}
+      />
+      {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
+    </div>
+  );
+}
+
+// 🚀 新增：下拉選單元件 (供縣市與行政區使用)
+function Select({ label, error, options = [], value, onChange, placeholder }) {
+  return (
+    <div className="w-full">
+      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 ml-1">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={value}
+        onChange={onChange}
+        className={`w-full bg-white border ${
+          error ? "border-red-500" : "border-gray-200"
+        } rounded-lg px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-[#008060] outline-none appearance-none`}
+      >
+        <option value="" disabled hidden>
+          {placeholder}
+        </option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
+    </div>
+  );
+}
+
 function CouponPicker({
   title = "可用折價券",
   subtitle,
@@ -181,38 +571,103 @@ function CouponPicker({
       </div>
 
       {loading ? (
-        <div className="text-xs text-gray-400">讀取中…</div>
+        <div className="text-xs text-gray-400 animate-pulse">讀取錢包中…</div>
       ) : coupons.length === 0 ? (
-        <div className="text-xs text-gray-400">{emptyText}</div>
+        <div className="text-xs text-gray-400 bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+          {emptyText}
+        </div>
       ) : (
-        <div className="grid grid-cols-2  gap-3">
+        <div className="flex flex-col gap-3">
           {coupons.map((c) => {
             const isActive =
               String(applied?.code || "").toLowerCase() ===
               String(c.code || "").toLowerCase();
-            const displayName = c.title || couponTitleByKindOrCode(c);
-            const imgSrc = getCouponImage(c);
+            const amount = Number(c.amount) || 0;
+            const kind = String(c.kind || "").toLowerCase();
+            const code = String(c.code || "").toLowerCase();
+
+            let theme = {
+              bar: "bg-gray-800",
+              text: "text-gray-800",
+              light: "bg-gray-50",
+              border: "border-gray-200",
+              ring: "ring-gray-800",
+              label: "專屬優惠",
+            };
+            if (kind === "upgrade" || code.startsWith("ufup-"))
+              theme = {
+                bar: "bg-amber-500",
+                text: "text-amber-700",
+                light: "bg-amber-50",
+                border: "border-amber-200",
+                ring: "ring-amber-500",
+                label: "升等禮金",
+              };
+            else if (kind === "birthday" || code.startsWith("ufbd-"))
+              theme = {
+                bar: "bg-rose-500",
+                text: "text-rose-700",
+                light: "bg-rose-50",
+                border: "border-rose-200",
+                ring: "ring-rose-500",
+                label: "專屬生日禮",
+              };
+            else if (
+              kind.includes("ref") ||
+              code.startsWith("ufamb-") ||
+              code.startsWith("uffrd-")
+            )
+              theme = {
+                bar: "bg-[#008060]",
+                text: "text-[#008060]",
+                light: "bg-emerald-50",
+                border: "border-emerald-200",
+                ring: "ring-[#008060]",
+                label: "購物抵用金",
+              };
 
             return (
               <button
                 key={c.code}
                 type="button"
-                className={`relative w-full text-left bg-transparent border-0 p-0 cursor-pointer transition-all duration-200 active:scale-[0.99] hover:drop-shadow-lg ${isActive ? "ring-2 ring-black rounded-lg scale-[0.995]" : ""}`}
                 onClick={() => onApply(c)}
-                title={displayName}
+                className={`relative w-full flex items-stretch rounded-xl border transition-all overflow-hidden text-left bg-white ${isActive ? `ring-2 ${theme.ring} border-transparent shadow-md scale-[0.98]` : "border-gray-200 hover:shadow-md hover:border-gray-300"}`}
               >
-                {/* 套用相對應的圖片 */}
-                <img
-                  src={imgSrc}
-                  alt={displayName}
-                  className="w-full h-auto object-contain rounded-lg block"
-                />
-
-                {isActive && (
-                  <div className="absolute top-2 right-2 bg-black/20 text-white text-[11px] font-black px-2.5 py-1 rounded-full z-10 shadow-md">
-                    APPLIED
+                <div className={`w-3 flex-shrink-0 ${theme.bar}`}></div>
+                <div className="flex-1 min-w-0 p-3.5 py-4">
+                  <div
+                    className={`text-[11px] font-bold ${theme.text} mb-1 tracking-wider truncate`}
+                  >
+                    {theme.label}
                   </div>
-                )}
+                  <div className="flex items-baseline gap-1 mb-1.5">
+                    <span className="text-sm font-bold text-gray-900">NT$</span>
+                    <span className="text-2xl font-black text-gray-900 tracking-tight truncate">
+                      {amount}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 font-mono tracking-widest uppercase truncate w-full">
+                    {c.code}
+                  </div>
+                </div>
+                <div
+                  className={`w-[76px] border-l-[1.5px] border-dashed ${theme.border} ${theme.light} flex flex-col items-center justify-center gap-1 shrink-0 px-2 py-3`}
+                >
+                  {isActive ? (
+                    <>
+                      <CheckCircle2 className={`w-5 h-5 ${theme.text}`} />
+                      <span className={`text-[11px] font-black ${theme.text}`}>
+                        已套用
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[13px] font-bold text-gray-400 hover:text-gray-700 transition-colors text-center leading-tight">
+                      點擊
+                      <br />
+                      使用
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -220,15 +675,15 @@ function CouponPicker({
       )}
 
       {applied ? (
-        <div className="mt-3 text-xs text-gray-500">
-          已套用：
-          <span className="font-black text-gray-900">
-            {" "}
-            {applied.title || applied.code}
-          </span>{" "}
-          折抵{" "}
-          <span className="font-black text-gray-900">
-            {currency(applied.amount)}
+        <div className="mt-3 text-[11px] text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 flex justify-between items-center">
+          <span>
+            已套用：
+            <span className="font-bold text-gray-900 uppercase">
+              {applied.code}
+            </span>
+          </span>
+          <span className="font-black text-emerald-600">
+            - {currency(applied.amount)}
           </span>
         </div>
       ) : null}
@@ -236,24 +691,6 @@ function CouponPicker({
   );
 }
 
-function Input({ label, error, ...props }) {
-  return (
-    <div className="w-full">
-      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 ml-1">
-        {label} {props.required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        {...props}
-        className={`w-full bg-white border ${
-          error ? "border-red-500" : "border-gray-200"
-        } rounded-lg px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-black/5 focus:border-black outline-none ${props.readOnly ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
-      />
-      {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
-    </div>
-  );
-}
-
-// ✅ 升等提示組件
 function UpgradeBanner({ membership }) {
   if (!membership?.nextTierName || !membership?.nextNeedAmount) return null;
   return (
@@ -274,6 +711,48 @@ function UpgradeBanner({ membership }) {
         <p className="text-xs mt-1 opacity-80">
           升等後將享有專屬折扣與更多禮遇。
         </p>
+      </div>
+    </div>
+  );
+}
+
+function FreeShippingProgress({ needForFreeShip, freeShipThreshold }) {
+  const percentage = Math.min(
+    100,
+    Math.max(
+      0,
+      ((freeShipThreshold - needForFreeShip) / freeShipThreshold) * 100,
+    ),
+  );
+  const isFree = needForFreeShip === 0;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
+      <div className="flex justify-between items-end mb-2">
+        <div className="text-sm font-bold text-gray-800">
+          {isFree ? (
+            <span className="text-[#008060] flex items-center gap-1">
+              <CheckCircle2 size={16} /> 已達免運門檻！
+            </span>
+          ) : (
+            <span>
+              再消費{" "}
+              <span className="text-rose-600 font-black">
+                {currency(needForFreeShip)}
+              </span>{" "}
+              即可享全館免運
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-gray-500">
+          滿 {currency(freeShipThreshold)} 免運
+        </div>
+      </div>
+      <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all duration-500 ease-out rounded-full ${isFree ? "bg-[#008060]" : "bg-rose-500"}`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );
@@ -316,8 +795,10 @@ function CartStep({
         <h1 className="text-3xl font-bold tracking-tight mb-6">
           購物車 ({items.length})
         </h1>
-
-        {/* ✅ 顯示升等提示 */}
+        <FreeShippingProgress
+          needForFreeShip={pricing.needForFreeShip}
+          freeShipThreshold={pricing.freeShipThreshold}
+        />
         <UpgradeBanner membership={membership} />
 
         <div className="space-y-6">
@@ -398,7 +879,6 @@ function CartStep({
 
       <aside className="lg:col-span-4">
         <div className="bg-gray-50 rounded-3xl p-8 sticky top-24 border border-gray-100">
-          {/* ✅ 會員等級 Badge */}
           {membership?.tierName && (
             <div className="mb-6 flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-2">
@@ -415,32 +895,22 @@ function CartStep({
 
           <CouponPicker
             title="可用折價券"
-            subtitle="升等禮 / 生日禮金"
-            coupons={coupons}
+            subtitle="點擊即可套用折扣"
+            coupons={[...coupons, ...referralCoupons]}
             applied={appliedCoupon}
             onApply={onApplyCoupon}
             onClear={onClearCoupon}
-            loading={couponLoading}
-          />
-          <CouponPicker
-            title="推薦折扣金"
-            subtitle="推薦回饋 / 註冊購物金"
-            coupons={referralCoupons}
-            applied={appliedCoupon}
-            onApply={onApplyCoupon}
-            onClear={onClearCoupon}
-            loading={referralLoading}
-            emptyText="目前沒有可用推薦折扣金"
+            loading={couponLoading || referralLoading}
           />
 
-          <h2 className="text-lg font-bold mb-6">訂單小計</h2>
+          <h2 className="text-lg font-bold mb-6 pt-4 border-t border-gray-200">
+            訂單小計
+          </h2>
           <div className="space-y-4 mb-6 text-sm">
             <div className="flex justify-between text-gray-500">
               <span>商品總計</span>
               <span>{currency(pricing.subtotal)}</span>
             </div>
-
-            {/* ✅ 會員折扣顯示 */}
             {pricing.memberDiscountAmount > 0 && (
               <div className="flex justify-between text-gray-500">
                 <span>{membership?.tierName} 優惠</span>
@@ -449,16 +919,14 @@ function CartStep({
                 </span>
               </div>
             )}
-
             {pricing.couponDiscount > 0 && (
-              <div className="flex justify-between text-gray-500">
-                <span>折價券</span>
-                <span className="font-black text-black">
+              <div className="flex justify-between text-emerald-600">
+                <span className="font-bold">優惠券折抵</span>
+                <span className="font-black">
                   - {currency(pricing.couponDiscount)}
                 </span>
               </div>
             )}
-
             <div className="flex justify-between text-gray-500">
               <span>預估運費</span>
               <span className="text-xs uppercase font-bold text-gray-400">
@@ -473,19 +941,11 @@ function CartStep({
                 {currency(pricing.total)}
               </span>
             </div>
-            {pricing.memberDiscountAmount > 0 || pricing.couponDiscount > 0 ? (
-              <p className="mt-2 text-[11px] text-gray-400">
-                已省下：
-                {currency(
-                  pricing.memberDiscountAmount + pricing.couponDiscount,
-                )}
-              </p>
-            ) : null}
           </div>
           <button
             type="button"
             onClick={onNext}
-            className="w-full py-4 bg-black text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-900 transition active:scale-95 shadow-xl shadow-black/10"
+            className="w-full py-4 bg-[#008060] text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#006e52] transition active:scale-95 shadow-xl shadow-emerald-900/20"
           >
             前往結帳 <ChevronRight className="w-4 h-4" />
           </button>
@@ -522,31 +982,17 @@ function CheckoutStep({
   const [errors, setErrors] = useState({});
   const searchParams = useSearchParams();
 
-  // (地圖 Callback 邏輯)
-  useEffect(() => {
-    const storeName = searchParams.get("storeName");
-    const storeId = searchParams.get("storeId");
-    const storeAddr = searchParams.get("storeAddr");
-    const provider = searchParams.get("provider");
-    if (storeId && storeName) {
-      setShipMethod(provider === "711" ? "711" : "CVS");
-      setAddr((prev) => ({
-        ...prev,
-        line1: `${storeName} (${storeId})`,
-        storeId,
-        storeName,
-        storeAddr: storeAddr || "",
-      }));
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete("storeName");
-      newUrl.searchParams.delete("storeId");
-      newUrl.searchParams.delete("storeAddr");
-      newUrl.searchParams.delete("provider");
-      window.history.replaceState({}, "", newUrl.toString());
-    }
-  }, [searchParams, setShipMethod, setAddr]);
+  // 🚨 【護城河 1】：前往地圖前，強制手動儲存至 sessionStorage
+  const saveStateBeforeMap = () => {
+    sessionStorage.setItem("checkout_contact", JSON.stringify(contact));
+    sessionStorage.setItem("checkout_addr", JSON.stringify(addr));
+    sessionStorage.setItem("checkout_shipMethod", shipMethod);
+    sessionStorage.setItem("checkout_payMethod", payMethod);
+    sessionStorage.setItem("checkout_step", "2");
+  };
 
   const openEzShipMap = () => {
+    saveStateBeforeMap();
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "https://map.ezship.com.tw/ezship_map_web.jsp";
@@ -567,11 +1013,9 @@ function CheckoutStep({
   };
 
   const openEcpay711Map = () => {
+    saveStateBeforeMap();
     const merchantID = process.env.NEXT_PUBLIC_ECPAY_MERCHANT_ID;
-    if (!merchantID) {
-      alert("錯誤：讀取不到 NEXT_PUBLIC_ECPAY_MERCHANT_ID");
-      return;
-    }
+    if (!merchantID) return alert("錯誤：讀取不到 ECPAY_MERCHANT_ID");
     const isTest = merchantID === "2000132" || merchantID === "2000933";
     const actionUrl = isTest
       ? "https://logistics-stage.ecpay.com.tw/Express/map"
@@ -598,21 +1042,48 @@ function CheckoutStep({
     form.submit();
   };
 
+  // 🚨 【防呆機制 2】：嚴格的 Regex 驗證
   const validate = () => {
     const e = {};
-    if (!contact.email || !contact.email.includes("@"))
-      e.email = "請輸入有效的電子郵件";
-    if (!addr.firstName) e.firstName = "必填";
-    if (!addr.lastName) e.lastName = "必填";
-    if (!addr.line1) e.line1 = "請選擇配送門市或填寫地址";
-    if (!addr.phone || addr.phone.length < 9) e.phone = "請輸入正確手機號碼";
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!contact.email || !emailRegex.test(contact.email.trim()))
+      e.email = "請輸入有效的電子郵件格式";
+
+    if (!addr.lastName || !addr.lastName.trim()) e.lastName = "請填寫姓氏";
+    if (!addr.firstName || !addr.firstName.trim()) e.firstName = "請填寫名字";
+
+    const phoneRegex = /^09\d{8}$/;
+    if (!addr.phone || !phoneRegex.test(addr.phone.trim())) {
+      e.phone = "請輸入有效的台灣手機號碼 (09開頭共10碼)";
+    }
+
+    // ✅ 動態驗證邏輯
+    if (shipMethod === "000") {
+      if (!addr.city) e.city = "請選擇縣市";
+      if (!addr.district) e.district = "請選擇區域";
+      if (!addr.street || !addr.street.trim())
+        e.street = "請填寫街道門牌等詳細地址";
+    } else {
+      if (!addr.storeId) e.store = "請選擇配送門市";
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const submit = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setIsSubmitting(true);
+
+    // ✅ 組合傳給後端的地址
+    const line1 =
+      shipMethod === "000"
+        ? `${addr.city}${addr.district}${addr.street.trim()}`
+        : `${addr.storeName} (${addr.storeId}) - ${addr.storeAddr}`;
 
     const payload = {
       items: items.map((it) => ({
@@ -621,15 +1092,22 @@ function CheckoutStep({
         price: it.price,
         title: it.name || it.title,
       })),
-      contact,
-      addr,
+      contact: { email: contact.email.trim() },
+      addr: {
+        firstName: addr.firstName.trim(),
+        lastName: addr.lastName.trim(),
+        line1: line1,
+        phone: addr.phone.trim(),
+        storeId: addr.storeId,
+        storeName: addr.storeName,
+        storeAddr: addr.storeAddr,
+      },
       shipMethod,
       payMethod,
       coupon: appliedCoupon
         ? { code: appliedCoupon.code, amount: appliedCoupon.amount }
         : null,
       total: pricing.total,
-      // ✅ 傳送會員折扣金額給後端 (若後端支援)
       memberDiscount: pricing.memberDiscountAmount,
     };
 
@@ -646,6 +1124,16 @@ function CheckoutStep({
         return;
       }
       onClearCart();
+      sessionStorage.removeItem("checkout_contact");
+      sessionStorage.removeItem("checkout_addr");
+      sessionStorage.removeItem("checkout_shipMethod");
+      sessionStorage.removeItem("checkout_payMethod");
+      sessionStorage.removeItem("checkout_step");
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
       if (data.html) {
         const div = document.createElement("div");
         div.innerHTML = data.html;
@@ -664,6 +1152,7 @@ function CheckoutStep({
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col lg:flex-row gap-12">
       <div className="flex-1 space-y-10">
+        {/* 1. 聯絡資訊 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
@@ -672,59 +1161,133 @@ function CheckoutStep({
             <h2 className="text-xl font-bold tracking-tight">聯絡資訊</h2>
           </div>
           <Input
-            label="電子郵件"
+            label="電子郵件 (作為訂單通知使用)"
             required
             type="email"
             value={contact.email}
             onChange={(e) => setContact({ ...contact, email: e.target.value })}
             error={errors.email}
-            placeholder="您的電子信箱"
+            placeholder="請輸入訂單通知信箱"
           />
         </section>
 
+        {/* 2. 運送方式 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
               2
             </span>
-            <h2 className="text-xl font-bold tracking-tight">運送方式</h2>
+            <h2 className="text-xl font-bold tracking-tight">
+              運送方式與收件資料
+            </h2>
           </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-2 text-blue-800">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="text-xs leading-relaxed">
+                <p className="font-bold mb-1">物流與配送規則：</p>
+                <ul className="list-disc pl-4 space-y-1 opacity-90">
+                  <li>
+                    全館消費滿{" "}
+                    <strong className="text-red-500">NT$1,500</strong>{" "}
+                    享免運費。
+                  </li>
+                  <li>現貨商品依訂單順序於 2-3 日內出貨（遇假日順延）。</li>
+                  <li>
+                    宅配預計出貨後 2-4 個工作日配達；超取需視門市狀況調整。
+                  </li>
+                  <li>
+                    離島地區（澎湖、金門、馬祖、綠島）請選擇「超商取貨」。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* 選擇物流 */}
           <div className="grid sm:grid-cols-3 gap-3 mb-8">
             <button
               type="button"
               onClick={() => {
                 setShipMethod("000");
-                setAddr({ ...addr, line1: "", storeId: "", storeName: "" });
+                setAddr({ ...addr, storeId: "", storeName: "" });
               }}
-              className={`flex flex-col p-4 border-2 rounded-2xl text-left transition-all hover:border-black ${shipMethod === "000" ? "border-black bg-gray-50 shadow-inner" : "border-gray-100"}`}
+              className={`flex flex-col justify-between p-4 border-2 rounded-2xl text-left transition-all hover:border-[#008060] min-h-[100px] ${shipMethod === "000" ? "border-[#008060] bg-emerald-50 shadow-inner" : "border-gray-100"}`}
             >
-              <Truck className="mb-2 w-4 h-4 text-gray-400" />
-              <span className="font-bold text-xs">宅配速送</span>
+              <div>
+                <Truck className="mb-2 w-5 h-5 text-gray-600" />
+                <span className="font-bold text-sm block mb-1">宅配速送</span>
+                <span className="text-[10px] text-gray-500 block">
+                  新竹物流
+                </span>
+              </div>
+              <span
+                className={`text-xs font-bold ${pricing.discountedSubtotal >= pricing.freeShipThreshold ? "text-[#008060]" : "text-gray-600"}`}
+              >
+                {pricing.discountedSubtotal >= pricing.freeShipThreshold
+                  ? "免運費"
+                  : "運費 NT$105"}
+              </span>
             </button>
+
             <button
               type="button"
               onClick={openEzShipMap}
-              className={`flex flex-col p-4 border-2 rounded-2xl text-left transition-all hover:border-black ${shipMethod === "CVS" ? "border-black bg-gray-50 shadow-inner" : "border-gray-100"}`}
+              className={`flex flex-col justify-between p-4 border-2 rounded-2xl text-left transition-all hover:border-[#008060] min-h-[100px] ${shipMethod === "CVS" ? "border-[#008060] bg-emerald-50 shadow-inner" : "border-gray-100"}`}
             >
-              <MapPin className="mb-2 w-4 h-4 text-green-600" />
-              <span className="font-bold text-xs">全家/萊爾富/OK</span>
+              <div>
+                <MapPin className="mb-2 w-5 h-5 text-green-600" />
+                <span className="font-bold text-sm block mb-1">
+                  全家 / 萊爾富 / OK
+                </span>
+                <span className="text-[10px] text-gray-500 block">
+                  點擊選擇門市
+                </span>
+              </div>
+              <span
+                className={`text-xs font-bold ${pricing.discountedSubtotal >= pricing.freeShipThreshold ? "text-[#008060]" : "text-gray-600"}`}
+              >
+                {pricing.discountedSubtotal >= pricing.freeShipThreshold
+                  ? "免運費"
+                  : "運費 NT$80"}
+              </span>
             </button>
+
             <button
               type="button"
               onClick={openEcpay711Map}
-              className={`flex flex-col p-4 border-2 rounded-2xl text-left transition-all hover:border-black ${shipMethod === "711" ? "border-black bg-gray-50 shadow-inner" : "border-gray-100"}`}
+              className={`flex flex-col justify-between p-4 border-2 rounded-2xl text-left transition-all hover:border-[#008060] min-h-[100px] ${shipMethod === "711" ? "border-[#008060] bg-emerald-50 shadow-inner" : "border-gray-100"}`}
             >
-              <MapPin className="mb-2 w-4 h-4 text-red-600" />
-              <span className="font-bold text-xs">7-11 選擇門市</span>
+              <div>
+                <MapPin className="mb-2 w-5 h-5 text-red-600" />
+                <span className="font-bold text-sm block mb-1">7-11</span>
+                <span className="text-[10px] text-gray-500 block">
+                  點擊選擇門市
+                </span>
+              </div>
+              <span
+                className={`text-xs font-bold ${pricing.discountedSubtotal >= pricing.freeShipThreshold ? "text-[#008060]" : "text-gray-600"}`}
+              >
+                {pricing.discountedSubtotal >= pricing.freeShipThreshold
+                  ? "免運費"
+                  : "運費 NT$80"}
+              </span>
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          {/* 🚀 動態表單：根據物流方式切換欄位 */}
+          <div className="grid grid-cols-2 gap-4  p-6  ">
+            <div className="col-span-2 mb-2 border-b-1 border-gray-200 pb-3 font-bold text-gray-800">
+              填寫收件資訊
+            </div>
             <Input
               label="姓氏"
               required
               value={addr.lastName}
               onChange={(e) => setAddr({ ...addr, lastName: e.target.value })}
               error={errors.lastName}
+              placeholder="例: 王"
             />
             <Input
               label="名字"
@@ -732,34 +1295,83 @@ function CheckoutStep({
               value={addr.firstName}
               onChange={(e) => setAddr({ ...addr, firstName: e.target.value })}
               error={errors.firstName}
+              placeholder="例: 小明"
             />
-            <div className="col-span-2">
-              <Input
-                label={shipMethod === "000" ? "配送地址" : "已選擇之門市"}
-                required
-                readOnly={shipMethod === "CVS" || shipMethod === "711"}
-                value={addr.line1}
-                onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
-                error={errors.line1}
-                placeholder={
-                  shipMethod === "000"
-                    ? "請輸入完整街道路名與門牌"
-                    : "請點選上方按鈕選擇門市"
-                }
-              />
-            </div>
             <div className="col-span-2">
               <Input
                 label="連絡電話"
                 required
+                maxLength={10}
                 value={addr.phone}
-                onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, ""); // 嚴格過濾非數字
+                  setAddr({ ...addr, phone: val });
+                }}
                 error={errors.phone}
+                placeholder="例: 0912345678"
               />
             </div>
+
+            {/* 判斷是宅配還是超商 */}
+            {shipMethod === "000" ? (
+              <>
+                <div className="col-span-1">
+                  <Select
+                    label="縣市"
+                    placeholder="選擇縣市"
+                    value={addr.city}
+                    options={Object.keys(TW_CITIES)}
+                    onChange={(e) => {
+                      setAddr({ ...addr, city: e.target.value, district: "" }); // 換縣市時清空行政區
+                    }}
+                    error={errors.city}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Select
+                    label="鄉鎮市區"
+                    placeholder="選擇區域"
+                    value={addr.district}
+                    options={addr.city ? TW_CITIES[addr.city] : []}
+                    onChange={(e) =>
+                      setAddr({ ...addr, district: e.target.value })
+                    }
+                    error={errors.district}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Input
+                    label="詳細地址"
+                    required
+                    value={addr.street}
+                    onChange={(e) =>
+                      setAddr({ ...addr, street: e.target.value })
+                    }
+                    error={errors.street}
+                    placeholder="例: 信義路一段1號5樓"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="col-span-2">
+                <Input
+                  label="已選擇門市"
+                  required
+                  readOnly
+                  value={
+                    addr.storeName
+                      ? `${addr.storeName} (${addr.storeId}) - ${addr.storeAddr}`
+                      : ""
+                  }
+                  error={errors.store}
+                  placeholder="請點擊上方物流按鈕選擇門市"
+                />
+              </div>
+            )}
           </div>
         </section>
 
+        {/* 3. 付款方式 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
@@ -767,17 +1379,53 @@ function CheckoutStep({
             </span>
             <h2 className="text-xl font-bold tracking-tight">付款方式</h2>
           </div>
-          <div className="p-6 border-2 border-black bg-gray-50 rounded-2xl flex items-center gap-4 shadow-inner">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100 shadow-sm">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-bold text-sm">綠界科技 ECPay 安全支付</p>
-              <p className="text-[11px] text-gray-500">
-                支援信用卡、ATM、超商代碼
-              </p>
-            </div>
-            <CheckCircle2 className="ml-auto text-black w-6 h-6" />
+
+          <div className="grid gap-3">
+            <button
+              type="button"
+              onClick={() => setPayMethod("card")}
+              className={`flex items-center gap-4 p-4 border-2 rounded-2xl text-left transition-all hover:border-[#008060] ${payMethod === "card" ? "border-[#008060] bg-emerald-50 shadow-inner" : "border-gray-100"}`}
+            >
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100 shadow-sm shrink-0">
+                <CreditCard
+                  className={`w-5 h-5 ${payMethod === "card" ? "text-[#008060]" : "text-gray-500"}`}
+                />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-gray-900">綠界安全支付</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  信用卡 / ATM / 超商代碼
+                </p>
+              </div>
+              {payMethod === "card" && (
+                <CheckCircle2 className="text-[#008060] w-5 h-5 shrink-0" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPayMethod("linepay")}
+              className={`flex items-center gap-4 p-4 border-2 rounded-2xl text-left transition-all hover:border-[#008060] ${payMethod === "linepay" ? "border-[#008060] bg-emerald-50 shadow-inner" : "border-gray-100"}`}
+            >
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100 shadow-sm shrink-0 p-1">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
+                  alt="LINE Pay"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-gray-900">
+                  LINE Pay 官方支付
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  使用 LINE 點數與綁定信用卡
+                </p>
+              </div>
+              {payMethod === "linepay" && (
+                <CheckCircle2 className="text-[#008060] w-5 h-5 shrink-0" />
+              )}
+            </button>
           </div>
         </section>
 
@@ -794,9 +1442,13 @@ function CheckoutStep({
             type="button"
             onClick={submit}
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-12 py-4 bg-black text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-black/20 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto px-12 py-4 bg-[#008060] text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-emerald-900/20 hover:bg-[#006e52] transition-all active:scale-95 disabled:opacity-50"
           >
-            {isSubmitting ? "建立訂單中..." : "確認付款並下單"}
+            {isSubmitting
+              ? payMethod === "linepay"
+                ? "導向 LINE Pay 中..."
+                : "安全連線中..."
+              : "確認付款並下單"}
           </button>
         </div>
       </div>
@@ -805,15 +1457,15 @@ function CheckoutStep({
         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm lg:sticky lg:top-24">
           <CouponPicker
             title="可用折價券"
-            subtitle="升等禮 / 生日禮金"
-            coupons={coupons}
+            subtitle="點擊即可套用折扣"
+            coupons={[...coupons, ...referralCoupons]}
             applied={appliedCoupon}
             onApply={onApplyCoupon}
             onClear={onClearCoupon}
-            loading={couponLoading}
+            loading={couponLoading || referralLoading}
           />
 
-          <h3 className="font-bold mb-6 flex items-center gap-2">
+          <h3 className="font-bold mb-6 flex items-center gap-2 pt-4 border-t border-gray-200">
             訂單明細{" "}
             <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">
               {items.length}
@@ -846,8 +1498,6 @@ function CheckoutStep({
               <span>小計</span>
               <span>{currency(pricing.subtotal)}</span>
             </div>
-
-            {/* ✅ 會員折扣 */}
             {pricing.memberDiscountAmount > 0 && (
               <div className="flex justify-between text-gray-400">
                 <span>{membership?.tierName} 優惠</span>
@@ -856,11 +1506,10 @@ function CheckoutStep({
                 </span>
               </div>
             )}
-
             {pricing.couponDiscount > 0 ? (
-              <div className="flex justify-between text-gray-400">
-                <span>折扣</span>
-                <span className="font-black text-black">
+              <div className="flex justify-between text-emerald-600">
+                <span className="font-bold">優惠券折抵</span>
+                <span className="font-black">
                   - {currency(pricing.couponDiscount)}
                 </span>
               </div>
@@ -868,12 +1517,16 @@ function CheckoutStep({
             <div className="flex justify-between text-gray-400">
               <span>運費</span>
               <span>
-                {pricing.shipping === 0 ? "免運" : currency(pricing.shipping)}
+                {pricing.shipping === 0 ? (
+                  <span className="text-[#008060] font-bold">免運</span>
+                ) : (
+                  currency(pricing.shipping)
+                )}
               </span>
             </div>
             <div className="flex justify-between text-base font-black pt-3 border-t border-gray-100 mt-2">
-              <span>總金額.</span>
-              <span>{currency(pricing.total)}</span>
+              <span>總金額</span>
+              <span className="text-2xl">{currency(pricing.total)}</span>
             </div>
           </div>
         </div>
@@ -898,6 +1551,7 @@ function CartContent() {
   const [referralLoading, setReferralLoading] = useState(false);
   const [referralCoupons, setReferralCoupons] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   const [pricing, setPricing] = useState({
     subtotal: 0,
     memberDiscountAmount: 0,
@@ -905,80 +1559,100 @@ function CartContent() {
     discountedSubtotal: 0,
     shipping: 0,
     total: 0,
+    needForFreeShip: 1500,
+    freeShipThreshold: 1500,
   });
+
   const [contact, setContact] = useState({ email: "" });
+
+  // 🚀 新增：更細緻的地址狀態 (加入 city, district, street)
   const [addr, setAddr] = useState({
     firstName: "",
     lastName: "",
-    line1: "",
     phone: "",
+    city: "",
+    district: "",
+    street: "",
     storeId: "",
     storeName: "",
     storeAddr: "",
   });
+
   const [shipMethod, setShipMethod] = useState("000");
   const [payMethod, setPayMethod] = useState("card");
-
-  // ✅ 新增：會員狀態
   const [membership, setMembership] = useState(null);
   const [discountRate, setDiscountRate] = useState(1);
 
+  // 🚨 【護城河 2】：載入資料與 URL 判定完美融合
   useEffect(() => {
     setItems(storeItems);
 
-    // ✅ 強制讀取會員資料
     const fetchMembership = async () => {
       try {
         const res = await fetch("/api/account/profile");
         const data = await res.json();
         if (data.loggedIn && data.membership) {
           setMembership(data.membership);
-          const rate = TIER_DISCOUNTS[data.membership.tierName] || 1;
-          setDiscountRate(rate);
-          // 如果有 Email 則自動填入
-          if (data.customer?.email) {
-            setContact((prev) => ({ ...prev, email: data.customer.email }));
-          }
+          setDiscountRate(TIER_DISCOUNTS[data.membership.tierName] || 1);
         }
-      } catch (e) {
-        console.error("Failed to fetch membership in cart", e);
-      }
+      } catch (e) {}
     };
     fetchMembership();
 
-    // URL handling
+    // 1. 先從 SessionStorage 還原狀態
+    let _addr = { ...addr };
+    let _contact = { ...contact };
+    let _ship = "000";
+    let _pay = "card";
+    let _step = 1;
+
+    try {
+      const sAddr = sessionStorage.getItem("checkout_addr");
+      if (sAddr) _addr = { ..._addr, ...JSON.parse(sAddr) };
+      const sContact = sessionStorage.getItem("checkout_contact");
+      if (sContact) _contact = { ..._contact, ...JSON.parse(sContact) };
+      const sShip = sessionStorage.getItem("checkout_shipMethod");
+      if (sShip) _ship = sShip;
+      const sPay = sessionStorage.getItem("checkout_payMethod");
+      if (sPay) _pay = sPay;
+      const sStep = sessionStorage.getItem("checkout_step");
+      if (sStep) _step = parseInt(sStep, 10);
+    } catch (e) {}
+
+    // 2. 檢查是否從地圖跳轉回來
     const sId = searchParams.get("storeId");
     const sName = searchParams.get("storeName");
-    const sAddr = searchParams.get("storeAddr");
+    const sAddrUrl = searchParams.get("storeAddr");
     const prov = searchParams.get("provider");
     const urlStep = searchParams.get("step");
 
     if (sId && sName) {
-      setShipMethod(prov === "711" ? "711" : "CVS");
-      setAddr((prev) => ({
-        ...prev,
-        line1: `${sName} (${sId})`,
+      _ship = prov === "711" ? "711" : "CVS";
+      _addr = {
+        ..._addr,
         storeId: sId,
         storeName: sName,
-        storeAddr: sAddr || "",
-      }));
-      setStep(2);
-    } else {
-      const savedAddr = sessionStorage.getItem("checkout_addr");
-      if (savedAddr) {
-        try {
-          setAddr(JSON.parse(savedAddr));
-        } catch {}
-      }
-      const savedShip = sessionStorage.getItem("checkout_shipMethod");
-      if (savedShip) setShipMethod(savedShip);
-      const savedStep = sessionStorage.getItem("checkout_step");
-      if (urlStep) setStep(parseInt(urlStep, 10));
-      else if (savedStep) setStep(parseInt(savedStep, 10));
+        storeAddr: sAddrUrl || "",
+      };
+      _step = 2; // 強制進入第二步
+
+      // 清理 URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("storeName");
+      newUrl.searchParams.delete("storeId");
+      newUrl.searchParams.delete("storeAddr");
+      newUrl.searchParams.delete("provider");
+      window.history.replaceState({}, "", newUrl.toString());
+    } else if (urlStep) {
+      _step = parseInt(urlStep, 10);
     }
 
-    const savedPay = sessionStorage.getItem("checkout_payMethod");
-    if (savedPay) setPayMethod(savedPay);
+    setContact(_contact);
+    setAddr(_addr);
+    setShipMethod(_ship);
+    setPayMethod(_pay);
+    setStep(_step);
+
     const savedCoupon = sessionStorage.getItem("cart_coupon");
     if (savedCoupon) {
       try {
@@ -988,7 +1662,19 @@ function CartContent() {
     }
 
     setItemsLoaded(true);
-  }, [searchParams, storeItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 🚨 【護城河 3】：任何輸入狀態改變，立刻同步至 SessionStorage
+  useEffect(() => {
+    if (itemsLoaded) {
+      sessionStorage.setItem("checkout_contact", JSON.stringify(contact));
+      sessionStorage.setItem("checkout_addr", JSON.stringify(addr));
+      sessionStorage.setItem("checkout_shipMethod", shipMethod);
+      sessionStorage.setItem("checkout_payMethod", payMethod);
+      sessionStorage.setItem("checkout_step", step.toString());
+    }
+  }, [contact, addr, shipMethod, payMethod, step, itemsLoaded]);
 
   useEffect(() => {
     const loadAllCoupons = async () => {
@@ -1050,60 +1736,38 @@ function CartContent() {
   useEffect(() => {
     if (!itemsLoaded) return;
     const discount = appliedCoupon?.amount || 0;
-    // ✅ 將 discountRate 傳入計算
+    const shippingBase = shipMethod === "000" ? 105 : 80;
     setPricing(
       calcPricing(
         items,
-        { shippingBase: 0, freeShipThreshold: 1800 },
+        { shippingBase, freeShipThreshold: 1500 },
         discount,
         discountRate,
       ),
     );
-  }, [items, itemsLoaded, appliedCoupon, discountRate]);
+  }, [items, itemsLoaded, appliedCoupon, discountRate, shipMethod]);
 
   const updateQty = (id, newQty) => storeUpdateQty(id, newQty);
   const removeItem = (id) => storeRemoveItem(id);
   const clearCart = () => storeClearCart();
-  const applyCoupon = (c) => setAppliedCoupon(c);
-  const clearCoupon = () => setAppliedCoupon(null);
+  const applyCoupon = (c) => {
+    setAppliedCoupon(c);
+    sessionStorage.setItem("cart_coupon", JSON.stringify(c));
+  };
+  const clearCoupon = () => {
+    setAppliedCoupon(null);
+    sessionStorage.removeItem("cart_coupon");
+  };
 
   if (!itemsLoaded)
     return (
       <div className="h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-gray-100 border-t-[#008060] rounded-full animate-spin" />
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b sticky top-0 bg-white/90 backdrop-blur-xl z-50">
-        <div className="max-w-6xl mx-auto h-20 flex items-center justify-between px-6">
-          <a href="/">
-            <img src="/images/logo/logo-y.png" alt="Uflow" className="h-7" />
-          </a>
-          <div className="flex gap-10 items-center text-[10px] font-black tracking-[0.2em] text-gray-300 uppercase">
-            <span
-              className={
-                step === 1
-                  ? "text-black border-b-2 border-black pb-2"
-                  : "hidden sm:block"
-              }
-            >
-              01 購物清單
-            </span>
-            <span
-              className={
-                step === 2
-                  ? "text-black border-b-2 border-black pb-2"
-                  : "hidden sm:block"
-              }
-            >
-              02 配送付款
-            </span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-white pt-[80px] sm:pt-[150px]">
       <main>
         <AnimatePresence mode="wait">
           {step === 1 ? (
@@ -1125,7 +1789,10 @@ function CartContent() {
                 onClearCoupon={clearCoupon}
                 onUpdateQty={updateQty}
                 onRemove={removeItem}
-                onNext={() => setStep(2)}
+                onNext={() => {
+                  sessionStorage.setItem("checkout_step", "2");
+                  setStep(2);
+                }}
                 membership={membership}
               />
             </motion.div>
@@ -1154,7 +1821,10 @@ function CartContent() {
                 setShipMethod={setShipMethod}
                 payMethod={payMethod}
                 setPayMethod={setPayMethod}
-                onPrev={() => setStep(1)}
+                onPrev={() => {
+                  sessionStorage.setItem("checkout_step", "1");
+                  setStep(1);
+                }}
                 onClearCart={clearCart}
                 membership={membership}
               />
@@ -1170,8 +1840,8 @@ export default function CartPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen flex items-center justify-center font-black tracking-widest text-gray-200">
-          UFLO
+        <div className="h-screen flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-gray-100 border-t-[#008060] rounded-full animate-spin" />
         </div>
       }
     >

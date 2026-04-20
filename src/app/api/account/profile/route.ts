@@ -27,78 +27,70 @@ function parseAdminEmails() {
     .filter(Boolean);
 }
 
-/* ========= 會員分級邏輯 (保持不變) ========= */
+/* ========= 🚨 完美貼齊企劃書的會員分級邏輯 ========= */
 function calcTier(totalSpent: number) {
-  if (totalSpent >= 35000) return "VVIP 貴賓";
-  if (totalSpent >= 10000) return "VIP 貴賓";
-  if (totalSpent >= 6000) return "金貴賓";
-  if (totalSpent >= 2000) return "銀貴賓";
-  if (totalSpent > 0) return "銅貴賓";
-  return "尚未消費";
+  if (totalSpent >= 35000) return "UVVIP貴賓";
+  if (totalSpent >= 10000) return "UVIP貴賓";
+  if (totalSpent >= 6000) return "U金貴賓";
+  if (totalSpent >= 2000) return "U銀貴賓";
+  return "U銅貴賓"; // 註冊即為銅貴賓
 }
 
 function buildMembershipPayload(totalSpent12m: number) {
   const tierName = calcTier(totalSpent12m);
-  let discountLabel = "依活動公告";
+  let discountLabel = "無專屬折扣";
   let upgradeGift = 0;
   let birthdayCredit = 0;
   let nextTierName: string | null = null;
   let nextNeedAmount: number | null = null;
 
-  if (tierName === "尚未消費") {
-    nextTierName = "銅貴賓";
-    nextNeedAmount = 1;
-  } else if (tierName === "銅貴賓") {
-    nextTierName = "銀貴賓";
-    nextNeedAmount = Math.max(0, 2000 - totalSpent12m);
-  } else if (tierName === "銀貴賓") {
-    nextTierName = "金貴賓";
-    nextNeedAmount = Math.max(0, 6000 - totalSpent12m);
-  } else if (tierName === "金貴賓") {
-    nextTierName = "VIP 貴賓";
-    nextNeedAmount = Math.max(0, 10000 - totalSpent12m);
-  } else if (tierName === "VIP 貴賓") {
-    nextTierName = "VVIP 貴賓";
-    nextNeedAmount = Math.max(0, 35000 - totalSpent12m);
-  }
-
+  // 💡 直接使用 switch 清晰定義每一階的福利，不留任何舊代碼殘骸
   switch (tierName) {
-    case "銅貴賓":
-      discountLabel = "消費享 95 折";
-      birthdayCredit = 50;
-      break;
-    case "銀貴賓":
-      discountLabel = "消費享 9 折";
-      birthdayCredit = 80;
-      break;
-    case "金貴賓":
-      discountLabel = "消費享 88 折";
-      birthdayCredit = 100;
+    case "U銅貴賓":
+      discountLabel = "無專屬折扣";
       upgradeGift = 50;
+      birthdayCredit = 100;
+      nextTierName = "U銀貴賓";
+      nextNeedAmount = Math.max(0, 2000 - totalSpent12m);
       break;
-    case "VIP 貴賓":
-      discountLabel = "消費享 85 折";
-      birthdayCredit = 150;
+    case "U銀貴賓":
+      discountLabel = "消費享 98 折";
       upgradeGift = 100;
-      break;
-    case "VVIP 貴賓":
-      discountLabel = "專屬 VIP 優惠";
       birthdayCredit = 200;
-      upgradeGift = 150;
+      nextTierName = "U金貴賓";
+      nextNeedAmount = Math.max(0, 6000 - totalSpent12m);
+      break;
+    case "U金貴賓":
+      discountLabel = "消費享 95 折";
+      upgradeGift = 300;
+      birthdayCredit = 300;
+      nextTierName = "UVIP貴賓";
+      nextNeedAmount = Math.max(0, 10000 - totalSpent12m);
+      break;
+    case "UVIP貴賓":
+      discountLabel = "消費享 9 折";
+      upgradeGift = 500;
+      birthdayCredit = 500;
+      nextTierName = "UVVIP貴賓";
+      nextNeedAmount = Math.max(0, 35000 - totalSpent12m);
+      break;
+    case "UVVIP貴賓":
+      discountLabel = "消費享 88 折";
+      upgradeGift = 1000;
+      birthdayCredit = 1000;
       break;
   }
 
-  return {
-    tierName,
-    totalSpent12m,
-    discountLabel,
-    upgradeGift,
-    birthdayCredit,
-    nextTierName,
-    nextNeedAmount,
+  return { 
+    tierName, 
+    totalSpent12m, 
+    discountLabel, 
+    upgradeGift, 
+    birthdayCredit, 
+    nextTierName, 
+    nextNeedAmount 
   };
 }
-
 // 提取並驗證用戶 Email 的輔助函式
 async function getAuthenticatedEmail() {
   const auth = basicAuth();

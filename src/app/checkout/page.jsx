@@ -3,21 +3,11 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-/**
- * ✅ 你要「自動開立發票」成功，前端這頁最重要是：
- * 1) /api/checkout 一定要收到 email / total / 姓名 / 電話 / 地址（讓後端寫入 Woo 訂單 billing/shipping）
- * 2) 後端建立綠界金流時，要把 CustomField1/2/3 填好（orderId / email / total）
- *
- * 這份我已把 submit payload 改成「Woo 能直接用」的結構（billing/shipping + line_items）
- * 後端 /api/checkout 只要照 payload 建 WC order 就會更穩。
- */
+import { Tag, CheckCircle2 } from "lucide-react"; // 加入 CheckCircle2
 
 /* ====== 假資料（可改成 cartStore 實際資料） ====== */
 const INIT_ITEMS = [
   {
-    // ⚠️ 建議你改成 WooCommerce 的「產品數字 ID」
-    // 例如：productId: 123
     productId: 0,
     id: "airflex-pants-gray-l",
     title: "AirFlex™ 機能柔韌訓練長褲（鐵灰）",
@@ -33,15 +23,30 @@ const INIT_ITEMS = [
 const currency = (n) =>
   `NT$${(Math.round(n * 100) / 100).toLocaleString("zh-TW")}`;
 
-function calcPricing(items, { shippingBase = 80, freeShipThreshold = 1800 }) {
+// ✅ 修正計算邏輯：加入 couponDiscount 參數
+function calcPricing(
+  items,
+  { shippingBase = 80, freeShipThreshold = 1800 },
+  couponDiscount = 0,
+) {
   const subtotal = items.reduce((s, it) => s + it.price * it.qty, 0);
   const saveFromSale = items.reduce(
     (s, it) => s + Math.max(0, (it.compareAt || it.price) - it.price) * it.qty,
-    0
+    0,
   );
-  const shipping = subtotal >= freeShipThreshold ? 0 : shippingBase;
-  const total = subtotal + shipping;
-  return { subtotal, shipping, discount: 0, total, saveFromSale };
+
+  // 扣除優惠券 (最多折抵到 0 元)
+  const safeDiscount = Math.min(couponDiscount, subtotal);
+  const discountedSubtotal = subtotal - safeDiscount;
+
+  // 用折抵後的金額計算運費
+  const shipping =
+    discountedSubtotal >= freeShipThreshold || discountedSubtotal === 0
+      ? 0
+      : shippingBase;
+  const total = discountedSubtotal + shipping;
+
+  return { subtotal, shipping, discount: safeDiscount, total, saveFromSale };
 }
 
 /* ====== 小元件 ====== */
@@ -83,10 +88,10 @@ function RadioRow({ checked, onChange, label, right, children }) {
 function SummaryPanel({
   items,
   pricing,
-  code,
-  codeMsg,
-  onCodeChange,
-  onApplyCode,
+  availableCoupons,
+  couponLoading,
+  selectedCoupon,
+  onSelectCoupon,
 }) {
   return (
     <aside className="w-full lg:w-[40%] xl:w-[38%]">
@@ -131,28 +136,65 @@ function SummaryPanel({
           ))}
         </div>
 
-        {/* 折扣碼 */}
-        <div className="mt-5">
-          <div className="flex gap-2">
-            <input
-              value={code}
-              onChange={(e) => onCodeChange(e.target.value)}
-              type="text"
-              placeholder="折扣碼"
-              className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-            />
-            <button
-              onClick={onApplyCode}
-              className="px-3 py-2 rounded-lg border text-sm hover:bg-gray-50"
-            >
-              套用
-            </button>
-          </div>
-          {codeMsg && <p className="text-xs mt-2 text-gray-500">{codeMsg}</p>}
+        {/* ✅ 自動讀取的折扣碼錢包 UI */}
+        <div className="mt-5 border-t pt-5">
+          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
+            <Tag size={16} className="text-[#008060]" /> 可用折扣金與專屬優惠
+          </h3>
+
+          {couponLoading ? (
+            <p className="text-xs text-gray-400">讀取錢包中...</p>
+          ) : availableCoupons.length === 0 ? (
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
+              <p className="text-xs text-gray-500">目前沒有可用的折扣碼</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {availableCoupons.map((c) => (
+                <label
+                  key={c.code}
+                  className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedCoupon?.code === c.code
+                      ? "border-[#008060] bg-emerald-50 shadow-sm"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="checkout_coupon"
+                      checked={selectedCoupon?.code === c.code}
+                      onChange={() => onSelectCoupon(c)}
+                      className="text-[#008060] focus:ring-[#008060] w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        折抵 NT$ {c.amount}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {c.description || "專屬禮金折扣"}
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              ))}
+
+              {/* 取消使用按鈕 */}
+              {selectedCoupon && (
+                <button
+                  type="button"
+                  onClick={() => onSelectCoupon(null)}
+                  className="mt-2 text-xs text-rose-600 hover:underline text-left inline-block w-fit"
+                >
+                  不使用折扣碼
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 金額明細 */}
-        <div className="mt-5 space-y-2 text-sm">
+        <div className="mt-5 space-y-2 text-sm border-t pt-5">
           <div className="flex justify-between">
             <span className="text-gray-600">小計</span>
             <span>{currency(pricing.subtotal)}</span>
@@ -177,38 +219,27 @@ function SummaryPanel({
           {pricing.discount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">折扣</span>
-              <span className="text-emerald-700">
+              <span className="text-emerald-700 font-bold">
                 - {currency(pricing.discount)}
               </span>
             </div>
           )}
           <div className="flex justify-between border-t pt-3 text-base font-semibold">
             <span>總計</span>
-            <span>{currency(pricing.total)}</span>
+            <span className="text-xl font-black">
+              {currency(pricing.total)}
+            </span>
           </div>
         </div>
 
         {/* 節省總額 */}
         {pricing.saveFromSale + pricing.discount > 0 && (
-          <div className="mt-3 text-xs text-gray-600 flex items-center gap-2">
-            <span className="inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-              總節省金額
-            </span>
-            <span className="font-medium">
+          <div className="mt-3 text-xs text-gray-600 flex items-center gap-2 bg-amber-50 p-2 rounded-md border border-amber-100">
+            <span className="font-bold text-amber-800">🎉 本次購物共節省</span>
+            <span className="font-bold text-amber-600">
               {currency(pricing.saveFromSale + pricing.discount)}
             </span>
           </div>
-        )}
-
-        {/* 免運提示 */}
-        {pricing.shipping === 0 ? (
-          <p className="mt-3 text-xs text-gray-500">
-            台灣地區消費滿 NT$1,800 免運 ✅
-          </p>
-        ) : (
-          <p className="mt-3 text-xs text-gray-500">
-            台灣地區消費滿 NT$1,800 即享免運
-          </p>
         )}
       </div>
     </aside>
@@ -218,17 +249,18 @@ function SummaryPanel({
 export default function CheckoutPage() {
   const router = useRouter();
 
-  // 商品與金額
+  // 商品
   const [items] = useState(INIT_ITEMS);
-  const base = useMemo(
-    () => calcPricing(items, { shippingBase: 80, freeShipThreshold: 1800 }),
-    [items]
-  );
-  const [pricing, setPricing] = useState(base);
 
-  // 折扣碼
-  const [code, setCode] = useState("");
-  const [codeMsg, setCodeMsg] = useState("");
+  // ✅ 新增：自動讀取折扣碼的狀態
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  // 初始化金額
+  const [pricing, setPricing] = useState(() =>
+    calcPricing(items, { shippingBase: 80, freeShipThreshold: 1800 }),
+  );
 
   // 聯絡/地址
   const [contact, setContact] = useState({ email: "", newsletter: true });
@@ -246,59 +278,43 @@ export default function CheckoutPage() {
 
   // 運送/付款
   const [shipMethod, setShipMethod] = useState("000");
-  const [payMethod, setPayMethod] = useState("card");
+  const [payMethod, setPayMethod] = useState("card"); // 預設為綠界
 
-  // 每次 items 變更就重算（並清空折扣）
+  // ✅ 進來結帳頁時，馬上打 API 抓客人的錢包
   useEffect(() => {
-    const next = calcPricing(items, {
-      shippingBase: 80,
-      freeShipThreshold: 1800,
-    });
+    async function fetchMyCoupons() {
+      setCouponLoading(true);
+      try {
+        const res = await fetch("/api/account/coupons/available", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setAvailableCoupons(data.available);
+        }
+      } catch (e) {
+        console.error("Fetch coupons failed", e);
+      }
+      setCouponLoading(false);
+    }
+    fetchMyCoupons();
+  }, []);
+
+  // ✅ 當選擇不同的折扣碼，或商品有變動時，重新計算金額
+  useEffect(() => {
+    const discountAmount = selectedCoupon ? Number(selectedCoupon.amount) : 0;
+    const next = calcPricing(
+      items,
+      {
+        shippingBase: 80,
+        freeShipThreshold: 1800,
+      },
+      discountAmount,
+    );
     setPricing(next);
-    setCode("");
-    setCodeMsg("");
-  }, [items]);
+  }, [items, selectedCoupon]);
 
-  // 套用折扣碼（示例規則）
-  const onApplyCode = () => {
-    const v = code.trim().toUpperCase();
-    if (!v) {
-      setCodeMsg("請輸入折扣碼");
-      setPricing((p) => ({
-        ...p,
-        discount: 0,
-        total: p.subtotal + p.shipping,
-      }));
-      return;
-    }
-    if (v === "ST35") {
-      setCodeMsg("已套用折扣碼：ST35（-NT$35）");
-      setPricing((p) => ({
-        ...p,
-        discount: 35,
-        total: Math.max(0, p.subtotal + p.shipping - 35),
-      }));
-    } else if (v === "TW8") {
-      setCodeMsg("已套用 92 折");
-      setPricing((p) => {
-        const cut = Math.round((p.subtotal + p.shipping) * 0.08);
-        return {
-          ...p,
-          discount: cut,
-          total: Math.max(0, p.subtotal + p.shipping - cut),
-        };
-      });
-    } else {
-      setCodeMsg("折扣碼無效");
-      setPricing((p) => ({
-        ...p,
-        discount: 0,
-        total: p.subtotal + p.shipping,
-      }));
-    }
-  };
-
-  // 驗證（簡化）
+  // 驗證
   const [errors, setErrors] = useState({});
   const validate = () => {
     const e = {};
@@ -312,7 +328,6 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0;
   };
 
-  // ✅ 新增：避免重複點擊
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -321,21 +336,19 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      // ✅ 這裡把地址拆成 Woo 常用欄位，後端建 WC order 可以直接塞 billing/shipping
       const billing = {
         first_name: addr.firstName,
         last_name: addr.lastName,
         email: contact.email,
         phone: addr.phone,
         country: addr.country === "台灣" ? "TW" : addr.country,
-        state: "", // 台灣可留空或填縣市
+        state: "",
         city: addr.city,
         address_1: addr.line1,
         address_2: addr.line2,
         postcode: addr.zip,
       };
 
-      // 你是出貨用，同 billing（或你要做不同收件人再分開）
       const shipping = {
         first_name: addr.firstName,
         last_name: addr.lastName,
@@ -347,31 +360,28 @@ export default function CheckoutPage() {
         postcode: addr.zip,
       };
 
-      // ✅ line_items 建議長這樣（Woo）
-      // ⚠️ 若你沒有 Woo productId，先用 name/price 讓後端自建也行，但最穩是 product_id
       const line_items = items.map((it) => ({
-        product_id: Number(it.productId || 0), // ✅ 後端若需要可檢查 0 就用自建商品/或改走 custom line item
+        product_id: Number(it.productId || 0),
         name: it.title,
         quantity: Number(it.qty || 1),
-        // 下面兩個是給你後端比對用（Woo REST 其實也能用 price，但不同版本可能限制）
         _client_price: Number(it.price || 0),
         _client_sku: it.id,
         meta_data: it.variant ? [{ key: "variant", value: it.variant }] : [],
       }));
 
-      // ✅ 送到 /api/checkout 的 payload（你後端要用的關鍵資料都在這）
       const payload = {
-        // 訂單資料
         currency: "TWD",
-        payment_method: payMethod, // "card" | "linepay"（你後端要轉成 ECPay 的 PaymentType/ChoosePayment）
-        shipping_method: shipMethod, // "000" etc.
-
-        // Woo 需要的資料
+        payment_method: payMethod,
+        shipping_method: shipMethod,
         billing,
         shipping,
         line_items,
 
-        // 金額（你後端可用 Woo 計算，也可用這裡作為核對/CustomField3）
+        // ✅ 後端送出的折扣資料
+        coupon: selectedCoupon
+          ? { code: selectedCoupon.code, amount: selectedCoupon.amount }
+          : null,
+
         pricing: {
           subtotal: pricing.subtotal,
           shipping: pricing.shipping,
@@ -379,18 +389,14 @@ export default function CheckoutPage() {
           total: pricing.total,
         },
 
-        // 折扣碼（後端要真的套用才有用；這裡先傳過去備用）
-        coupon_code: code.trim() || "",
-
-        // 你原本的資料（保留，避免你後端已經在用）
         contact: { email: contact.email },
         addr: {
           firstName: addr.firstName,
           lastName: addr.lastName,
-          line1: `${addr.city}${addr.line1}`, // 若你後端曾用這個字段，也保留
+          line1: `${addr.city}${addr.line1}`,
           phone: addr.phone,
         },
-        total: pricing.total, // ✅ 關鍵：後端建綠界 CustomField3 可以用這個
+        total: pricing.total,
       };
 
       const res = await fetch("/api/checkout", {
@@ -407,7 +413,12 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ✅ 綠界回傳 HTML form：直接 submit
+      // 🚀 新增：如果是走路線 B (LINE Pay)，後端會回傳 redirectUrl
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
       if (data.html) {
         const div = document.createElement("div");
         div.innerHTML = data.html;
@@ -416,7 +427,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      // fallback
       router.push(`/thank-you?orderId=${data.orderId}`);
     } catch (err) {
       alert("連線失敗，請稍後再試");
@@ -425,7 +435,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 pt-[80px] sm:pt-[150px]">
       {/* 頂部品牌列 */}
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
@@ -452,7 +462,7 @@ export default function CheckoutPage() {
                     onChange={(e) =>
                       setContact((s) => ({ ...s, email: e.target.value }))
                     }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                       errors.email ? "border-red-500" : ""
                     }`}
                     placeholder="you@example.com"
@@ -468,6 +478,7 @@ export default function CheckoutPage() {
                         newsletter: e.target.checked,
                       }))
                     }
+                    className="text-[#008060] focus:ring-[#008060]"
                   />
                   以電子郵件傳送最新消息和優惠活動給我
                 </label>
@@ -485,7 +496,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, country: e.target.value }))
                       }
-                      className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                      className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060]"
                     >
                       <option>台灣</option>
                       <option>香港</option>
@@ -498,7 +509,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, firstName: e.target.value }))
                       }
-                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                         errors.firstName ? "border-red-500" : ""
                       }`}
                       placeholder="名字"
@@ -510,7 +521,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, lastName: e.target.value }))
                       }
-                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                         errors.lastName ? "border-red-500" : ""
                       }`}
                       placeholder="姓氏"
@@ -524,7 +535,7 @@ export default function CheckoutPage() {
                     onChange={(e) =>
                       setAddr((s) => ({ ...s, line1: e.target.value }))
                     }
-                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                    className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                       errors.line1 ? "border-red-500" : ""
                     }`}
                     placeholder="例：板橋區重慶路 〇號"
@@ -536,7 +547,7 @@ export default function CheckoutPage() {
                     onChange={(e) =>
                       setAddr((s) => ({ ...s, line2: e.target.value }))
                     }
-                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                    className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060]"
                     placeholder="樓層、公司…"
                   />
                 </Field>
@@ -553,7 +564,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, city: e.target.value }))
                       }
-                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                         errors.city ? "border-red-500" : ""
                       }`}
                     />
@@ -564,7 +575,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, zip: e.target.value }))
                       }
-                      className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                      className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060]"
                     />
                   </Field>
                   <Field label="電話" required error={errors.phone}>
@@ -573,7 +584,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddr((s) => ({ ...s, phone: e.target.value }))
                       }
-                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 ${
+                      className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-[#008060] ${
                         errors.phone ? "border-red-500" : ""
                       }`}
                       placeholder="09xxxxxxxx"
@@ -588,6 +599,7 @@ export default function CheckoutPage() {
                     onChange={(e) =>
                       setAddr((s) => ({ ...s, saveInfo: e.target.checked }))
                     }
+                    className="text-[#008060] focus:ring-[#008060]"
                   />
                   儲存此資訊供下次使用
                 </label>
@@ -622,7 +634,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* 付款 */}
+            {/* 🚀 替換付款區塊：加入 LINE Pay */}
             <div className="bg-white border rounded-xl p-5 lg:p-6 shadow-sm">
               <h2 className="text-lg font-semibold">付款</h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -631,10 +643,11 @@ export default function CheckoutPage() {
               </p>
 
               <div className="mt-4 grid gap-3">
+                {/* 綠界選項 */}
                 <RadioRow
                   checked={payMethod === "card"}
                   onChange={() => setPayMethod("card")}
-                  label="信用卡支付"
+                  label="綠界安全支付 (信用卡/ATM/超商代碼)"
                   right={
                     <div className="flex items-center gap-1 opacity-70">
                       <img
@@ -647,50 +660,36 @@ export default function CheckoutPage() {
                         alt="Mastercard"
                         className="h-4 w-auto"
                       />
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/3/30/Amex_logo.svg"
-                        alt="AMEX"
-                        className="h-4 w-auto"
-                      />
                     </div>
                   }
                 >
-                  <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                    <input
-                      className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                      placeholder="卡號 •••• •••• •••• ••••"
-                      disabled
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                        placeholder="MM/YY"
-                        disabled
-                      />
-                      <input
-                        className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                        placeholder="CVC"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    你目前是走綠界金流：這裡先當示意欄位（實際會跳綠界付款頁）。
-                  </p>
+                  {payMethod === "card" && (
+                    <p className="text-xs text-gray-500 mt-2 animate-in fade-in">
+                      點擊「立即付款」後將跳轉至綠界科技安全金流頁面進行結帳。
+                    </p>
+                  )}
                 </RadioRow>
 
+                {/* 🚀 新增 LINE Pay 選項 */}
                 <RadioRow
                   checked={payMethod === "linepay"}
                   onChange={() => setPayMethod("linepay")}
-                  label="LINE Pay"
+                  label="LINE Pay 官方支付"
                   right={
                     <img
                       src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
-                      alt="LINE"
-                      className="h-4 w-auto"
+                      alt="LINE Pay"
+                      className="h-5 w-auto"
                     />
                   }
-                />
+                >
+                  {payMethod === "linepay" && (
+                    <p className="text-xs text-emerald-600 font-bold mt-2 animate-in fade-in flex items-center gap-1">
+                      <CheckCircle2 size={14} /> 點擊付款將導向 LINE Pay
+                      官方驗證授權。
+                    </p>
+                  )}
+                </RadioRow>
               </div>
             </div>
 
@@ -702,25 +701,25 @@ export default function CheckoutPage() {
               <button
                 onClick={submit}
                 disabled={submitting}
-                className={`px-6 py-3 rounded-lg font-semibold ${
+                className={`px-8 py-3.5 rounded-lg font-bold text-lg transition-all ${
                   submitting
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-black text-white hover:bg-gray-900"
+                    : "bg-[#008060] text-white hover:bg-[#006e52] hover:shadow-lg active:scale-95"
                 }`}
               >
-                {submitting ? "送出中…" : "立即付款"}
+                {submitting ? "處理跳轉中…" : "立即付款"}
               </button>
             </div>
           </section>
 
-          {/* 右側：摘要 */}
+          {/* 右側：摘要與錢包 */}
           <SummaryPanel
             items={items}
             pricing={pricing}
-            code={code}
-            codeMsg={codeMsg}
-            onCodeChange={setCode}
-            onApplyCode={onApplyCode}
+            availableCoupons={availableCoupons}
+            couponLoading={couponLoading}
+            selectedCoupon={selectedCoupon}
+            onSelectCoupon={setSelectedCoupon}
           />
         </div>
       </main>

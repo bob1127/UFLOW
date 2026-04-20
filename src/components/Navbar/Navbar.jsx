@@ -3,14 +3,55 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "next-view-transitions";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+// ✅ 修正：補上缺失的 ChevronRight 引用
+import { ChevronRight } from "lucide-react";
 
 // ============================================================================
 // 子組件區塊
 // ============================================================================
 
-/** * 漢堡選單按鈕
- * 風格：深色線條 (適配白底)
- */
+/** * 🚀 頂部公告輪播組件 */
+function TopAnnouncementBar() {
+  const announcements = [
+    { text: "- 全館消費滿 NT$1,500 即享免運優惠 -", color: "#f58a9c" },
+    { text: "- 新會員註冊立即送 NT$50 購物金 -", color: "#f58a9c" },
+    { text: "- 會員生日當月享專屬禮金 NT$100 起 -", color: "#f58a9c" },
+    {
+      text: "- UFLOW 推薦計畫：親友首單完成，即獲 NT$200 抵用金 -",
+      color: "#f58a9c",
+    },
+  ];
+
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % announcements.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [announcements.length]);
+
+  return (
+    <div className="relative h-9 w-full overflow-hidden bg-[#f58a9c]">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -30, opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          className="flex h-full w-full items-center justify-center px-4 text-center"
+        >
+          <span className="text-[11px] font-bold tracking-widest text-white md:text-xs">
+            {announcements[index].text}
+          </span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** * 漢堡選單按鈕 */
 function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   const spring = { type: "spring", stiffness: 260, damping: 20 };
   return (
@@ -27,7 +68,6 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
         width="28"
         height="28"
         viewBox="0 0 24 24"
-        aria-hidden="true"
         initial={false}
         animate={open ? "open" : "closed"}
         className="text-slate-900"
@@ -81,9 +121,7 @@ function MenuToggleButton({ open, onClick, className = "", buttonRef }) {
   );
 }
 
-/** * 購物車按鈕
- * 風格：深色 Icon (適配白底)
- */
+/** * 購物車按鈕 */
 function CartButton({ count = 0, onClick }) {
   return (
     <Link
@@ -92,10 +130,9 @@ function CartButton({ count = 0, onClick }) {
       onClick={onClick}
       className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-800 hover:bg-slate-100 transition-colors"
     >
-      <svg width="22" height="22" viewBox="0 0 24 24" className="currentColor">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path
           d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H3"
-          fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
           strokeLinecap="round"
@@ -121,46 +158,29 @@ function CartButton({ count = 0, onClick }) {
   );
 }
 
-/** * 手機版側邊選單 (Mobile Drawer)
- * 顯示於 md (768px) 以下
- */
+/** * 手機版側邊選單 */
 function MobileDrawer({
   open,
   onClose,
   isLoggedIn,
   user,
-  onLogin,
   onLogout,
   navLinks = [],
   cartCount = 0,
 }) {
   const panelRef = useRef(null);
-
-  useEffect(() => {
-    if (open) {
-      const firstFocusable = panelRef.current?.querySelector(
-        'a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])',
-      );
-      firstFocusable?.focus?.();
-    }
-  }, [open]);
-
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* 背景遮罩 */}
           <motion.div
             key="mb-overlay"
             className="fixed inset-0 z-[1199] bg-black/40 backdrop-blur-sm md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
             onClick={onClose}
           />
-
-          {/* 側邊欄本體 */}
           <motion.aside
             key="mb-drawer"
             ref={panelRef}
@@ -169,9 +189,7 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
-            onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
               <img
                 src="/images/logo-04.png"
@@ -180,8 +198,6 @@ function MobileDrawer({
               />
               <MenuToggleButton open onClick={onClose} className="h-9 w-9" />
             </div>
-
-            {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-2">
               <nav className="px-2">
                 {navLinks.map((it) => (
@@ -195,8 +211,6 @@ function MobileDrawer({
                   </Link>
                 ))}
               </nav>
-
-              {/* Mobile Cart/Account Links */}
               <div className="mt-4 px-2 border-t pt-4">
                 <Link
                   href="/cart"
@@ -218,21 +232,15 @@ function MobileDrawer({
                 </Link>
               </div>
             </div>
-
-            {/* Login Status Footer */}
             {isLoggedIn && (
-              <div className="border-t p-4 bg-slate-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600 truncate">
-                    {user?.name}
-                  </span>
-                  <button
-                    onClick={onLogout}
-                    className="text-sm text-rose-500 font-medium"
-                  >
-                    登出
-                  </button>
-                </div>
+              <div className="border-t p-4 bg-slate-50 text-sm flex items-center justify-between">
+                <span className="text-slate-600 truncate">{user?.name}</span>
+                <button
+                  onClick={onLogout}
+                  className="text-rose-500 font-medium"
+                >
+                  登出
+                </button>
               </div>
             )}
           </motion.aside>
@@ -242,15 +250,14 @@ function MobileDrawer({
   );
 }
 
-/** * 桌面版會員選單 (User Menu)
- */
+/** * 桌面版會員選單 */
 function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
   const [open, setOpen] = useState(false);
-
   return (
-    <div className="relative">
+    <div className="relative" onMouseLeave={() => setOpen(false)}>
       <button
         type="button"
+        onMouseEnter={() => setOpen(true)}
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group"
       >
@@ -261,9 +268,7 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
           width="14"
           height="14"
           viewBox="0 0 24 24"
-          className={`transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         >
           <path
             d="M6 9l6 6 6-6"
@@ -283,7 +288,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
             className="absolute right-0 top-full mt-3 w-48 rounded-lg border border-slate-100 bg-white shadow-xl z-[1500] p-1"
-            onMouseLeave={() => setOpen(false)}
           >
             {!isLoggedIn ? (
               <button
@@ -316,7 +320,7 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
 }
 
 // ============================================================================
-// 主應用程式組件
+// 主組件
 // ============================================================================
 
 export default function App() {
@@ -324,14 +328,13 @@ export default function App() {
   const openerRef = useRef(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
-  const [cartCount, setCartCount] = useState(2);
+  const [cartCount, setCartCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // 1. Auth 邏輯 (保持您的原始邏輯)
   const refreshAuth = useCallback(async () => {
     try {
       const r = await fetch("/api/account/profile", {
@@ -353,7 +356,6 @@ export default function App() {
       }
     } catch {
       setIsLoggedIn(false);
-      setUser({ name: "", email: "", avatarUrl: "" });
     }
   }, []);
 
@@ -361,7 +363,6 @@ export default function App() {
     refreshAuth();
   }, [pathname, refreshAuth]);
 
-  // 2. 滾動偵測 (用於陰影切換)
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
@@ -369,16 +370,12 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 3. 鎖定捲軸 (當選單開啟時)
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && closeMenu();
-    window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = menuOpen ? "hidden" : "";
     return () => {
-      window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
     };
-  }, [menuOpen, closeMenu]);
+  }, [menuOpen]);
 
   const handleLogin = () => {
     const next = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -392,22 +389,20 @@ export default function App() {
       window.location.reload();
     }
   };
+
   const hotItems = [
     {
       title: "鎂鎂香蜂草",
-      // 將 href 修改為對應的 slug
       href: "/products/gaba-magnesium-lemon-balm",
       imageUrl: "/images/GABA鎂鎂香蜂草.png",
     },
     {
       title: "維他菌合生元",
-      // 將 href 修改為對應的 slug
       href: "/products/synbiotics",
       imageUrl: "/images/維他菌-合生元.png",
     },
     {
       title: "冰晶芙蓉",
-      // 將 href 修改為對應的 slug
       href: "/products/肽晶芙蓉",
       imageUrl: "/images/00912.png",
     },
@@ -423,87 +418,64 @@ export default function App() {
 
   return (
     <>
-      {/* Navbar Container 
-        風格：常駐白底，滾動時陰影加深
-      */}
       <header
-        className={`sticky top-0 z-[1000] w-full bg-white transition-shadow duration-300 ${
-          isScrolled ? " " : " "
-        }`}
+        className={`sticky top-0 z-[1000] w-full bg-white transition-shadow border-b-1 border-gray-100 duration-300 ${isScrolled ? "shadow-none" : ""}`}
       >
+        <TopAnnouncementBar />
+
         <div className="mx-auto flex w-full justify-between px-4 lg:px-8">
-          {/* ====== 左側：LOGO ====== */}
-          <div className="flex items-center py-4">
+          <div className="flex items-center py-1">
             <Link href="/" className="flex items-center gap-3 group">
-              {/* Logo 圖片 */}
-              <div className="relative">
-                <img
-                  src="/images/logo-04.png"
-                  className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
-                  alt="UFLOW LOGO"
-                />
-              </div>
-              {/* 文字 Logo (模擬 LOGOS 樣式) */}
+              <img
+                src="/images/logo-04.png"
+                className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                alt="UFLOW LOGO"
+              />
               <div className="hidden xl:block">
-                <p className="text-xl font-bold tracking-widest text-slate-900 leading-none">
-                  UFLOW
+                <p className="text-xl font-bold tracking-widest text-slate-900 leading-none uppercase">
+                  Uflow
                 </p>
-                <p className="text-[10px] tracking-[0.2em] text-slate-500 font-serif mt-1">
+                <p className="text-[10px] tracking-[0.2em] text-slate-500 font-serif mt-1 italic">
                   Enjoy Healthy Life!
                 </p>
               </div>
             </Link>
           </div>
 
-          {/* ====== 右側 (Desktop)：雙層結構 ====== */}
           <div className="hidden md:flex flex-col items-end justify-center py-2">
-            {/* --- 第一排 (Row 1): 上方工具列 + 黃色 CTA --- */}
             <div className="flex items-center gap-6 mb-3">
-              {/* 聯絡我們 */}
               <Link
                 href="/contact"
                 className="text-[12px] font-bold text-slate-600 hover:text-black flex items-center gap-1 transition-colors"
               >
-                聯絡我們
-                <span className="text-[10px]">▼</span>
+                聯絡我們 <span className="text-[8px]">▼</span>
               </Link>
-
-              {/* 品牌家族 */}
               <div className="flex items-center gap-1 border border-slate-300 rounded-full px-3 py-1 bg-white">
                 <span className="text-[14px]">∞</span>
                 <span className="text-[11px] font-bold text-slate-700">
                   UFLOW FAMILY
                 </span>
               </div>
-
-              {/* 🌟 黃色 ONLINE SHOP 按鈕 */}
               <Link
                 href="/products"
-                className="bg-[#FCD800] hover:bg-[#ffe033] text-black h-[46px] px-8 flex items-center justify-center gap-3 transition-colors relative group overflow-hidden"
-                // 使用 clip-path 模擬一點設計感 (可選)
-                style={{
-                  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                }}
+                className="bg-[#FCD800] hover:bg-[#ffe033] text-black h-[44px] px-8 flex items-center justify-center gap-3 transition-colors relative group"
               >
                 <div className="flex flex-col items-start leading-none">
-                  <span className="text-[15px] font-extrabold tracking-wider">
+                  <span className="text-[14px] font-extrabold tracking-wider">
                     ONLINE SHOP
                   </span>
-                  <span className="text-[10px] font-medium tracking-wide">
+                  <span className="text-[9px] font-medium tracking-wide">
                     熱銷產品情報
                   </span>
                 </div>
-                {/* 箭頭 Icon */}
-                <div className="bg-white rounded-full w-6 h-6 flex items-center justify-center group-hover:translate-x-1 transition-transform shadow-sm">
+                <div className="bg-white rounded-full w-5 h-5 flex items-center justify-center group-hover:translate-x-1 transition-transform shadow-sm">
                   <svg
-                    width="12"
-                    height="12"
+                    width="10"
+                    height="10"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    strokeWidth="4"
                   >
                     <path d="M9 18l6-6-6-6" />
                   </svg>
@@ -511,20 +483,16 @@ export default function App() {
               </Link>
             </div>
 
-            {/* --- 第二排 (Row 2): 導覽連結 + 功能按鈕 --- */}
             <div className="flex items-center gap-8">
-              {/* 導覽連結 */}
               <nav className="flex items-center">
                 {navLinks.map((link, idx) => (
                   <React.Fragment key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-[14px] font-bold text-slate-800 hover:text-slate-500 tracking-wider transition-colors px-2 relative group"
+                      className="text-[14px] font-bold text-slate-800 hover:text-[#f58a9c] tracking-wider transition-colors px-2 relative group"
                     >
                       {link.label}
-                      <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-slate-800 transition-all duration-300 group-hover:w-full"></span>
                     </Link>
-                    {/* 分隔線 (除了最後一個) */}
                     {idx !== navLinks.length - 1 && (
                       <div className="w-[1px] h-3 bg-slate-300 mx-3"></div>
                     )}
@@ -532,7 +500,6 @@ export default function App() {
                 ))}
               </nav>
 
-              {/* 功能區塊 (會員/購物車/漢堡) */}
               <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
                 <UserMenu
                   isLoggedIn={isLoggedIn}
@@ -551,7 +518,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* ====== Mobile View (md 以下顯示) ====== */}
           <div className="flex md:hidden items-center gap-3">
             <CartButton count={cartCount} />
             <MenuToggleButton
@@ -563,112 +529,78 @@ export default function App() {
         </div>
       </header>
 
-      {/* ====== 手機版側邊選單 ====== */}
       <MobileDrawer
         open={menuOpen}
         onClose={closeMenu}
         isLoggedIn={isLoggedIn}
         user={user}
-        onLogin={handleLogin}
         onLogout={handleLogout}
         navLinks={navLinks}
         cartCount={cartCount}
       />
 
-      {/* ====== Desktop 全螢幕 Mega Menu (從您原始代碼復原) ====== */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            {/* 桌面版遮罩 */}
             <motion.div
               key="overlay"
               className="fixed inset-0 z-[1199] bg-black/40 backdrop-blur-sm hidden md:block"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={closeMenu}
             />
-            {/* 桌面版下滑面板 */}
             <motion.section
-              id="full-mega"
-              role="dialog"
-              aria-modal="true"
-              className="fixed left-0 top-0 z-[1200] hidden h-[85vh] w-full bg-white md:block shadow-2xl"
+              key="full-mega"
+              className="fixed left-0 top-0 z-[1200] hidden h-[80vh] w-full bg-white md:block shadow-2xl overflow-hidden"
               initial={{ clipPath: "inset(0 0 100% 0)" }}
               animate={{ clipPath: "inset(0 0 0% 0)" }}
               exit={{ clipPath: "inset(0 0 100% 0)" }}
-              transition={{ duration: 0.38, ease: [0.2, 0.8, 0.2, 1] }}
-              onClick={(e) => e.stopPropagation()}
+              transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
             >
-              {/* Mega Menu Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b px-8 py-5 bg-white">
-                <div>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    探索 UFLOW 的所有商品與服務
-                  </p>
-                </div>
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b px-10 py-6 bg-white">
+                <p className="text-sm font-medium text-slate-500 tracking-widest uppercase">
+                  Explore Uflow Life
+                </p>
                 <MenuToggleButton
-                  open={menuOpen}
+                  open
                   onClick={closeMenu}
-                  className="h-12 w-12"
+                  className="h-10 w-10"
                 />
               </div>
 
-              {/* Mega Menu Content */}
-              <div className="mx-auto h-[calc(85vh-88px)] max-w-[1200px] overflow-y-auto px-8 pb-10 pt-8">
-                {/* 區塊 1: 熱銷推薦 */}
-                <div className="mb-8">
-                  <h3 className="mb-4 text-lg font-bold text-slate-800 border-l-4 border-[#FCD800] pl-3">
-                    熱銷產品推薦
+              <div className="mx-auto h-full max-w-[1200px] overflow-y-auto px-10 pb-20 pt-10">
+                <div className="mb-12">
+                  <h3 className="mb-8 text-xl font-bold text-slate-900 flex items-center gap-3">
+                    <span className="h-1 w-8 bg-[#FCD800]"></span>人氣熱銷推薦
                   </h3>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     {hotItems.map((it, i) => (
                       <motion.div
                         key={it.title}
-                        initial={{ y: 8, opacity: 0 }}
-                        animate={{
-                          y: 0,
-                          opacity: 1,
-                          transition: { delay: 0.1 + i * 0.05, duration: 0.3 },
-                        }}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: i * 0.1 }}
                       >
                         <Link
                           href={it.href}
                           onClick={closeMenu}
-                          className="group block h-full overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-lg hover:border-slate-200"
+                          className="group block overflow-hidden rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl transition-all duration-500"
                         >
-                          <div className="aspect-[16/9] w-full overflow-hidden bg-gray-50">
+                          <div className="aspect-square w-full overflow-hidden p-8">
                             <img
                               src={it.imageUrl}
                               alt={it.title}
-                              className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                              className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-110"
                             />
                           </div>
-                          <div className="p-4">
-                            <div className="flex items-start justify-between">
-                              <span className="text-[16px] font-bold text-slate-900 group-hover:text-[#D4B200] transition-colors">
-                                {it.title}
-                              </span>
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                className="text-slate-300 transition-colors group-hover:text-[#FCD800]"
-                              >
-                                <path
-                                  d="M9 18l6-6-6-6"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  fill="none"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                          <div className="p-6 border-t border-slate-100 flex justify-between items-center">
+                            <span className="text-lg font-bold text-slate-900 group-hover:text-[#f58a9c] transition-colors">
+                              {it.title}
+                            </span>
+                            <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-[#FCD800] group-hover:border-[#FCD800] transition-all">
+                              <ChevronRight size={16} />
                             </div>
-                            <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                              人氣商品快速導覽，一鍵前往詳細頁面。
-                            </p>
                           </div>
                         </Link>
                       </motion.div>
@@ -676,55 +608,75 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 區塊 2: 快速連結列表 (範例) */}
-                <div className="grid grid-cols-4 gap-8 pt-6 border-t border-slate-100">
+                <div className="grid grid-cols-4 gap-12 pt-12 border-t border-slate-100">
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-3">關於我們</h4>
-                    <ul className="space-y-2 text-sm text-slate-600">
+                    <h4 className="font-bold text-slate-900 mb-5 tracking-widest uppercase text-sm">
+                      Brand Store
+                    </h4>
+                    <ul className="space-y-4 text-sm font-medium text-slate-500">
                       <li>
                         <Link
                           href="/brand"
                           onClick={closeMenu}
-                          className="hover:text-black"
+                          className="hover:text-[#f58a9c]"
                         >
                           品牌故事
                         </Link>
                       </li>
                       <li>
                         <Link
-                          href="/team"
+                          href="/brand"
                           onClick={closeMenu}
-                          className="hover:text-black"
+                          className="hover:text-[#f58a9c]"
                         >
-                          經營團隊
+                          核心理念
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/about"
+                          onClick={closeMenu}
+                          className="hover:text-[#f58a9c]"
+                        >
+                          關於我們
                         </Link>
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-3">客戶服務</h4>
-                    <ul className="space-y-2 text-sm text-slate-600">
+                    <h4 className="font-bold text-slate-900 mb-5 tracking-widest uppercase text-sm">
+                      Customer Care
+                    </h4>
+                    <ul className="space-y-4 text-sm font-medium text-slate-500">
                       <li>
                         <Link
                           href="/qa"
                           onClick={closeMenu}
-                          className="hover:text-black"
+                          className="hover:text-[#f58a9c]"
                         >
-                          常見問題
+                          常見問題 QA
                         </Link>
                       </li>
                       <li>
                         <Link
                           href="/shipping"
                           onClick={closeMenu}
-                          className="hover:text-black"
+                          className="hover:text-[#f58a9c]"
                         >
-                          運送政策
+                          配送及付款方式
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/shipping"
+                          onClick={closeMenu}
+                          className="hover:text-[#f58a9c]"
+                        >
+                          退換貨政策
                         </Link>
                       </li>
                     </ul>
                   </div>
-                  {/* 更多連結... */}
                 </div>
               </div>
             </motion.section>

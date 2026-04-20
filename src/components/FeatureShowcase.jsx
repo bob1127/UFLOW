@@ -1,6 +1,6 @@
 "use client";
-
-import React, { useState, useRef } from "react";
+import Marquee from "react-fast-marquee";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -63,6 +63,18 @@ export default function FeatureShowcase() {
   const isAnimating = useRef(false);
   const total = slides.length;
 
+  // --- 🚀 新增：自動輪播邏輯 ---
+  useEffect(() => {
+    // 設定每 5 秒自動跳下一張
+    const autoPlayTimer = setInterval(() => {
+      handleNext();
+    }, 5000);
+
+    // 清除計時器 (當組件卸載或使用者手動切換時重新計算)
+    return () => clearInterval(autoPlayTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex]);
+
   // --- 控制邏輯 ---
   const handleNext = () => {
     if (isAnimating.current) return;
@@ -79,7 +91,6 @@ export default function FeatureShowcase() {
   // --- 核心 GSAP 動畫 (響應式優化) ---
   useGSAP(
     () => {
-      // 創建 GSAP MatchMedia 來處理不同螢幕尺寸的動畫
       let mm = gsap.matchMedia();
 
       // Desktop (>= 768px): 執行原本的複雜空間計算動畫
@@ -153,10 +164,9 @@ export default function FeatureShowcase() {
       mm.add("(max-width: 767px)", () => {
         slides.forEach((_, i) => {
           const el = `.slide-container-${i}`;
-          const duration = 0.8; // 手機版淡入可以快一點
+          const duration = 0.8;
 
           if (i === currentIndex) {
-            // 目前這張：顯示並確保在最上層
             gsap.to(el, {
               opacity: 1,
               zIndex: 10,
@@ -164,7 +174,6 @@ export default function FeatureShowcase() {
               ease: "power2.out",
             });
           } else {
-            // 其他張：隱藏
             gsap.to(el, {
               opacity: 0,
               zIndex: 1,
@@ -186,14 +195,12 @@ export default function FeatureShowcase() {
   );
 
   return (
-    // 🚨 移除了所有會破壞 Sticky 的 overflow 設定，回歸最單純的 flex
     <div className="w-full bg-[#f4f5f7] font-sans flex min-h-screen">
       {/* ==============================================
-          左側 Sticky 導覽列 (完美恢復 Sticky 效果)
+          左側 Sticky 導覽列
           ============================================== */}
       <div className="left-nav w-[60px] md:w-[80px] shrink-0 p-1 relative z-40">
-        {/* top-[100px] 完美避開 Navbar */}
-        <aside className="sticky-nav bg-white rounded-[6px]  h-[calc(100vh-80px)] w-full sticky top-[85px] md:top-[120px] flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)]">
+        <aside className="sticky-nav bg-white rounded-[6px] h-[calc(100vh-80px)] w-full sticky top-[85px] md:top-[120px] flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 border-2 border-gray-800 rounded-full rounded-tr-none flex items-center justify-center">
               <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
@@ -202,20 +209,27 @@ export default function FeatureShowcase() {
               className="text-[8px] md:text-[10px] font-serif tracking-[0.2em] text-gray-500 mt-2"
               style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
             >
-              UFLOW HEALTH
+              UFLOW
             </p>
           </div>
-
+          <div>
+            <Marquee speed={17}>
+              {" "}
+              <p
+                className="text-[8px] md:text-[10px] font-serif tracking-[0.2em] text-gray-500 mb-8 mt-2"
+                style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+              >
+                ．REDISCOVER A HEALTHY LIFESTYLE．
+              </p>
+            </Marquee>
+          </div>
           <div className="flex flex-col gap-4">
-            <button className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-[6px] hover:bg-gray-100 transition-colors">
-              <Phone size={16} className="text-gray-700" strokeWidth={2} />
-            </button>
-            <button className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-[6px] hover:bg-gray-100 transition-colors">
-              <MapPin size={16} className="text-gray-700" strokeWidth={2} />
-            </button>
-            <button className="w-10 h-10 bg-[#f5a49f] flex items-center justify-center rounded-[6px] hover:bg-[#f87777] transition-colors ">
-              <PenLine size={16} className="text-white" strokeWidth={2} />
-            </button>
+            <p
+              className="text-[8px] md:text-[10px] font-serif tracking-[0.2em] text-gray-500 mb-8 mt-2"
+              style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+            >
+              HEALTH
+            </p>
           </div>
         </aside>
       </div>
@@ -229,24 +243,22 @@ export default function FeatureShowcase() {
           ref={containerRef}
           className="relative w-full h-[75vh] md:h-[90vh] min-h-[500px] md:min-h-[700px] overflow-hidden bg-white rounded-[6px] border border-gray-100"
         >
-          {/* Header */}
           <div className="absolute top-0 left-0 w-full px-6 md:px-10 py-6 flex justify-between items-center z-30 pointer-events-none">
             <h2 className="text-2xl md:text-3xl font-serif text-gray-800 tracking-wider">
               Feature
             </h2>
-            <span className="text-[10px] md:text-xs font-medium text-gray-500 tracking-[0.2em] border-b border-gray-300 pb-1 md:border-none md:pb-0">
+            <span className="text-[10px] md:text-xs font-medium text-gray-500 tracking-[0.2em]">
               品牌特色
             </span>
           </div>
 
-          {/* 浮水印 */}
           <div className="hidden md:block absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none select-none">
             <h1 className="text-[22vw] font-serif text-gray-200/40 tracking-[0.05em] leading-none whitespace-nowrap">
               UFLOW
             </h1>
           </div>
 
-          {/* 控制按鈕 (手機版稍微縮小並靠上) */}
+          {/* 控制按鈕 */}
           <div className="absolute top-[12vh] md:top-[12vh] right-[4vw] md:right-[6vw] z-40 flex gap-2 md:gap-3">
             <button
               onClick={handlePrev}
@@ -262,17 +274,11 @@ export default function FeatureShowcase() {
             </button>
           </div>
 
-          {/* 動態圖片 DOM 容器 */}
-          {/* 在手機版 (md 以前)，我們讓容器滿版 (inset-0)。
-              在電腦版 (md 以後)，我們透過 GSAP 來控制寬高和位置。
-              我們需要稍微調整一下 GSAP 邏輯，讓他在手機版只做淡入淡出。 */}
           {slides.map((slide, i) => (
             <div
               key={i}
-              // 添加了一層絕對滿版的基礎設定
               className={`slide-container-${i} absolute inset-0 md:inset-auto md:top-0 md:left-0 overflow-hidden bg-gray-200 cursor-pointer shadow-sm rounded-sm`}
               style={{
-                // 初始狀態：只有第一張顯示
                 opacity: i === currentIndex ? 1 : 0,
                 zIndex: i === currentIndex ? 10 : 1,
               }}
@@ -287,10 +293,8 @@ export default function FeatureShowcase() {
                 }
               }}
             >
-              {/* 在手機版，我們加上一層漸層遮罩，讓文字好閱讀 */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10 md:hidden pointer-events-none"></div>
-
-              <div className={`slide-img-${i} w-full h-full  relative z-0`}>
+              <div className={`slide-img-${i} w-full h-full relative z-0`}>
                 <Image
                   src={slide.img}
                   alt={slide.title}
@@ -303,8 +307,6 @@ export default function FeatureShowcase() {
             </div>
           ))}
 
-          {/* 文字資訊區塊 */}
-          {/* 手機版：靠下、置中、文字反白。 電腦版：維持原本右側 */}
           <div className="absolute bottom-[8vh] left-[6vw] right-[6vw] md:bottom-auto md:top-[20vh] md:left-[52vw] md:right-auto md:w-[35vw] z-30">
             <AnimatePresence mode="wait">
               <motion.div
@@ -313,7 +315,7 @@ export default function FeatureShowcase() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-col items-start md:items-start"
+                className="flex flex-col items-start"
               >
                 <div className="flex items-center gap-4 md:gap-6 text-white/80 md:text-gray-400 font-serif mb-4 md:mb-6 tracking-widest border-b border-white/30 md:border-transparent pb-2 md:pb-0">
                   <span className="text-lg md:text-xl text-white md:text-gray-800 font-medium">
@@ -342,83 +344,11 @@ export default function FeatureShowcase() {
 
         {/* --- 2. 雙卡片導覽區塊 --- */}
         <section className="w-full border-t border-gray-100 bg-white mt-1 rounded-[6px] overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
-            {/* 卡片 1 */}
-            {/* 手機版：flex-col-reverse (文字在下，圖片在上) 或 flex-col */}
-            <div className="group flex flex-col-reverse md:flex-row items-center justify-between p-8 sm:p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer text-center md:text-left gap-8 md:gap-0">
-              <div className="flex-1 md:pr-8 relative z-10 w-full flex flex-col items-center md:items-start">
-                <span className="font-serif text-gray-400 text-lg md:text-xl lg:text-2xl tracking-widest block mb-4 md:mb-6 uppercase">
-                  .Philosophy
-                </span>
-                <h3 className="text-lg sm:text-xl md:text-[22px] font-bold text-gray-900 mb-2 md:mb-3 tracking-wide">
-                  從日常找回健康節奏
-                </h3>
-                <p className="text-xs md:text-[13px] lg:text-sm text-gray-500 mb-8 md:mb-12 tracking-wider">
-                  讓健康成為一種簡單、自然的生活方式
-                </p>
-
-                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
-                  <span className="text-[10px] md:text-[11px] font-bold text-gray-700 tracking-widest">
-                    了解更多
-                  </span>
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
-                    <ArrowRight size={10} strokeWidth={2.5} />
-                  </div>
-                </div>
-              </div>
-
-              {/* 手機版縮小圖片 */}
-              <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                <Image
-                  src="/images/DSCF7801.jpg"
-                  fill
-                  className="object-cover"
-                  alt="Philosophy"
-                />
-              </div>
-            </div>
-
-            {/* 卡片 2 */}
-            <div className="group flex flex-col-reverse md:flex-row items-center justify-between p-8 sm:p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer text-center md:text-left gap-8 md:gap-0">
-              <div className="flex-1 md:pr-8 relative z-10 w-full flex flex-col items-center md:items-start">
-                <span className="font-serif text-gray-400 text-lg md:text-xl lg:text-2xl tracking-widest block mb-4 md:mb-6 uppercase">
-                  .Quality & Safety
-                </span>
-                <h3 className="text-lg sm:text-xl md:text-[22px] font-bold text-gray-900 mb-2 md:mb-3 tracking-wide">
-                  嚴格把關的品質承諾
-                </h3>
-                <p className="text-xs md:text-[13px] lg:text-sm text-gray-500 mb-8 md:mb-12 tracking-wider">
-                  全產品通過多項國際與台灣專業檢驗認證
-                </p>
-
-                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
-                  <span className="text-[10px] md:text-[11px] font-bold text-gray-700 tracking-widest">
-                    了解更多
-                  </span>
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
-                    <ArrowRight size={10} strokeWidth={2.5} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                <Image
-                  src="/images/00912.png"
-                  fill
-                  className="object-cover"
-                  alt="Quality"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-        {/* --- 2. 雙卡片導覽區塊 --- */}
-        <section className="w-full border-t border-gray-100 bg-white mt-1 rounded-[6px]   overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* 卡片 1 */}
             <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 border-b lg:border-b-0 lg:border-r border-gray-100 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
               <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
-                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6">
+                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6 uppercase">
                   .Philosophy
                 </span>
                 <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
@@ -451,7 +381,7 @@ export default function FeatureShowcase() {
             {/* 卡片 2 */}
             <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
               <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
-                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6">
+                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6 uppercase">
                   .Quality & Safety
                 </span>
                 <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
@@ -484,7 +414,7 @@ export default function FeatureShowcase() {
         </section>
 
         {/* --- 3. Consultation 詳細預約區塊 --- */}
-        <section className="w-full py-24 px-6 md:px-12 lg:px-20 bg-white font-sans overflow-hidden border-t border-gray-100 mt-1 rounded-[6px]  ">
+        <section className="w-full py-24 px-6 md:px-12 lg:px-20 bg-white font-sans overflow-hidden border-t border-gray-100 mt-1 rounded-[6px]">
           <div className="max-w-[1400px] mx-auto">
             <div className="flex justify-between items-end mb-16 border-b border-gray-200 pb-6">
               <h2 className="text-5xl md:text-[64px] font-serif text-[#333333] tracking-tight">
@@ -580,7 +510,7 @@ export default function FeatureShowcase() {
                   </div>
                 </div>
 
-                <button className="w-full bg-[#f5a49f] hover:bg-[#f87777] transition-colors duration-300 py-6 md:py-8 px-8 md:px-12 flex justify-between items-center group rounded-b-sm relative z-20 ">
+                <button className="w-full bg-[#f5a49f] hover:bg-[#f87777] transition-colors duration-300 py-6 md:py-8 px-8 md:px-12 flex justify-between items-center group rounded-b-sm relative z-20">
                   <span className="text-gray-900 font-bold text-lg tracking-widest">
                     立即預約諮詢
                   </span>
