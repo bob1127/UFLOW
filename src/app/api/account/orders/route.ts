@@ -17,6 +17,9 @@ function basicAuth() {
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
 
+/**
+ * 提取綠界支付資訊
+ */
 function extractPaymentDetails(metaData: any[]) {
   const info: any = {};
   if (!Array.isArray(metaData)) return undefined;
@@ -89,6 +92,7 @@ export async function GET() {
     const normalizedEmail = email ? email.trim().toLowerCase() : null;
     let customerId: number | null = null;
 
+    // 1. 透過 wpUserId 尋找
     if (wpUserId) {
       try {
         const byIdRes = await fetch(
@@ -107,12 +111,13 @@ export async function GET() {
       }
     }
 
+    // 2. 透過 Email 尋找 (🚨 關鍵修正：加入 role=all 讓 LINE 註冊的帳號也能被找到)
     if (!customerId && normalizedEmail) {
       try {
         const cRes = await fetch(
           `${BASE}/wp-json/wc/v3/customers?email=${encodeURIComponent(
             normalizedEmail
-          )}`,
+          )}&role=all`,
           {
             headers: { Authorization: auth },
             cache: "no-store",
@@ -128,14 +133,32 @@ export async function GET() {
       } catch (e) {
         console.error("orders fetch customer by email catch error:", e);
       }
+
+      // 3. 雙重保險：如果 WooCommerce 還是找不到，去 WordPress 底層找
+      if (!customerId) {
+        try {
+          const wpRes = await fetch(
+            `${BASE}/wp-json/wp/v2/users?search=${encodeURIComponent(normalizedEmail)}`,
+            { headers: { Authorization: auth }, cache: "no-store" }
+          );
+          if (wpRes.ok) {
+            const wpUsers = await wpRes.json();
+            const matchedUser = wpUsers.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+            if (matchedUser) customerId = matchedUser.id;
+          }
+        } catch (e) {
+          console.error("orders fallback to wp user error:", e);
+        }
+      }
     }
 
     let ordersRaw: any[] = [];
 
+    // 如果成功找到會員 ID，直接撈取該會員所有訂單
     if (customerId) {
       try {
         const oRes = await fetch(
-          `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=10&orderby=date&order=desc`,
+          `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=20&orderby=date&order=desc`,
           {
             headers: { Authorization: auth },
             cache: "no-store",
@@ -149,10 +172,11 @@ export async function GET() {
       }
     }
 
+    // 終極保險：如果還是沒有訂單，嘗試用信箱暴力搜尋 (處理訪客結帳或未綁定情況)
     if ((!ordersRaw || ordersRaw.length === 0) && normalizedEmail) {
       try {
         const oRes = await fetch(
-          `${BASE}/wp-json/wc/v3/orders?per_page=20&orderby=date&order=desc&search=${encodeURIComponent(
+          `${BASE}/wp-json/wc/v3/orders?per_page=30&orderby=date&order=desc&search=${encodeURIComponent(
             normalizedEmail
           )}`,
           {
@@ -177,7 +201,7 @@ export async function GET() {
       }
     }
 
-    // 💡 回傳給前端
+    // 整理回傳給前端
     const orders = (ordersRaw || []).map((o: any) => ({
       id: o.id,
       number: o.number,
@@ -186,14 +210,9 @@ export async function GET() {
       total: o.total,
       currency: o.currency,
       payment_method_title: o.payment_method_title || "標準支付",
-      
-      // ✅ 抓取綠界存放在「給客戶的備註」中的資訊 (因為有些外掛會寫在這裡)
       customer_note: o.customer_note || "",
-
-      // ✅ 執行模糊比對提取
       payment_info: extractPaymentDetails(o.meta_data || []),
       meta_data: o.meta_data || [],
-
       line_items: (o.line_items || []).map((it: any) => ({
         name: it.name,
         quantity: it.quantity,

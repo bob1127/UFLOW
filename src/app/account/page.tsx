@@ -120,7 +120,6 @@ type AdminCustomer = {
   referralEarned: number;
 };
 
-// 💡 確保 AdminOrder 型別加上付款相關屬性
 type AdminOrder = {
   id: number;
   number: string;
@@ -178,6 +177,55 @@ function pickCouponCreatedAt(c: AvailableCoupon) {
   return Number.isFinite(t) ? t : 0;
 }
 
+// 💡 終極防護：直接在前端解析 meta_data，無視後端 API 是否當機或快取
+function parseMetaDataForPayment(metaData: any[]) {
+  const info: any = {};
+  if (!Array.isArray(metaData)) return info;
+
+  metaData.forEach((item: any) => {
+    const key = String(item.key || "").toLowerCase();
+    const val = Array.isArray(item.value)
+      ? String(item.value[0])
+      : String(item.value || "");
+
+    // 比對虛擬帳號 (支援 _woosea_ecpay_atm_vAccount 等各種變形)
+    if (
+      key.includes("vaccount") ||
+      key.includes("virtual_account") ||
+      key.includes("atm_account")
+    ) {
+      info.atm_account = val;
+    }
+    // 比對銀行代碼
+    if (
+      key.includes("bankcode") ||
+      key.includes("bank_code") ||
+      key.includes("atm_bank")
+    ) {
+      info.bank_code = val;
+    }
+    // 比對超商代碼
+    if (
+      key.includes("paymentno") ||
+      key.includes("cvs_payment") ||
+      key.includes("cvscode")
+    ) {
+      info.cvs_code = val;
+    }
+    // 比對繳費期限
+    if (
+      key.includes("expiredate") ||
+      key.includes("expire_date") ||
+      key.includes("duedate")
+    ) {
+      info.expire_date = val;
+    }
+  });
+
+  return info;
+}
+
+// 備用：從文字備註中解析
 function extractInfoFromNote(note: string) {
   if (!note) return null;
   const result: any = {};
@@ -945,7 +993,6 @@ export default function AccountPage() {
     0,
   );
 
-  // 💡 3. 修正：管理員介面的詳細訂單列表 (加入付款方式欄位與備註提取邏輯)
   const renderExpandedOrdersAdmin = () => {
     if (expandedOrdersLoading)
       return <p className="text-xs text-slate-500 py-2">載入訂單中…</p>;
@@ -971,11 +1018,26 @@ export default function AccountPage() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {expandedOrders.map((o) => {
+              // 💡 雙重保險解析，確保管理員也能看到 ATM
+              const parsedMeta = parseMetaDataForPayment(o.meta_data || []);
               const noteInfo = extractInfoFromNote(o.customer_note || "");
-              const cvsCode = o.payment_info?.cvs_code || noteInfo?.cvs_code;
+              const cvsCode =
+                parsedMeta.cvs_code ||
+                o.payment_info?.cvs_code ||
+                noteInfo?.cvs_code;
               const atmAccount =
-                o.payment_info?.atm_account || noteInfo?.atm_account;
-              const bankCode = o.payment_info?.bank_code || noteInfo?.bank_code;
+                parsedMeta.atm_account ||
+                o.payment_info?.atm_account ||
+                noteInfo?.atm_account;
+              const bankCode =
+                parsedMeta.bank_code ||
+                o.payment_info?.bank_code ||
+                noteInfo?.bank_code;
+              const expireDate =
+                parsedMeta.expire_date ||
+                o.payment_info?.expire_date ||
+                noteInfo?.expire_date ||
+                "依綠界規定";
               const pTitle = o.payment_method_title || "標準支付";
 
               return (
@@ -1468,22 +1530,32 @@ export default function AccountPage() {
                               </thead>
                               <tbody className="divide-y divide-[#ebebeb]">
                                 {filteredOrders.map((o) => {
+                                  // 💡 雙重保險解析，確保一般會員也能看到 ATM
+                                  const parsedMeta = parseMetaDataForPayment(
+                                    o.meta_data || [],
+                                  );
                                   const noteInfo = extractInfoFromNote(
                                     o.customer_note || "",
                                   );
                                   const cvsCode =
+                                    parsedMeta.cvs_code ||
                                     o.payment_info?.cvs_code ||
                                     noteInfo?.cvs_code;
                                   const atmAccount =
+                                    parsedMeta.atm_account ||
                                     o.payment_info?.atm_account ||
                                     noteInfo?.atm_account;
                                   const bankCode =
+                                    parsedMeta.bank_code ||
                                     o.payment_info?.bank_code ||
                                     noteInfo?.bank_code;
                                   const expireDate =
+                                    parsedMeta.expire_date ||
                                     o.payment_info?.expire_date ||
                                     noteInfo?.expire_date ||
                                     "依綠界規定";
+                                  const pTitle =
+                                    o.payment_method_title || "標準支付";
 
                                   return (
                                     <Fragment key={o.id}>
@@ -1608,8 +1680,7 @@ export default function AccountPage() {
                                                   <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
                                                     付款方式:{" "}
                                                     <span className="font-medium text-gray-900">
-                                                      {o.payment_method_title ||
-                                                        "標準支付"}
+                                                      {pTitle}
                                                     </span>
                                                     <p className="mt-1 text-xs opacity-70">
                                                       此訂單目前無須額外代碼，請依系統指示操作。
