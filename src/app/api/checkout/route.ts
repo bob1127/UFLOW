@@ -229,6 +229,7 @@ export async function POST(req: Request) {
       
       // 🚨 終極防呆：直接寫死正式網址，保證 Vercel 絕對抓得到
       ReturnURL: `https://www.uflow.space/api/ecpay/callback`,
+      PaymentInfoURL: `https://www.uflow.space/api/ecpay/callback`,
       ClientBackURL: `https://www.uflow.space/thank-you?orderId=${orderId}`,
       
       ChoosePayment: "ALL",

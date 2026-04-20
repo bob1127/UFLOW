@@ -38,7 +38,7 @@ import {
   Landmark,
 } from "lucide-react";
 
-/* ===================== Types (Account) ===================== */
+/* ===================== Types ===================== */
 type Customer = {
   id?: number;
   email?: string;
@@ -50,7 +50,6 @@ type Customer = {
   role?: string;
   isAdmin?: boolean;
 };
-
 type MembershipInfo = {
   tierName: string;
   totalSpent12m: number;
@@ -60,9 +59,7 @@ type MembershipInfo = {
   nextTierName?: string | null;
   nextNeedAmount?: number | null;
 };
-
 type OrderItem = { name: string; quantity: number; total?: string };
-
 type Order = {
   id: number;
   number: string;
@@ -81,16 +78,13 @@ type Order = {
   };
   meta_data?: { key: string; value: any }[];
 };
-
 type ClaimKind = "upgrade" | "birthday";
-
 type ReferralInfo = {
   refCode: string;
   referralLink: string;
   friendReward: number;
   ambassadorReward: number;
 };
-
 type AvailableCoupon = {
   kind?: string;
   code: string;
@@ -99,10 +93,7 @@ type AvailableCoupon = {
   expires?: string | null;
   coupon?: any;
 };
-
 type TabKey = "profile" | "orders" | "admin";
-
-/* ===================== Types (Admin Analytics) ===================== */
 type AdminCustomer = {
   id: number;
   name: string;
@@ -119,7 +110,6 @@ type AdminCustomer = {
   rewardedCount: number;
   referralEarned: number;
 };
-
 type AdminOrder = {
   id: number;
   number: string;
@@ -143,14 +133,11 @@ type AdminOrder = {
 function cn(...arr: Array<string | false | undefined | null>) {
   return arr.filter(Boolean).join(" ");
 }
-
 function formatMoneyNT(n: number) {
   return `NT$ ${Number(n || 0).toLocaleString("zh-TW")}`;
 }
-
 const formatNTD = (val: number) =>
   "NT$" + Math.round(val || 0).toLocaleString("zh-TW");
-
 function codeUpper(code?: string) {
   return String(code || "")
     .trim()
@@ -177,55 +164,42 @@ function pickCouponCreatedAt(c: AvailableCoupon) {
   return Number.isFinite(t) ? t : 0;
 }
 
-// 💡 終極防護：直接在前端解析 meta_data，無視後端 API 是否當機或快取
 function parseMetaDataForPayment(metaData: any[]) {
   const info: any = {};
   if (!Array.isArray(metaData)) return info;
-
   metaData.forEach((item: any) => {
     const key = String(item.key || "").toLowerCase();
     const val = Array.isArray(item.value)
       ? String(item.value[0])
       : String(item.value || "");
-
-    // 比對虛擬帳號 (支援 _woosea_ecpay_atm_vAccount 等各種變形)
     if (
       key.includes("vaccount") ||
       key.includes("virtual_account") ||
       key.includes("atm_account")
-    ) {
+    )
       info.atm_account = val;
-    }
-    // 比對銀行代碼
     if (
       key.includes("bankcode") ||
       key.includes("bank_code") ||
       key.includes("atm_bank")
-    ) {
+    )
       info.bank_code = val;
-    }
-    // 比對超商代碼
     if (
       key.includes("paymentno") ||
       key.includes("cvs_payment") ||
       key.includes("cvscode")
-    ) {
+    )
       info.cvs_code = val;
-    }
-    // 比對繳費期限
     if (
       key.includes("expiredate") ||
       key.includes("expire_date") ||
       key.includes("duedate")
-    ) {
+    )
       info.expire_date = val;
-    }
   });
-
   return info;
 }
 
-// 備用：從文字備註中解析
 function extractInfoFromNote(note: string) {
   if (!note) return null;
   const result: any = {};
@@ -247,12 +221,10 @@ function StatusPill({
   type?: "order" | "account" | "tier" | "admin";
 }) {
   const s = String(status || "").toLowerCase();
-
   if (type === "order") {
     let label = status;
     let tone = "bg-[#e4e5e7] text-[#202223] border-transparent";
     let dotColor = "fill-[#5c5f62]";
-
     if (s === "pending" || s === "待付款" || s === "waiting-payment") {
       label = "待付款";
       tone = "bg-[#ffea8a] text-[#8a6116] border-transparent";
@@ -268,7 +240,6 @@ function StatusPill({
     } else if (s === "cancelled" || s === "已取消") {
       label = "已取消";
     }
-
     return (
       <span
         className={cn(
@@ -281,7 +252,6 @@ function StatusPill({
       </span>
     );
   }
-
   if (type === "account") {
     const isActive = s === "active" || s === "有效" || s === "正常";
     return (
@@ -303,14 +273,11 @@ function StatusPill({
       </span>
     );
   }
-
   const isGold = s.includes("金") || s.includes("gold");
   const isSilver = s.includes("銀") || s.includes("silver");
   const isAdmin = s.includes("管理") || s.includes("admin");
-
   let theme = "bg-slate-100 text-slate-600 border-slate-200";
   let Icon = Zap;
-
   if (isGold) {
     theme = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm";
     Icon = Crown;
@@ -321,7 +288,6 @@ function StatusPill({
     theme = "bg-[#1a1a1a] text-white border-black shadow-sm";
     Icon = ShieldCheck;
   }
-
   return (
     <span
       className={cn(
@@ -438,21 +404,17 @@ function MemberAnalytics({
   orders: AdminOrder[];
   customer: AdminCustomer;
 }) {
-  if (!orders || orders.length === 0) {
+  if (!orders || orders.length === 0)
     return (
       <div className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-500">
         尚無足夠訂單資料可供分析。
       </div>
     );
-  }
-
   const totalAmount = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   const orderCount = orders.length;
   const avgAmount = orderCount > 0 ? totalAmount / orderCount : 0;
-
   const monthLabels: string[] = [];
   const monthTotalsMap: Record<string, number> = {};
-
   orders.forEach((o) => {
     const d = new Date(o.date_created);
     if (isNaN(d.getTime())) return;
@@ -460,17 +422,14 @@ function MemberAnalytics({
     if (!monthLabels.includes(key)) monthLabels.push(key);
     monthTotalsMap[key] = (monthTotalsMap[key] || 0) + (o.total || 0);
   });
-
   monthLabels.sort();
   const monthTotals = monthLabels.map((m) => monthTotalsMap[m] || 0);
-
   const productMap: Record<string, number> = {};
   orders.forEach((o) =>
     o.line_items.forEach((it) => {
       productMap[it.name] = (productMap[it.name] || 0) + (it.quantity || 0);
     }),
   );
-
   const productEntries = Object.entries(productMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
@@ -579,15 +538,14 @@ export default function AccountPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersDebug, setOrdersDebug] = useState<any>(null); // 💡 新增除錯狀態
 
   const [referral, setReferral] = useState<ReferralInfo | null>(null);
   const [referralLoading, setReferralLoading] = useState(false);
-
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>(
     [],
   );
   const [availableLoading, setAvailableLoading] = useState(false);
-
   const [claimLoading, setClaimLoading] = useState({
     upgrade: false,
     birthday: false,
@@ -609,7 +567,6 @@ export default function AccountPage() {
   const [expandedUserOrderId, setExpandedUserOrderId] = useState<number | null>(
     null,
   );
-
   const [expandedOrders, setExpandedOrders] = useState<AdminOrder[]>([]);
   const [expandedOrdersLoading, setExpandedOrdersLoading] = useState(false);
   const [expandedOrdersError, setExpandedOrdersError] = useState("");
@@ -618,7 +575,6 @@ export default function AccountPage() {
   const [birthdayInput, setBirthdayInput] = useState("");
   const [isSettingBirthday, setIsSettingBirthday] = useState(false);
   const [birthdayLoading, setBirthdayLoading] = useState(false);
-
   const [showBirthdayModal, setShowBirthdayModal] = useState(false);
   const [modalBirthdayInput, setModalBirthdayInput] = useState("");
 
@@ -672,6 +628,7 @@ export default function AccountPage() {
       });
       const data = await res.json();
       setOrders(data.orders || []);
+      setOrdersDebug(data.debug || null); // 儲存除錯資訊
     } catch {
       setOrders([]);
     } finally {
@@ -717,7 +674,6 @@ export default function AccountPage() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
-
   useEffect(() => {
     if (loggedIn) {
       loadOrders();
@@ -725,7 +681,6 @@ export default function AccountPage() {
       loadAvailableCoupons();
     }
   }, [loggedIn, loadOrders, loadReferral, loadAvailableCoupons]);
-
   useEffect(() => {
     if (!loading && loggedIn && customer && !customer.birthday) {
       const hasPrompted = sessionStorage.getItem("birthdayPrompted");
@@ -845,14 +800,12 @@ export default function AccountPage() {
       (a, b) => pickCouponCreatedAt(b) - pickCouponCreatedAt(a),
     );
   }, [availableCoupons]);
-
   const referralCoupons = useMemo(() => {
     return sortedCoupons.filter(
       (c) =>
         isFriendCoupon(c.code, c.kind) || isAmbassadorCoupon(c.code, c.kind),
     );
   }, [sortedCoupons]);
-
   const filteredCoupons = useMemo(() => {
     let base = referralCoupons;
     if (searchQuery && activeTab === "profile") {
@@ -875,7 +828,6 @@ export default function AccountPage() {
     () => referralCoupons.filter((c) => isFriendCoupon(c.code, c.kind)),
     [referralCoupons],
   );
-
   const ambassadorTotal = useMemo(
     () =>
       ambassadorCoupons.reduce((sum, c) => sum + (Number(c.amount) || 0), 0),
@@ -894,14 +846,12 @@ export default function AccountPage() {
     ).trim() ||
     customer?.username ||
     (customer?.email ? customer.email.split("@")[0] : "會員");
-
   const getBirthMonthLabel = (dateStr?: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return "";
     return `${d.getMonth() + 1}月`;
   };
-
   const isCurrentMonthBirthday = useMemo(() => {
     if (!customer?.birthday) return false;
     const d = new Date(customer.birthday);
@@ -1018,7 +968,6 @@ export default function AccountPage() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {expandedOrders.map((o) => {
-              // 💡 雙重保險解析，確保管理員也能看到 ATM
               const parsedMeta = parseMetaDataForPayment(o.meta_data || []);
               const noteInfo = extractInfoFromNote(o.customer_note || "");
               const cvsCode =
@@ -1152,7 +1101,6 @@ export default function AccountPage() {
             </span>
           </div>
         </div>
-
         <div className="flex-1 max-w-2xl px-4 hidden md:block">
           <div className="relative flex items-center w-full">
             <Search className="absolute left-3 text-[#8c9196] w-4 h-4" />
@@ -1165,7 +1113,6 @@ export default function AccountPage() {
             />
           </div>
         </div>
-
         <div className="flex items-center gap-4 justify-end">
           <button className="text-[#a6a6a6] hover:text-white transition-colors relative">
             <Bell className="w-5 h-5" />
@@ -1504,11 +1451,23 @@ export default function AccountPage() {
                             載入訂單中...
                           </p>
                         ) : filteredOrders.length === 0 ? (
-                          <p className="text-sm text-[#6d7175] py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
-                            {searchQuery
-                              ? "找不到符合條件的訂單。"
-                              : "目前尚未有任何訂單紀錄。"}
-                          </p>
+                          <div className="py-4 text-center border border-dashed border-[#c9cccf] rounded bg-[#f9fafb]">
+                            <p className="text-sm text-[#6d7175] mb-4">
+                              {searchQuery
+                                ? "找不到符合條件的訂單。"
+                                : "目前尚未有任何訂單紀錄。"}
+                            </p>
+                            {ordersDebug && (
+                              <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-64 text-left mx-4">
+                                <div className="text-white mb-2 font-bold">
+                                  🛠️ 訂單 API 偵錯報告 (請截圖給工程師看)
+                                </div>
+                                <pre>
+                                  {JSON.stringify(ordersDebug, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <div className="-mx-5 -mb-5 mt-2 overflow-x-auto">
                             <table className="w-full text-sm text-left whitespace-nowrap">
@@ -1530,7 +1489,6 @@ export default function AccountPage() {
                               </thead>
                               <tbody className="divide-y divide-[#ebebeb]">
                                 {filteredOrders.map((o) => {
-                                  // 💡 雙重保險解析，確保一般會員也能看到 ATM
                                   const parsedMeta = parseMetaDataForPayment(
                                     o.meta_data || [],
                                   );

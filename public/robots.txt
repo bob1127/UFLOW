@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://www.uflow.space
+Host: http://localhost:3000
 
 # Sitemaps
-Sitemap: https://www.uflow.space/sitemap.xml
+Sitemap: http://localhost:3000/sitemap.xml

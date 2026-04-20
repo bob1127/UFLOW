@@ -44,15 +44,56 @@ export async function POST(req: Request) {
        return new NextResponse("0|CheckMacValueVerifyFail");
     }
 
-    // 付款成功
+    const orderId = data.CustomField1;
+
+    // 💡 情況 A：取得 ATM 虛擬帳號/超商代碼成功 (RtnCode 是 2)
+    if (data.RtnCode === "2") {
+      if (orderId && WC_API_BASE && WC_CONSUMER_KEY && WC_CONSUMER_SECRET) {
+        const bankCode = data.BankCode || "";
+        const vAccount = data.vAccount || "";
+        const expireDate = data.ExpireDate || "";
+        const paymentNo = data.PaymentNo || ""; // 超商代碼
+
+        // 準備要寫入 WooCommerce 的自訂欄位
+        const metaData = [];
+        let customerNote = "";
+
+        if (data.PaymentType?.includes("ATM")) {
+          metaData.push({ key: "_vAccount", value: vAccount });
+          metaData.push({ key: "_BankCode", value: bankCode });
+          metaData.push({ key: "_ExpireDate", value: expireDate });
+          customerNote = `【系統自動紀錄】ATM 銀行代碼: ${bankCode}, 虛擬帳號: ${vAccount}, 期限: ${expireDate}`;
+        } else if (data.PaymentType?.includes("CVS") || data.PaymentType?.includes("BARCODE")) {
+          metaData.push({ key: "_PaymentNo", value: paymentNo });
+          metaData.push({ key: "_ExpireDate", value: expireDate });
+          customerNote = `【系統自動紀錄】超商繳費代碼: ${paymentNo}, 期限: ${expireDate}`;
+        }
+
+        if (metaData.length > 0) {
+          const wcRes = await fetch(`${WC_API_BASE.replace(/\/$/, "")}/wp-json/wc/v3/orders/${orderId}?consumer_key=${WC_CONSUMER_KEY}&consumer_secret=${WC_CONSUMER_SECRET}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              meta_data: metaData,
+              customer_note: customerNote, // 順便寫入備註，方便後台人員看
+            }),
+          });
+          
+          if (wcRes.ok) console.log(`✅ 訂單 #${orderId} 的取號資訊已存入 WooCommerce`);
+          else console.error(`❌ 訂單 #${orderId} 取號資訊存入失敗`);
+        }
+      }
+      return new NextResponse("1|OK");
+    }
+
+    // 💡 情況 B：實際付款成功 (RtnCode 是 1)
     if (data.RtnCode === "1") {
-      const orderId = data.CustomField1;
       const customerEmail = data.CustomField2;
       const tradeAmount = Math.round(Number(data.TradeAmt || data.CustomField3 || 0));
 
       if (!orderId) return new NextResponse("1|OK");
 
-      // 1) 更新 Woo 訂單
+      // 1) 更新 Woo 訂單為已付款
       if (WC_API_BASE && WC_CONSUMER_KEY && WC_CONSUMER_SECRET) {
         const wcRes = await fetch(`${WC_API_BASE.replace(/\/$/, "")}/wp-json/wc/v3/orders/${orderId}?consumer_key=${WC_CONSUMER_KEY}&consumer_secret=${WC_CONSUMER_SECRET}`, {
           method: "PUT",
