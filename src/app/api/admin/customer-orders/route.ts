@@ -24,29 +24,33 @@ function parseAdminEmails() {
 }
 
 async function assertAdmin(noCache: Record<string, string>) {
-  // const session = await getServerSession(authOptions);
-  // const adminEmails = parseAdminEmails();
-  // const userEmail = String(session?.user?.email || "").trim().toLowerCase();
-  // const isAdmin = !!userEmail && adminEmails.includes(userEmail);
-
-  // if (!session || !isAdmin) {
-  //   return NextResponse.json(
-  //     { ok: false, message: "Forbidden" },
-  //     { status: 403, headers: noCache }
-  //   );
-  // }
+  // 保持你原本的註解邏輯
   return null;
 }
 
-/**
- * ✅ 先用 customerId 查；如果抓不到，改用 email 搜尋（billing.email 精準過濾）
- */
+// 💡 1. 補上：提取付款資訊的超強模糊比對函式
+function extractPaymentDetails(metaData: any[]) {
+  const info: any = {};
+  if (!Array.isArray(metaData)) return undefined;
+
+  metaData.forEach((item: any) => {
+    const key = String(item.key || "").toLowerCase();
+    const val = Array.isArray(item.value) ? String(item.value[0]) : String(item.value || "");
+
+    if (key.includes("vaccount") || key.includes("virtual_account") || key.includes("atm_account")) info.atm_account = val;
+    if (key.includes("bankcode") || key.includes("bank_code") || key.includes("atm_bank")) info.bank_code = val;
+    if (key.includes("paymentno") || key.includes("cvs_payment") || key.includes("cvscode")) info.cvs_code = val;
+    if (key.includes("expiredate") || key.includes("expire_date") || key.includes("duedate")) info.expire_date = val;
+  });
+
+  return Object.keys(info).length > 0 ? info : undefined;
+}
+
 async function fetchOrdersByCustomerOrEmail(
   auth: string,
   customerId: string,
   email?: string | null
 ) {
-  // 1) by customer id
   try {
     const res = await fetch(
       `${BASE}/wp-json/wc/v3/orders?customer=${customerId}&per_page=50&orderby=date&order=desc&status=any`,
@@ -58,7 +62,6 @@ async function fetchOrdersByCustomerOrEmail(
     }
   } catch {}
 
-  // 2) fallback by email
   const safeEmail = String(email || "").trim().toLowerCase();
   if (!safeEmail) return [];
 
@@ -91,7 +94,7 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url);
     const customerId = url.searchParams.get("customerId");
-    const email = url.searchParams.get("email"); // ✅ 新增：可選帶 email
+    const email = url.searchParams.get("email");
 
     if (!customerId) {
       return NextResponse.json(
@@ -110,6 +113,7 @@ export async function GET(req: Request) {
 
     const raw = await fetchOrdersByCustomerOrEmail(auth, customerId, email);
 
+    // 💡 2. 修正：保留完整的 meta_data、customer_note 與 payment_info
     const orders = raw.map((o) => ({
       id: o.id,
       number: o.number,
@@ -117,6 +121,10 @@ export async function GET(req: Request) {
       total: parseFloat(o.total || "0"),
       currency: o.currency,
       date_created: o.date_created,
+      payment_method_title: o.payment_method_title || "標準支付",
+      customer_note: o.customer_note || "",
+      payment_info: extractPaymentDetails(o.meta_data || []),
+      meta_data: o.meta_data || [],
       line_items: (o.line_items || []).map((li: any) => ({
         name: li.name,
         quantity: li.quantity,

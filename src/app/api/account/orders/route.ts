@@ -17,32 +17,23 @@ function basicAuth() {
   return "Basic " + Buffer.from(`${CK}:${CS}`).toString("base64");
 }
 
-/**
- * 💡 終極強化版：用模糊比對抓取綠界支付資訊，同時保留原始 meta_data
- */
 function extractPaymentDetails(metaData: any[]) {
   const info: any = {};
   if (!Array.isArray(metaData)) return undefined;
 
   metaData.forEach((item: any) => {
-    // 防呆：確保 key 轉小寫方便比對
     const key = String(item.key || "").toLowerCase();
-    // 防呆：有時候 value 會被外掛包成陣列，強制轉為字串
     const val = Array.isArray(item.value) ? String(item.value[0]) : String(item.value || "");
 
-    // 1. ATM 虛擬帳號 (攔截常見外掛命名)
     if (key.includes("vaccount") || key.includes("virtual_account") || key.includes("atm_account")) {
       info.atm_account = val;
     }
-    // 2. ATM 銀行代碼
     if (key.includes("bankcode") || key.includes("bank_code") || key.includes("atm_bank")) {
       info.bank_code = val;
     }
-    // 3. 超商繳費代碼
     if (key.includes("paymentno") || key.includes("cvs_payment") || key.includes("cvscode")) {
       info.cvs_code = val;
     }
-    // 4. 繳費期限
     if (key.includes("expiredate") || key.includes("expire_date") || key.includes("duedate")) {
       info.expire_date = val;
     }
@@ -196,9 +187,11 @@ export async function GET() {
       currency: o.currency,
       payment_method_title: o.payment_method_title || "標準支付",
       
-      // ✅ 執行超強模糊比對提取
+      // ✅ 抓取綠界存放在「給客戶的備註」中的資訊 (因為有些外掛會寫在這裡)
+      customer_note: o.customer_note || "",
+
+      // ✅ 執行模糊比對提取
       payment_info: extractPaymentDetails(o.meta_data || []),
-      // ✅ 原封不動保留完整 meta_data 給前端
       meta_data: o.meta_data || [],
 
       line_items: (o.line_items || []).map((it: any) => ({
