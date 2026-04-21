@@ -409,10 +409,19 @@ const TW_CITIES = {
   連江縣: ["南竿鄉", "北竿鄉", "莒光鄉", "東引鄉"],
 };
 
-// 工具函數
 const currency = (n) =>
   `NT$${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString("zh-TW")}`;
 
+// 會員折扣表
+const TIER_DISCOUNTS = {
+  U銅貴賓: 1,
+  U銀貴賓: 0.98,
+  U金貴賓: 0.95,
+  UVIP貴賓: 0.9,
+  UVVIP貴賓: 0.88,
+};
+
+// 工具函數
 function isUpgradeCode(code) {
   return String(code || "")
     .toLowerCase()
@@ -449,6 +458,7 @@ function couponTitleByKindOrCode(c) {
   return `專屬折扣碼 - ${currency(amount)}`;
 }
 
+// 核心計算邏輯
 function calcPricing(
   items,
   { shippingBase = 80, freeShipThreshold = 1500 },
@@ -510,7 +520,6 @@ function Input({ label, error, ...props }) {
   );
 }
 
-// 🚀 新增：下拉選單元件 (供縣市與行政區使用)
 function Select({ label, error, options = [], value, onChange, placeholder }) {
   return (
     <div className="w-full">
@@ -822,7 +831,7 @@ function CartStep({
                     </h3>
                     <button
                       type="button"
-                      onClick={() => onRemove(it.id)}
+                      onClick={() => onRemove(it.id || it.wcProductId)}
                       className="text-gray-300 hover:text-red-500 transition"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -849,10 +858,13 @@ function CartStep({
                 </div>
                 <div className="flex justify-between items-end">
                   <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    {/* ✅ 修正：使用 id 或 wcProductId 來呼叫更新數量 */}
                     <button
                       type="button"
                       className="px-3 py-2 hover:bg-gray-50 transition"
-                      onClick={() => onUpdateQty(it.id, it.qty - 1)}
+                      onClick={() =>
+                        onUpdateQty(it.id || it.wcProductId, it.qty - 1)
+                      }
                     >
                       <Minus className="w-3 h-3" />
                     </button>
@@ -862,7 +874,9 @@ function CartStep({
                     <button
                       type="button"
                       className="px-3 py-2 hover:bg-gray-50 transition"
-                      onClick={() => onUpdateQty(it.id, it.qty + 1)}
+                      onClick={() =>
+                        onUpdateQty(it.id || it.wcProductId, it.qty + 1)
+                      }
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -980,7 +994,6 @@ function CheckoutStep({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const searchParams = useSearchParams();
 
   // 🚨 【護城河 1】：前往地圖前，強制手動儲存至 sessionStorage
   const saveStateBeforeMap = () => {
@@ -989,6 +1002,7 @@ function CheckoutStep({
     sessionStorage.setItem("checkout_shipMethod", shipMethod);
     sessionStorage.setItem("checkout_payMethod", payMethod);
     sessionStorage.setItem("checkout_step", "2");
+    sessionStorage.setItem("checkout_items", JSON.stringify(items)); // ✅ 一併儲存商品
   };
 
   const openEzShipMap = () => {
@@ -1042,10 +1056,8 @@ function CheckoutStep({
     form.submit();
   };
 
-  // 🚨 【防呆機制 2】：嚴格的 Regex 驗證
   const validate = () => {
     const e = {};
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!contact.email || !emailRegex.test(contact.email.trim()))
       e.email = "請輸入有效的電子郵件格式";
@@ -1058,7 +1070,6 @@ function CheckoutStep({
       e.phone = "請輸入有效的台灣手機號碼 (09開頭共10碼)";
     }
 
-    // ✅ 動態驗證邏輯
     if (shipMethod === "000") {
       if (!addr.city) e.city = "請選擇縣市";
       if (!addr.district) e.district = "請選擇區域";
@@ -1079,7 +1090,6 @@ function CheckoutStep({
     }
     setIsSubmitting(true);
 
-    // ✅ 組合傳給後端的地址
     const line1 =
       shipMethod === "000"
         ? `${addr.city}${addr.district}${addr.street.trim()}`
@@ -1129,6 +1139,7 @@ function CheckoutStep({
       sessionStorage.removeItem("checkout_shipMethod");
       sessionStorage.removeItem("checkout_payMethod");
       sessionStorage.removeItem("checkout_step");
+      sessionStorage.removeItem("checkout_items");
 
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
@@ -1143,7 +1154,6 @@ function CheckoutStep({
       }
       window.location.href = `/thank-you?orderId=${data.orderId}`;
     } catch (err) {
-      console.error(err);
       setIsSubmitting(false);
       alert("連線失敗，請稍後再試");
     }
@@ -1152,7 +1162,6 @@ function CheckoutStep({
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col lg:flex-row gap-12">
       <div className="flex-1 space-y-10">
-        {/* 1. 聯絡資訊 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
@@ -1171,7 +1180,6 @@ function CheckoutStep({
           />
         </section>
 
-        {/* 2. 運送方式 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
@@ -1205,7 +1213,6 @@ function CheckoutStep({
             </div>
           </div>
 
-          {/* 選擇物流 */}
           <div className="grid sm:grid-cols-3 gap-3 mb-8">
             <button
               type="button"
@@ -1276,7 +1283,6 @@ function CheckoutStep({
             </button>
           </div>
 
-          {/* 🚀 動態表單：根據物流方式切換欄位 */}
           <div className="grid grid-cols-2 gap-4  p-6  ">
             <div className="col-span-2 mb-2 border-b-1 border-gray-200 pb-3 font-bold text-gray-800">
               填寫收件資訊
@@ -1304,7 +1310,7 @@ function CheckoutStep({
                 maxLength={10}
                 value={addr.phone}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, ""); // 嚴格過濾非數字
+                  const val = e.target.value.replace(/\D/g, "");
                   setAddr({ ...addr, phone: val });
                 }}
                 error={errors.phone}
@@ -1312,7 +1318,6 @@ function CheckoutStep({
               />
             </div>
 
-            {/* 判斷是宅配還是超商 */}
             {shipMethod === "000" ? (
               <>
                 <div className="col-span-1">
@@ -1322,7 +1327,7 @@ function CheckoutStep({
                     value={addr.city}
                     options={Object.keys(TW_CITIES)}
                     onChange={(e) => {
-                      setAddr({ ...addr, city: e.target.value, district: "" }); // 換縣市時清空行政區
+                      setAddr({ ...addr, city: e.target.value, district: "" });
                     }}
                     error={errors.city}
                   />
@@ -1371,7 +1376,6 @@ function CheckoutStep({
           </div>
         </section>
 
-        {/* 3. 付款方式 */}
         <section>
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-black/20">
@@ -1379,7 +1383,6 @@ function CheckoutStep({
             </span>
             <h2 className="text-xl font-bold tracking-tight">付款方式</h2>
           </div>
-
           <div className="grid gap-3">
             <button
               type="button"
@@ -1464,7 +1467,6 @@ function CheckoutStep({
             onClear={onClearCoupon}
             loading={couponLoading || referralLoading}
           />
-
           <h3 className="font-bold mb-6 flex items-center gap-2 pt-4 border-t border-gray-200">
             訂單明細{" "}
             <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">
@@ -1506,14 +1508,14 @@ function CheckoutStep({
                 </span>
               </div>
             )}
-            {pricing.couponDiscount > 0 ? (
+            {pricing.couponDiscount > 0 && (
               <div className="flex justify-between text-emerald-600">
                 <span className="font-bold">優惠券折抵</span>
                 <span className="font-black">
                   - {currency(pricing.couponDiscount)}
                 </span>
               </div>
-            ) : null}
+            )}
             <div className="flex justify-between text-gray-400">
               <span>運費</span>
               <span>
@@ -1564,8 +1566,6 @@ function CartContent() {
   });
 
   const [contact, setContact] = useState({ email: "" });
-
-  // 🚀 新增：更細緻的地址狀態 (加入 city, district, street)
   const [addr, setAddr] = useState({
     firstName: "",
     lastName: "",
@@ -1585,26 +1585,13 @@ function CartContent() {
 
   // 🚨 【護城河 2】：載入資料與 URL 判定完美融合
   useEffect(() => {
-    setItems(storeItems);
-
-    const fetchMembership = async () => {
-      try {
-        const res = await fetch("/api/account/profile");
-        const data = await res.json();
-        if (data.loggedIn && data.membership) {
-          setMembership(data.membership);
-          setDiscountRate(TIER_DISCOUNTS[data.membership.tierName] || 1);
-        }
-      } catch (e) {}
-    };
-    fetchMembership();
-
-    // 1. 先從 SessionStorage 還原狀態
+    // 優先處理跳轉回來的資料還原
     let _addr = { ...addr };
     let _contact = { ...contact };
     let _ship = "000";
     let _pay = "card";
     let _step = 1;
+    let _items = [];
 
     try {
       const sAddr = sessionStorage.getItem("checkout_addr");
@@ -1617,9 +1604,20 @@ function CartContent() {
       if (sPay) _pay = sPay;
       const sStep = sessionStorage.getItem("checkout_step");
       if (sStep) _step = parseInt(sStep, 10);
+
+      // ✅ 從 SessionStorage 撈回原本的商品清單
+      const sItems = sessionStorage.getItem("checkout_items");
+      if (sItems) {
+        _items = JSON.parse(sItems);
+      }
     } catch (e) {}
 
-    // 2. 檢查是否從地圖跳轉回來
+    // 如果 Zustand 有資料，就用 Zustand 的 (代表沒有刷新頁面)
+    if (storeItems && storeItems.length > 0) {
+      _items = storeItems;
+    }
+
+    // 檢查是否從地圖跳轉回來
     const sId = searchParams.get("storeId");
     const sName = searchParams.get("storeName");
     const sAddrUrl = searchParams.get("storeAddr");
@@ -1652,6 +1650,7 @@ function CartContent() {
     setShipMethod(_ship);
     setPayMethod(_pay);
     setStep(_step);
+    setItems(_items); // ✅ 設定被保留的商品清單
 
     const savedCoupon = sessionStorage.getItem("cart_coupon");
     if (savedCoupon) {
@@ -1662,8 +1661,27 @@ function CartContent() {
     }
 
     setItemsLoaded(true);
+
+    const fetchMembership = async () => {
+      try {
+        const res = await fetch("/api/account/profile");
+        const data = await res.json();
+        if (data.loggedIn && data.membership) {
+          setMembership(data.membership);
+          setDiscountRate(TIER_DISCOUNTS[data.membership.tierName] || 1);
+        }
+      } catch (e) {}
+    };
+    fetchMembership();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 🚨 當全域的 Zustand 真的有更新時（例如打開另一個分頁加了商品），才同步覆蓋本地
+  useEffect(() => {
+    if (itemsLoaded && storeItems && storeItems.length > 0) {
+      setItems(storeItems);
+    }
+  }, [storeItems, itemsLoaded]);
 
   // 🚨 【護城河 3】：任何輸入狀態改變，立刻同步至 SessionStorage
   useEffect(() => {
@@ -1673,8 +1691,9 @@ function CartContent() {
       sessionStorage.setItem("checkout_shipMethod", shipMethod);
       sessionStorage.setItem("checkout_payMethod", payMethod);
       sessionStorage.setItem("checkout_step", step.toString());
+      sessionStorage.setItem("checkout_items", JSON.stringify(items)); // ✅ 商品變更也隨時存
     }
-  }, [contact, addr, shipMethod, payMethod, step, itemsLoaded]);
+  }, [contact, addr, shipMethod, payMethod, step, items, itemsLoaded]);
 
   useEffect(() => {
     const loadAllCoupons = async () => {
@@ -1736,7 +1755,7 @@ function CartContent() {
   useEffect(() => {
     if (!itemsLoaded) return;
     const discount = appliedCoupon?.amount || 0;
-    const shippingBase = shipMethod === "000" ? 105 : 80;
+    const shippingBase = shipMethod === "000" ? 0 : 0;
     setPricing(
       calcPricing(
         items,
@@ -1747,9 +1766,30 @@ function CartContent() {
     );
   }, [items, itemsLoaded, appliedCoupon, discountRate, shipMethod]);
 
-  const updateQty = (id, newQty) => storeUpdateQty(id, newQty);
-  const removeItem = (id) => storeRemoveItem(id);
-  const clearCart = () => storeClearCart();
+  // ✅ 修正數量增減與移除，先更新 Local State，再更新 Store
+  const updateQty = (id, newQty) => {
+    if (newQty < 1) return;
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === id || it.wcProductId === id ? { ...it, qty: newQty } : it,
+      ),
+    );
+    if (typeof storeUpdateQty === "function") storeUpdateQty(id, newQty);
+  };
+
+  const removeItem = (id) => {
+    setItems((prev) =>
+      prev.filter((it) => it.id !== id && it.wcProductId !== id),
+    );
+    if (typeof storeRemoveItem === "function") storeRemoveItem(id);
+  };
+
+  const clearCart = () => {
+    setItems([]);
+    sessionStorage.removeItem("checkout_items");
+    if (typeof storeClearCart === "function") storeClearCart();
+  };
+
   const applyCoupon = (c) => {
     setAppliedCoupon(c);
     sessionStorage.setItem("cart_coupon", JSON.stringify(c));

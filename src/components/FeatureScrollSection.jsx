@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Link from "next/link";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -85,38 +86,41 @@ export default function FeatureScrollSection() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-start gap-12 lg:gap-24">
         {/* === 左側：固定區塊 (Sticky) === */}
         {/* 將 sticky 設定在元素本身，並給予 top 值 */}
-        <div className="w-full lg:w-5/12 sticky top-[15vh] z-20 pb-10">
+        <div className="w-full lg:w-5/12 sticky top-[18vh] z-20 pb-10">
           <span className="text-sm font-bold text-yellow-500 tracking-widest mb-4 uppercase inline-block">
             Our feature
           </span>
-          <h2 className="text-4xl lg:text-5xl font-black leading-[1.3] tracking-wider mb-8">
-            我們的 願景
-            <br />
-            打造每個人在繁忙生活中的健康節奏
+          <h2 className="text-4xl lg:text-3xl font-black leading-[1.3] tracking-wider mb-8">
+            UFLOW 陪伴使用者找回了那份消失已久的「輕盈穩定感」。
+            <br /> <br />
+            我們不只提供產品，更想邀你一起，感受身體重新開機、能量再次流動的美好時刻。
           </h2>
-          <p className="text-[#555] leading-loose mb-10 text-[15px] lg:text-[16px] max-w-md">
-            UFLOW
-            是一家以提供高品質健康產品為核心的品牌。我們的研發精神在於將科學方法應用於天然原料，以科技養護身心。
+          <p className="text-stone-700 leading-loose mb-10 text-[15px] lg:text-[16px] max-w-md">
+            我們想做的，不是一盒放在架上的商品，而是一個能讓身體「活」起來的開關。為了實踐「流動
+            (Flow)」的核心理念，研發過程比預期艱辛。
             <br />
             <br />
-            我們選擇與全球領先的科學研究機構合作，確保每一款產品都符合最嚴格的品質標準，並能有效促進身心健康。從日常生活出發，為您找回身體原本的循環與平衡。
+            我們不滿足於單一成分。過程中，我們推翻了超過 20
+            種營養成分，翻閱了上百篇國際期刊。期待是一個完整的「微生態動力系統」。
           </p>
 
-          <button className="bg-[#1a1a1a] text-white rounded-full px-8 py-4 font-bold w-fit flex items-center gap-4 hover:bg-gray-800 transition-colors duration-300 shadow-xl">
-            我們的產品
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          <Link href="">
+            <button className="bg-[#1a1a1a] text-white rounded-full px-8 py-4 font-bold w-fit flex items-center gap-4 hover:bg-gray-800 transition-colors duration-300 shadow-xl">
+              我們的產品
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </Link>
         </div>
 
         {/* === 右側：滾動焦點卡片區塊 === */}
@@ -150,7 +154,7 @@ export default function FeatureScrollSection() {
                     className={`w-32 h-32 rounded-full ${data.bgColor} absolute right-10 top-0 opacity-80 mix-blend-multiply`}
                   ></div>
                   <div className="w-40 h-40 bg-gray-50 rounded-2xl relative z-10 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-200">
-                    [ 圖片替換區 ]
+                    <img src="/images/植萃天然.jpg" alt="" />
                   </div>
                 </div>
               </div>

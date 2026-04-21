@@ -180,17 +180,17 @@ const TextParallaxContentExample = () => {
                     維他菌合生元
                   </h1>
 
-                  <p className="text-xl font-medium text-slate-600">
+                  <p className="text-xl font-medium text-stone-700">
                     益生菌 x 益生元 x 後生元 (益萃質®)
                   </p>
                 </div>
 
                 {/* Content Block 1 */}
-                <div className="space-y-4 border-l-4 border-yellow-400 pl-6">
+                <div className="space-y-4    ">
                   <h3 className="text-2xl font-bold text-slate-800">
                     建構腸道「黃金三角」，開啟消化環保新紀元
                   </h3>
-                  <p className="text-lg leading-relaxed text-slate-600">
+                  <p className="text-lg leading-relaxed text-stone-700">
                     超越傳統益生菌的單一補充，我們採用現代腸道保健的頂級規格——
                     <span className="font-bold text-slate-800">
                       「合生元 (Synbiotics) 搭配後生元 (Postbiotics)」
@@ -201,11 +201,11 @@ const TextParallaxContentExample = () => {
                 </div>
 
                 {/* Content Block 2 */}
-                <div className="space-y-4 border-l-4 border-blue-400 pl-6">
+                <div className="space-y-4    ">
                   <h3 className="text-2xl font-bold text-slate-800">
                     嚴選 4 大專利機能菌 x Totipro® 益萃質
                   </h3>
-                  <p className="text-lg leading-relaxed text-slate-600">
+                  <p className="text-lg leading-relaxed text-stone-700">
                     嚴選適合亞洲人體質的 4 大專利機能益菌：
                     <span className="font-bold text-blue-900">
                       CP-9、F-1、LPL-28 與 AP-32
@@ -217,11 +217,11 @@ const TextParallaxContentExample = () => {
                 </div>
 
                 {/* Content Block 3 */}
-                <div className="space-y-4 border-l-4 border-green-400 pl-6">
+                <div className="space-y-4    ">
                   <h3 className="text-2xl font-bold text-slate-800">
                     漢方智慧加持，溫和調理的舒暢哲學
                   </h3>
-                  <p className="text-lg leading-relaxed text-slate-600">
+                  <p className="text-lg leading-relaxed text-stone-700">
                     獨家融入傳統漢方智慧，特別添加
                     <span className="font-bold text-green-800">
                       山藥、山楂與牛蒡
@@ -236,15 +236,6 @@ const TextParallaxContentExample = () => {
               <div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-screen">
                 <div className="relative flex justify-center items-center w-full aspect-square lg:aspect-auto lg:h-[600px]">
                   {/* 背景裝飾圖 (旋轉的那張) */}
-                  <div className="absolute z-0 w-[80%] max-w-[500px] opacity-80 transition-transform duration-700 hover:rotate-[-15deg]">
-                    <Image
-                      src="/images/3c3vnce4cqjbowo0tetrzx0x2jbrrayr-Photoroom.png"
-                      alt="Background decoration"
-                      width={600}
-                      height={600}
-                      className="w-full h-auto object-contain rotate-[-45deg]"
-                    />
-                  </div>
 
                   {/* 主產品圖 */}
                   <div className="absolute z-10 w-[90%] max-w-[600px] drop-shadow-2xl">
@@ -296,9 +287,9 @@ const TextParallaxContentExample = () => {
                 className="text-[clamp(24px,4vw,54px)] font-extrabold text-neutral-800 whitespace-nowrap select-none"
               >
                 <div className="text-outline-shadow text-6xl font-sans tracking-[2px] uppercase">
-                  NATURAL
+                  UFLOW
                 </div>
-                對天然成分的堅持
+                是身體的指揮家
                 <div className="w-full overflow-hidden max-w-[500px] mt-4">
                   <Marquee>
                     <div className="flex justify-center items-center w-full overflow-hidden">
@@ -330,14 +321,10 @@ const TextParallaxContentExample = () => {
                 style={{ x: rightX, opacity: textOpacity }}
                 className="text-[clamp(24px,4vw,54px)] font-extrabold text-neutral-800 whitespace-nowrap select-none max-w-[520px]"
               >
-                對天然成分的堅持
+                「UFLOW」
                 <br />
                 <div className="text-[14px] mt-4 text-wrap font-normal">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut
-                  dolorem alias, excepturi sapiente reiciendis quos maiores
-                  mollitia facere perspiciatis. Exercitationem assumenda
-                  deserunt fuga aspernatur aperiam veritatis nihil, eveniet
-                  aliquid. Porro.
+                  的名字代表著：U (You) + Flow (流動)。
                 </div>
               </motion.h2>
             </div>
@@ -394,7 +381,7 @@ const StickyBackground = ({ containerRef }) => {
 
   return (
     <motion.div
-      className="absolute inset-0 bg-[url('/images/粉003.png')] bg-center bg-cover bg-no-repeat"
+      className="absolute inset-0 bg-[url('/images/肽晶芙蓉.png')] bg-center bg-cover bg-no-repeat"
       style={{
         scale,
         y,

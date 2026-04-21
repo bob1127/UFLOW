@@ -253,13 +253,19 @@ function MobileDrawer({
 /** * 桌面版會員選單 */
 function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
   const [open, setOpen] = useState(false);
+
   return (
-    <div className="relative" onMouseLeave={() => setOpen(false)}>
+    // 🚨 修正：將 MouseEnter / MouseLeave 綁在最外層父容器
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         type="button"
-        onMouseEnter={() => setOpen(true)}
+        // 移除這裡的 onMouseEnter，交給父容器處理
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group"
+        className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group h-full py-2" // 增加 py-2 擴大感應區
       >
         <span className="text-[13px] font-bold tracking-wide">
           {isLoggedIn ? user.name || "會員" : "會員登入"}
@@ -268,7 +274,9 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
           width="14"
           height="14"
           viewBox="0 0 24 24"
-          className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          }`}
         >
           <path
             d="M6 9l6 6 6-6"
@@ -283,42 +291,48 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="absolute right-0 top-full mt-3 w-48 rounded-lg border border-slate-100 bg-white shadow-xl z-[1500] p-1"
-          >
-            {!isLoggedIn ? (
-              <button
-                onClick={onLogin}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-50 rounded-md font-medium text-slate-700"
-              >
-                登入 / 註冊
-              </button>
-            ) : (
-              <>
-                <Link
-                  href="/account"
-                  className="block px-4 py-2 text-sm hover:bg-slate-50 rounded-md font-medium text-slate-700"
-                >
-                  我的帳戶
-                </Link>
+          // 🚨 修正：加入 pt-4 作為隱形橋樑，讓滑鼠往下移不會中斷 hover
+          <div className="absolute right-0 top-full pt-4 z-[1500]">
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="w-48 rounded-lg border border-slate-100 bg-white shadow-xl p-1 relative"
+            >
+              {/* 選單上方的小三角形 (視覺修飾，可選) */}
+              <div className="absolute -top-1.5 right-6 w-3 h-3 bg-white border-t border-l border-slate-100 transform rotate-45"></div>
+
+              {!isLoggedIn ? (
                 <button
-                  onClick={onLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-md font-medium"
+                  onClick={onLogin}
+                  className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 rounded-md font-bold text-slate-700 transition-colors"
                 >
-                  登出
+                  登入 / 註冊
                 </button>
-              </>
-            )}
-          </motion.div>
+              ) : (
+                <>
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="block px-4 py-2.5 text-sm hover:bg-slate-50 rounded-md font-bold text-slate-700 transition-colors"
+                  >
+                    我的帳戶
+                  </Link>
+                  <button
+                    onClick={onLogout}
+                    className="block w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 rounded-md font-bold transition-colors mt-1"
+                  >
+                    登出
+                  </button>
+                </>
+              )}
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
   );
 }
-
 // ============================================================================
 // 主組件
 // ============================================================================

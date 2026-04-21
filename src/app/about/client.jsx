@@ -166,16 +166,18 @@ export default function AboutClient({ faqs = [] }) {
       {/* 問題區 */}
       <section className="flex flex-col w-full max-w-[1120px] mx-auto px-4 md:px-8 py-12 md:py-24">
         <div className="flex flex-col md:flex-row justify-between md:items-end w-full mb-12 lg:mb-16 gap-8">
-          <div className="w-full md:w-3/4 flex flex-col">
+          <div className="w-full md:w-[70%] flex flex-col">
             <h2 className="text-4xl md:text-[2.6rem] leading-tight text-gray-900 font-normal">
-              養分循環補給
+              UFLOW
               <br className="hidden md:block" />
-              相關問題
+              你是身體的指揮家
             </h2>
             <div className="line bg-black h-[1px] w-[80px] my-6"></div>
-            <p className="text-gray-800 text-sm md:text-base font-light max-w-[400px] leading-relaxed">
-              我們相信，健康是一種生活方式，
-              也是一種簡單、自然且富有活力的人生。
+            <p className="text-gray-800 text-sm md:text-base font-light w-[90%] tracking-widest max-w-[530px] leading-relaxed">
+              我們希望每個人都能重新掌握身體的韻律。
+              當身體順了、心情輕了，生活就不再是艱難的攀爬，而是一場流暢的舞動。
+              「市面上的保健品都在教人『加法』，卻忽略解決『循環』與『代謝』的問題。」
+              UFLOW 就在被期待的契機中誕生。
             </p>
           </div>
 

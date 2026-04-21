@@ -1101,48 +1101,9 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pt-20 mt-10 bg-[#f6f6f7] text-[#202223] font-sans">
-      <header className="h-14 bg-[#1a1a1a] flex items-center justify-between px-4 shrink-0 z-10 border-b border-[#000]">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
-            <div className="w-7 h-7 bg-[#95bf47] rounded flex items-center justify-center text-white">
-              <span className="text-sm">U</span>
-            </div>
-            UFLOW{" "}
-            <span className="text-[#a6a6a6] font-normal text-sm ml-1 hidden sm:inline">
-              後台
-            </span>
-          </div>
-        </div>
-        <div className="flex-1 max-w-2xl px-4 hidden md:block">
-          <div className="relative flex items-center w-full">
-            <Search className="absolute left-3 text-[#8c9196] w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={getSearchPlaceholder()}
-              className="w-full bg-[#2c2c2c] text-white placeholder-[#8c9196] text-sm border-none rounded-md pl-10 pr-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#95bf47]"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-4 justify-end">
-          <button className="text-[#a6a6a6] hover:text-white transition-colors relative">
-            <Bell className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 bg-[#2c2c2c] px-2 py-1 rounded-md cursor-pointer hover:bg-[#333] transition-colors border border-[#404040]">
-            <div className="w-6 h-6 bg-[#ffc453] rounded-sm flex items-center justify-center text-[#8a6116] text-xs font-bold uppercase">
-              {displayName.substring(0, 2)}
-            </div>
-            <span className="text-sm text-white hidden sm:block truncate max-w-[100px]">
-              {displayName}
-            </span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen flex flex-col pt-10 sm:pt-20 mt-20 bg-[#f6f6f7] text-[#202223] font-sans">
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-60 bg-[#ebebeb] border-r border-[#d2d5d8] flex flex-col hidden md:flex shrink-0">
+        <aside className="w-60 bg-[#ffffff] border-r border-[#d2d5d8] flex flex-col hidden md:flex shrink-0">
           <div className="p-3 flex flex-col gap-1">
             <SidebarItem
               active={activeTab === "profile"}
