@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "next-view-transitions";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-// ✅ 修正：補上缺失的 ChevronRight 引用
 import { ChevronRight } from "lucide-react";
 
 // ============================================================================
@@ -11,7 +10,7 @@ import { ChevronRight } from "lucide-react";
 // ============================================================================
 
 /** * 🚀 頂部公告輪播組件 */
-function TopAnnouncementBar() {
+function TopAnnouncementBar({ isVisible }) {
   const announcements = [
     { text: "- 全館消費滿 NT$1,500 即享免運優惠 -", color: "#f58a9c" },
     { text: "- 新會員註冊立即送 NT$50 購物金 -", color: "#f58a9c" },
@@ -32,21 +31,27 @@ function TopAnnouncementBar() {
   }, [announcements.length]);
 
   return (
-    <div className="relative h-9 w-full overflow-hidden bg-[#f58a9c]">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={index}
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -30, opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="flex h-full w-full items-center justify-center px-4 text-center"
-        >
-          <span className="text-[11px] font-bold tracking-widest text-white md:text-xs">
-            {announcements[index].text}
-          </span>
-        </motion.div>
-      </AnimatePresence>
+    <div
+      className={`w-full bg-[#f58a9c] transition-all duration-300 ease-in-out overflow-hidden ${
+        isVisible ? "h-9 opacity-100" : "h-0 opacity-0"
+      }`}
+    >
+      <div className="relative h-9 w-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -30, opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="flex h-full w-full items-center justify-center px-4 text-center"
+          >
+            <span className="text-[11px] font-bold tracking-widest text-white md:text-xs">
+              {announcements[index].text}
+            </span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -126,7 +131,6 @@ function CartButton({ count = 0, onClick }) {
   return (
     <Link
       href="/cart"
-      type="button"
       onClick={onClick}
       className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-800 hover:bg-slate-100 transition-colors"
     >
@@ -255,7 +259,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
   const [open, setOpen] = useState(false);
 
   return (
-    // 🚨 修正：將 MouseEnter / MouseLeave 綁在最外層父容器
     <div
       className="relative"
       onMouseEnter={() => setOpen(true)}
@@ -263,9 +266,8 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
     >
       <button
         type="button"
-        // 移除這裡的 onMouseEnter，交給父容器處理
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group h-full py-2" // 增加 py-2 擴大感應區
+        className="flex items-center gap-1 text-slate-800 hover:text-slate-600 transition-colors group h-full py-2"
       >
         <span className="text-[13px] font-bold tracking-wide">
           {isLoggedIn ? user.name || "會員" : "會員登入"}
@@ -291,7 +293,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
 
       <AnimatePresence>
         {open && (
-          // 🚨 修正：加入 pt-4 作為隱形橋樑，讓滑鼠往下移不會中斷 hover
           <div className="absolute right-0 top-full pt-4 z-[1500]">
             <motion.div
               initial={{ opacity: 0, y: 5 }}
@@ -299,7 +300,6 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
               exit={{ opacity: 0, y: 5 }}
               className="w-48 rounded-lg border border-slate-100 bg-white shadow-xl p-1 relative"
             >
-              {/* 選單上方的小三角形 (視覺修飾，可選) */}
               <div className="absolute -top-1.5 right-6 w-3 h-3 bg-white border-t border-l border-slate-100 transform rotate-45"></div>
 
               {!isLoggedIn ? (
@@ -333,6 +333,7 @@ function UserMenu({ isLoggedIn, user, onLogin, onLogout }) {
     </div>
   );
 }
+
 // ============================================================================
 // 主組件
 // ============================================================================
@@ -344,6 +345,12 @@ export default function App() {
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
   const [cartCount, setCartCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // 🚀 狀態控制：主導覽列隱藏、粉色公告欄顯示
+  const [hidden, setHidden] = useState(false);
+  const [showPinkBar, setShowPinkBar] = useState(false);
+  const lastScrollY = useRef(0);
+
   const pathname = usePathname();
 
   const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
@@ -377,10 +384,34 @@ export default function App() {
     refreshAuth();
   }, [pathname, refreshAuth]);
 
+  // 🚀 完美滾動偵測邏輯
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // 判斷是否加上陰影
+      setIsScrolled(currentScrollY > 10);
+
+      if (currentScrollY <= 10) {
+        // 1. 到達最頂部：顯示主導覽列，收回粉色公告
+        setHidden(false);
+        setShowPinkBar(false);
+      } else if (currentScrollY > lastScrollY.current) {
+        // 2. 往下滾動：超過 50px 隱藏主導覽列，絕對不顯示粉色公告
+        if (currentScrollY > 50) {
+          setHidden(true);
+        }
+        setShowPinkBar(false);
+      } else if (currentScrollY < lastScrollY.current) {
+        // 3. 往上滾動：顯示主導覽列，並且展開粉色公告
+        setHidden(false);
+        setShowPinkBar(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -433,9 +464,12 @@ export default function App() {
   return (
     <>
       <header
-        className={`sticky top-0 z-[1000] w-full bg-white transition-shadow border-b-1 border-gray-100 duration-300 ${isScrolled ? "shadow-none" : ""}`}
+        className={`sticky top-0 z-[1000] w-full bg-white border-b border-gray-100 transition-all duration-300 ease-in-out ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        } ${isScrolled ? "shadow-md" : "shadow-none"}`}
       >
-        <TopAnnouncementBar />
+        {/* 🚀 改由 showPinkBar 嚴格控制是否出現 */}
+        <TopAnnouncementBar isVisible={showPinkBar} />
 
         <div className="mx-auto flex w-full justify-between px-4 lg:px-8">
           <div className="flex items-center py-1">

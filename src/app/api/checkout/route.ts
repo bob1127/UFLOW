@@ -1,4 +1,3 @@
-// src/app/api/checkout/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { getServerSession } from "next-auth";
@@ -9,15 +8,15 @@ export const runtime = "nodejs";
 const BASE = process.env.WC_API_BASE!;
 const CK = process.env.WC_CONSUMER_KEY!;
 const CS = process.env.WC_CONSUMER_SECRET!;
-const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID || process.env.NEXT_PUBLIC_ECPAY_MERCHANT_ID!;
+
+const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID!;
 const HASH_KEY = process.env.ECPAY_HASH_KEY!;
 const HASH_IV = process.env.ECPAY_HASH_IV!;
-const ECPAY_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
+const ECPAY_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5"; 
 
-// 💡 新增：LINE Pay 的金鑰設定 (請在 .env 中補上)
 const LINEPAY_CHANNEL_ID = process.env.LINEPAY_CHANNEL_ID!;
 const LINEPAY_CHANNEL_SECRET = process.env.LINEPAY_CHANNEL_SECRET!;
-const LINEPAY_URL = process.env.LINEPAY_API_URL || "https://sandbox-api-pay.line.me/v3/payments/request"; // 測試機網址
+const LINEPAY_URL = process.env.LINEPAY_API_URL || "https://api-pay.line.me/v3/payments/request"; 
 
 interface CartItem { wcProductId: number; qty: number; price: number; title: string; }
 interface ContactInfo { email: string; }
@@ -56,7 +55,6 @@ function escapeHtmlAttr(v: string | number): string {
   return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// 💡 產生 LINE Pay 需要的 Hmac 簽章
 function generateLinePaySignature(uri: string, requestBody: string, nonce: string): string {
   const message = `${LINEPAY_CHANNEL_SECRET}${uri}${requestBody}${nonce}`;
   return crypto.createHmac("sha256", LINEPAY_CHANNEL_SECRET).update(message).digest("base64");
@@ -75,6 +73,10 @@ export async function POST(req: Request) {
     const body: RequestBody = await req.json();
     const { items, contact, addr, total, shipMethod, payMethod, coupon } = body;
 
+    const safeLastName = (addr.lastName || "").replace(/\s+/g, "");
+    const safeFirstName = (addr.firstName || "").replace(/\s+/g, "");
+    const safePhone = (addr.phone || "").replace(/\s+/g, "");
+
     if (!loggedInCustomerId && contact?.email && auth && BASE) {
       try {
         const cRes = await fetch(`${BASE.replace(/\/$/, "")}/wp-json/wc/v3/customers?email=${encodeURIComponent(contact.email.trim())}&role=all`, {
@@ -87,62 +89,62 @@ export async function POST(req: Request) {
             loggedInCustomerId = cArr[0].id;
           }
         }
-      } catch (e) {
-        console.error("強制認親發生錯誤:", e);
-      }
+      } catch (e) {}
     }
 
     const cleanItemName = items && items.length > 0 ? items.map((it) => (it.title || "").replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, "")).join("#").slice(0, 150) : "Uflow_Product";
-    
-    // 💡 產生一組統一的訂單編號前綴 (綠界和 LINE Pay 都能用這組對帳)
     const tradeNo = `W${Date.now().toString().slice(-8)}`;
-
     let orderId: string | number = tradeNo;
     
-    // ===== 建立 WooCommerce 訂單 (無論走什麼金流都要建) =====
     if (auth && BASE) {
       try {
         const meta_data: any[] = [
           { key: "_ecpay_trade_no", value: tradeNo },
-          { key: "_invoice_email", value: contact.email },
-          { key: "_payment_provider", value: payMethod || "ecpay" } // 註記走哪家金流
+          { key: "_shipping_phone", value: safePhone } 
         ];
 
         let finalAddress = addr.line1;
-        let logisticsSubType = "";
+        let methodId = "ry_ecpay_shipping"; 
+        let shippingTitle = "宅配速送";
 
         if ((shipMethod === "CVS" || shipMethod === "711") && addr.storeId) {
-          logisticsSubType = shipMethod === "CVS" ? "FAMIC2C" : "UNIMARTC2C"; 
+          const isFami = shipMethod === "CVS";
+          
+          // 🚀 核心防呆：自動補齊全家被吃掉的 0 (強制補滿 6 碼)
+          const finalStoreId = String(addr.storeId).padStart(6, '0');
+
+          // 使用原生探針測出來的最完美 ID
+          methodId = isFami ? "ry_ecpay_shipping_cvs_family" : "ry_ecpay_shipping_cvs_711"; 
+          shippingTitle = isFami ? "綠界物流 超商取貨 全家" : "綠界物流 超商取貨 7-ELEVEN";
+          finalAddress = `${addr.storeName} (${finalStoreId}) - ${addr.storeAddr}`;
+          
+          // 原生探針證實的極簡 Meta Data (沒有多餘的暗號，絕不干擾)
           meta_data.push(
-            { key: "_shipping_store_id", value: String(addr.storeId) },
-            { key: "_shipping_store_name", value: addr.storeName },
-            { key: "_shipping_store_address", value: addr.storeAddr },
-            { key: "_shipping_phone", value: addr.phone },
-            { key: "CVSStoreID", value: String(addr.storeId) },
-            { key: "CVSStoreName", value: addr.storeName },
-            { key: "CVSAddress", value: addr.storeAddr },
-            { key: "LogisticsSubType", value: logisticsSubType },
-            { key: "_ecpay_shipping_method", value: logisticsSubType }
+            { key: "_shipping_cvs_store_ID", value: finalStoreId },
+            { key: "_shipping_cvs_store_name", value: addr.storeName },
+            { key: "_shipping_cvs_store_address", value: addr.storeAddr },
+            { key: "_shipping_cvs_store_telephone", value: safePhone }
           );
-          finalAddress = `${addr.storeName} (${addr.storeId}) - ${addr.storeAddr}`;
         }
 
         if (coupon?.code) meta_data.push({ key: "_used_coupon_code", value: coupon.code });
 
         const wcOrderPayload = {
           customer_id: loggedInCustomerId, 
-          payment_method: payMethod === "linepay" ? "linepay" : "ecpay",
+          // 🚀 核心欺騙術：告訴 Woo 這是 bacs，讓外掛面板立刻現身
+          payment_method: payMethod === "linepay" ? "linepay" : "bacs",
           payment_method_title: payMethod === "linepay" ? "LINE Pay" : "綠界科技 ECPay",
-          set_paid: false, // 等 Callback 回來才改 true
+          set_paid: false, 
           billing: {
-            first_name: addr.lastName, last_name: addr.firstName,
+            first_name: safeFirstName, last_name: safeLastName,
             address_1: finalAddress, city: "Taipei", country: "TW",
-            email: contact.email, phone: addr.phone,
+            email: contact.email, phone: safePhone,
           },
           shipping: {
-            first_name: addr.lastName, last_name: addr.firstName,
+            first_name: safeFirstName, last_name: safeLastName,
             address_1: finalAddress, country: "TW",
           },
+          shipping_lines: [{ method_id: methodId, method_title: shippingTitle, total: "80" }],
           line_items: items.map((it) => ({ product_id: it.wcProductId, quantity: it.qty })),
           meta_data: meta_data, 
         };
@@ -154,18 +156,15 @@ export async function POST(req: Request) {
         });
         const wcData = await wcRes.json();
         if (wcData.id) orderId = wcData.id;
-      } catch (wcErr) {}
+      } catch (wcErr) {
+        console.error("WC 訂單建立失敗", wcErr);
+      }
     }
 
     const totalAmountString = Math.floor(Number(total) || 0).toString();
-    const domain = "https://www.uflow.space"; // 推上正式機請確保為正式網址
+    const domain = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; 
 
-    // ==========================================
-    // 🔀 分流點：根據選擇的付款方式走不同邏輯
-    // ==========================================
-    
     if (payMethod === "linepay") {
-      // 🟢 路線 B：LINE Pay 官方直串
       if (!LINEPAY_CHANNEL_ID || !LINEPAY_CHANNEL_SECRET) {
         return NextResponse.json({ ok: false, message: "LINE Pay 金鑰未設定" }, { status: 500 });
       }
@@ -190,8 +189,8 @@ export async function POST(req: Request) {
           }
         ],
         redirectUrls: {
-          confirmUrl: `${domain}/api/linepay/confirm?orderId=${orderId}&tradeNo=${tradeNo}`, // 客人付完款導向這裡驗證
-          cancelUrl: `${domain}/cart` // 取消付款回購物車
+          confirmUrl: `${domain}/api/linepay/confirm?orderId=${orderId}&tradeNo=${tradeNo}`, 
+          cancelUrl: `${domain}/cart` 
         }
       };
 
@@ -212,20 +211,12 @@ export async function POST(req: Request) {
       const lpData = await lpRes.json();
 
       if (lpData.returnCode === "0000" && lpData.info.paymentUrl.web) {
-        // 成功取得 LINE Pay 付款網址，回傳給前端跳轉
-        return NextResponse.json({ 
-          ok: true, 
-          orderId, 
-          redirectUrl: lpData.info.paymentUrl.web 
-        });
+        return NextResponse.json({ ok: true, orderId, redirectUrl: lpData.info.paymentUrl.web });
       } else {
-        console.error("LINE Pay API 錯誤:", lpData);
         return NextResponse.json({ ok: false, message: lpData.returnMessage || "LINE Pay 請求失敗" }, { status: 400 });
       }
 
     } else {
-      // 🟢 路線 A：綠界科技 ECPay (包含卡片、ATM、超商)
-      // 注意：這裡我幫你把 ChoosePayment 鎖死為不包含 LINE Pay (綠界的代號可能不同，通常預設 ALL 會包含簽約通道)
       const ecpayParams: Record<string, string> = {
         MerchantID: MERCHANT_ID,
         MerchantTradeNo: tradeNo,
@@ -236,8 +227,8 @@ export async function POST(req: Request) {
         ItemName: cleanItemName,
         ReturnURL: `${domain}/api/ecpay/callback`,
         PaymentInfoURL: `${domain}/api/ecpay/callback`, 
-        ClientBackURL: `${domain}/thank-you?orderId=${orderId}`, // 直接回你的網站
-        ChoosePayment: "ALL", // 如果你綠界後台有開通 LINEPay 這裡可能會顯示，建議若不給綠界收，可改為 "Credit" 或去後台關掉
+        ClientBackURL: `${domain}/thank-you?orderId=${orderId}`, 
+        ChoosePayment: "ALL", 
         EncryptType: "1",
         CustomField1: String(orderId),
         CustomField2: contact.email,
