@@ -107,18 +107,40 @@ export async function POST(req: Request) {
         let methodId = "ry_ecpay_shipping"; 
         let shippingTitle = "宅配速送";
 
-        if ((shipMethod === "CVS" || shipMethod === "711") && addr.storeId) {
-          const isFami = shipMethod === "CVS";
-          
-          // 🚀 核心防呆：自動補齊全家被吃掉的 0 (強制補滿 6 碼)
-          const finalStoreId = String(addr.storeId).padStart(6, '0');
+        const isCVS = ["CVS", "711", "HILIFE", "OKMART", "FAMI"].includes(shipMethod) && !!addr.storeId;
 
-          // 使用原生探針測出來的最完美 ID
-          methodId = isFami ? "ry_ecpay_shipping_cvs_family" : "ry_ecpay_shipping_cvs_711"; 
-          shippingTitle = isFami ? "綠界物流 超商取貨 全家" : "綠界物流 超商取貨 7-ELEVEN";
+        if (isCVS) {
+          let finalStoreId = String(addr.storeId);
+          const sName = addr.storeName || "";
+          
+          // 🚀 精準物流分流與「客製化補零」防呆機制
+          if (shipMethod === "711" || sName.includes("7-11") || sName.includes("統一")) {
+            methodId = "ry_ecpay_shipping_cvs_711"; 
+            shippingTitle = "綠界物流 超商取貨 7-ELEVEN";
+            finalStoreId = finalStoreId.padStart(6, '0'); // 7-11 補滿 6 碼
+            
+          } else if (shipMethod === "HILIFE" || sName.includes("萊爾富")) {
+            methodId = "ry_ecpay_shipping_cvs_hilife"; 
+            shippingTitle = "綠界物流 超商取貨 萊爾富";
+            // ⚠️ 萊爾富通常為 4 碼，絕對不可強制補滿 6 碼！移除前端可能誤補的 00
+            if (finalStoreId.length > 4 && finalStoreId.startsWith("00")) {
+              finalStoreId = finalStoreId.replace(/^0+/, ''); 
+            }
+            
+          } else if (shipMethod === "OKMART" || sName.includes("OK") || sName.toUpperCase().includes("OKMART")) {
+            methodId = "ry_ecpay_shipping_cvs_ok"; 
+            shippingTitle = "綠界物流 超商取貨 OK超商";
+            // OK 超商維持原樣傳送
+            
+          } else {
+            methodId = "ry_ecpay_shipping_cvs_family"; 
+            shippingTitle = "綠界物流 超商取貨 全家";
+            finalStoreId = finalStoreId.padStart(6, '0'); // 全家必須補滿 6 碼
+          }
+          
           finalAddress = `${addr.storeName} (${finalStoreId}) - ${addr.storeAddr}`;
           
-          // 原生探針證實的極簡 Meta Data (沒有多餘的暗號，絕不干擾)
+          // 🚀 100% 原生極簡 Meta Data (不再亂塞暗號，回歸最純淨的 C2C 呼叫)
           meta_data.push(
             { key: "_shipping_cvs_store_ID", value: finalStoreId },
             { key: "_shipping_cvs_store_name", value: addr.storeName },
@@ -131,8 +153,7 @@ export async function POST(req: Request) {
 
         const wcOrderPayload = {
           customer_id: loggedInCustomerId, 
-          // 🚀 核心欺騙術：告訴 Woo 這是 bacs，讓外掛面板立刻現身
-          payment_method: payMethod === "linepay" ? "linepay" : "bacs",
+          payment_method: payMethod === "linepay" ? "linepay" : "ecpay",
           payment_method_title: payMethod === "linepay" ? "LINE Pay" : "綠界科技 ECPay",
           set_paid: false, 
           billing: {

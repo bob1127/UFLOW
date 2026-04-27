@@ -219,6 +219,13 @@ function extractInfoFromNote(note: string) {
   if (atmMatch) result.atm_account = atmMatch[1];
   const cvsMatch = note.match(/繳費代碼.*?([a-zA-Z0-9]{14})/);
   if (cvsMatch) result.cvs_code = cvsMatch[1];
+
+  // 嘗試萃取期限 (如 2026/04/30 或 2026-04-30 23:59:59)
+  const expMatch = note.match(
+    /期限.*?(\d{4}[-/]\d{2}[-/]\d{2}(?: \d{2}:\d{2}:\d{2})?)/,
+  );
+  if (expMatch) result.expire_date = expMatch[1];
+
   return Object.keys(result).length > 0 ? result : null;
 }
 
@@ -811,7 +818,6 @@ export default function AccountPage() {
     );
   }, [availableCoupons]);
 
-  // 💡 修正：不再強制濾掉個人禮金！讓錢包顯示所有屬於你的折扣碼
   const filteredCoupons = useMemo(() => {
     let base = sortedCoupons;
     if (searchQuery && activeTab === "profile") {
@@ -1426,7 +1432,6 @@ export default function AccountPage() {
                           </p>
                         ) : (
                           <>
-                            {/* 💡 永遠顯示的 API 除錯黑盒子 */}
                             {ordersDebug && (
                               <div className="mb-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-64 text-left border border-emerald-900">
                                 <div className="text-white mb-2 font-bold flex justify-between">
@@ -1501,7 +1506,6 @@ export default function AccountPage() {
                                         noteInfo?.expire_date ||
                                         "依綠界規定";
 
-                                      // 💡 把缺少時間的日期補上 23:59:59，使其與綠界顯示一致
                                       const displayExpireDate =
                                         rawExpireDate !== "依綠界規定" &&
                                         /^\d{4}[-/]\d{2}[-/]\d{2}$/.test(
@@ -1512,6 +1516,13 @@ export default function AccountPage() {
 
                                       const pTitle =
                                         o.payment_method_title || "標準支付";
+
+                                      // 💡 判斷是否為「待付款」狀態
+                                      const isPendingPayment =
+                                        o.status === "pending" ||
+                                        o.status === "待付款" ||
+                                        o.status === "waiting-payment" ||
+                                        o.status === "on-hold"; // 綠界有時會用 on-hold
 
                                       return (
                                         <Fragment key={o.id}>
@@ -1566,138 +1577,93 @@ export default function AccountPage() {
                                                     </h4>
 
                                                     {(() => {
-                                                      // 💡 1. 判斷訂單是否已被取消
                                                       const isCancelled =
                                                         o.status ===
                                                           "cancelled" ||
                                                         o.status === "已取消";
 
-                                                      // 💡 2. 判斷時間是否已經超過繳費期限
                                                       let isTimeExpired = false;
                                                       if (
                                                         rawExpireDate &&
                                                         rawExpireDate !==
                                                           "依綠界規定"
                                                       ) {
-                                                        const expDate =
-                                                          new Date(
-                                                            rawExpireDate.replace(
-                                                              /-/g,
-                                                              "/",
-                                                            ),
+                                                        // 嘗試解析帶有時間的格式 (YYYY/MM/DD HH:mm:ss)
+                                                        const dateStr =
+                                                          rawExpireDate.replace(
+                                                            /-/g,
+                                                            "/",
                                                           );
-                                                        // 假設 expireDate 只有日期 (YYYY/MM/DD)，期限通常是當天 23:59:59
-                                                        expDate.setHours(
-                                                          23,
-                                                          59,
-                                                          59,
-                                                          999,
-                                                        );
-                                                        isTimeExpired =
-                                                          new Date().getTime() >
-                                                          expDate.getTime();
+                                                        const hasTime =
+                                                          dateStr.includes(":");
+
+                                                        const expDate =
+                                                          new Date(dateStr);
+
+                                                        // 如果只有日期沒有時間，預設為當天 23:59:59
+                                                        if (
+                                                          !hasTime &&
+                                                          !isNaN(
+                                                            expDate.getTime(),
+                                                          )
+                                                        ) {
+                                                          expDate.setHours(
+                                                            23,
+                                                            59,
+                                                            59,
+                                                            999,
+                                                          );
+                                                        }
+
+                                                        if (
+                                                          !isNaN(
+                                                            expDate.getTime(),
+                                                          )
+                                                        ) {
+                                                          isTimeExpired =
+                                                            new Date().getTime() >
+                                                            expDate.getTime();
+                                                        }
                                                       }
 
-                                                      // 🚨 情況 A：訂單已取消 或 繳費已逾期
-                                                      if (
-                                                        isCancelled ||
-                                                        isTimeExpired
-                                                      ) {
+                                                      if (isCancelled) {
                                                         return (
                                                           <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-lg p-5 shadow-sm text-center">
                                                             <p className="font-bold text-base mb-1">
-                                                              {isCancelled
-                                                                ? "訂單已取消"
-                                                                : "繳費期限已逾期"}
+                                                              訂單已取消
                                                             </p>
                                                             <p className="text-xs opacity-80">
-                                                              此付款帳號已失效。若您仍需購買，請重新下單。
+                                                              若您仍需購買，請重新下單。
                                                             </p>
                                                           </div>
                                                         );
                                                       }
 
-                                                      // ✅ 情況 B-2：正常可繳費狀態 (超商條碼 BARCODE)
+                                                      // ✅ 情況 A：待付款 + 超商代碼 (CVS)
                                                       if (
-                                                        barcode1 &&
-                                                        barcode2 &&
-                                                        barcode3
+                                                        isPendingPayment &&
+                                                        cvsCode
                                                       ) {
                                                         return (
-                                                          <div className="bg-emerald-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
-                                                            <div className="flex justify-between items-start mb-4">
-                                                              <div>
-                                                                <p className="text-xs opacity-80 mb-1">
-                                                                  超商條碼
-                                                                  (請將螢幕調亮)
-                                                                </p>
-                                                                <div className="text-sm font-bold tracking-wider">
-                                                                  四大超商皆可繳費
+                                                          <div
+                                                            className={cn(
+                                                              "rounded-lg p-5 shadow-lg border relative overflow-hidden",
+                                                              isTimeExpired
+                                                                ? "bg-gray-100 border-gray-300 text-gray-500"
+                                                                : "bg-emerald-600 border-emerald-700 text-white animate-in zoom-in-95 duration-200",
+                                                            )}
+                                                          >
+                                                            {isTimeExpired && (
+                                                              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] z-10">
+                                                                <div className="bg-rose-600 text-white px-4 py-2 rounded-full font-bold shadow-md transform -rotate-12 border-2 border-white">
+                                                                  繳費已逾期
                                                                 </div>
                                                               </div>
-                                                              <div className="text-right">
-                                                                <p className="text-xs opacity-80 mb-1">
-                                                                  繳費期限
-                                                                </p>
-                                                                <div className="text-sm font-medium flex items-center gap-1 justify-end">
-                                                                  <Calendar
-                                                                    size={14}
-                                                                  />{" "}
-                                                                  {
-                                                                    displayExpireDate
-                                                                  }
-                                                                </div>
-                                                              </div>
-                                                            </div>
-
-                                                            {/* 💡 條碼與文字顯示區塊 */}
-                                                            <div className="bg-white rounded-md p-5 flex flex-col gap-5 items-center overflow-hidden shadow-inner">
-                                                              {/* 第一段 */}
-                                                              <div className="flex flex-col items-center w-full">
-                                                                <img
-                                                                  src={`https://bwipjs-api.metafloor.com/?bcid=code39&text=${barcode1}&scale=2&height=10`}
-                                                                  alt="Barcode 1"
-                                                                  className="h-12 w-full max-w-[280px] object-contain mix-blend-multiply"
-                                                                />
-                                                                <p className="text-[13px] font-mono font-bold text-gray-800 tracking-[0.2em] mt-1.5">
-                                                                  {barcode1}
-                                                                </p>
-                                                              </div>
-                                                              {/* 第二段 */}
-                                                              <div className="flex flex-col items-center w-full">
-                                                                <img
-                                                                  src={`https://bwipjs-api.metafloor.com/?bcid=code39&text=${barcode2}&scale=2&height=10`}
-                                                                  alt="Barcode 2"
-                                                                  className="h-12 w-full max-w-[280px] object-contain mix-blend-multiply"
-                                                                />
-                                                                <p className="text-[13px] font-mono font-bold text-gray-800 tracking-[0.2em] mt-1.5">
-                                                                  {barcode2}
-                                                                </p>
-                                                              </div>
-                                                              {/* 第三段 */}
-                                                              <div className="flex flex-col items-center w-full">
-                                                                <img
-                                                                  src={`https://bwipjs-api.metafloor.com/?bcid=code39&text=${barcode3}&scale=2&height=10`}
-                                                                  alt="Barcode 3"
-                                                                  className="h-12 w-full max-w-[280px] object-contain mix-blend-multiply"
-                                                                />
-                                                                <p className="text-[13px] font-mono font-bold text-gray-800 tracking-[0.2em] mt-1.5">
-                                                                  {barcode3}
-                                                                </p>
-                                                              </div>
-                                                            </div>
-                                                          </div>
-                                                        );
-                                                      }
-
-                                                      // ✅ 情況 B：正常可繳費狀態 (超商 CVS)
-                                                      if (cvsCode) {
-                                                        return (
-                                                          <div className="bg-blue-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
+                                                            )}
                                                             <p className="text-xs opacity-80 mb-1">
                                                               超商繳費代碼 (CVS)
                                                             </p>
-                                                            <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between">
+                                                            <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between mb-4 bg-black/10 px-3 py-2 rounded">
                                                               {cvsCode}
                                                               <button
                                                                 onClick={(
@@ -1707,64 +1673,99 @@ export default function AccountPage() {
                                                                   navigator.clipboard.writeText(
                                                                     cvsCode,
                                                                   );
+                                                                  alert(
+                                                                    "已複製超商代碼",
+                                                                  );
                                                                 }}
                                                                 className="hover:scale-110 active:scale-95 transition-transform"
+                                                                title="複製代碼"
                                                               >
                                                                 <Copy
                                                                   size={20}
                                                                 />
                                                               </button>
                                                             </div>
-                                                            <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
-                                                              <div className="flex items-center gap-2 text-xs">
-                                                                <Calendar
-                                                                  size={14}
-                                                                />{" "}
-                                                                繳費期限:{" "}
-                                                                {
-                                                                  displayExpireDate
-                                                                }
-                                                              </div>
+                                                            <div className="text-xs space-y-1 opacity-90">
+                                                              <p className="flex items-center justify-between">
+                                                                <span>
+                                                                  適用超商：
+                                                                </span>
+                                                                <span className="font-medium">
+                                                                  7-11, 全家,
+                                                                  萊爾富, OK
+                                                                </span>
+                                                              </p>
+                                                              <p className="flex items-center justify-between pt-2 border-t border-current/20 mt-2">
+                                                                <span className="flex items-center gap-1">
+                                                                  <Calendar
+                                                                    size={14}
+                                                                  />{" "}
+                                                                  繳費期限：
+                                                                </span>
+                                                                <span className="font-bold">
+                                                                  {
+                                                                    displayExpireDate
+                                                                  }
+                                                                </span>
+                                                              </p>
                                                             </div>
                                                           </div>
                                                         );
                                                       }
 
-                                                      // ✅ 情況 C：正常可繳費狀態 (ATM)
-                                                      if (atmAccount) {
+                                                      // ✅ 情況 B：待付款 + 虛擬帳號 (ATM)
+                                                      if (
+                                                        isPendingPayment &&
+                                                        atmAccount
+                                                      ) {
                                                         return (
-                                                          <div className="bg-indigo-600 text-white rounded-lg p-5 shadow-lg animate-in zoom-in-95 duration-200">
-                                                            <div className="flex justify-between items-start mb-4">
+                                                          <div
+                                                            className={cn(
+                                                              "rounded-lg p-5 shadow-lg border relative overflow-hidden",
+                                                              isTimeExpired
+                                                                ? "bg-gray-100 border-gray-300 text-gray-500"
+                                                                : "bg-indigo-600 border-indigo-700 text-white animate-in zoom-in-95 duration-200",
+                                                            )}
+                                                          >
+                                                            {isTimeExpired && (
+                                                              <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] z-10">
+                                                                <div className="bg-rose-600 text-white px-4 py-2 rounded-full font-bold shadow-md transform -rotate-12 border-2 border-white">
+                                                                  繳費已逾期
+                                                                </div>
+                                                              </div>
+                                                            )}
+                                                            <div className="flex justify-between items-end mb-4">
                                                               <div>
                                                                 <p className="text-xs opacity-80 mb-1">
                                                                   銀行代碼
                                                                 </p>
-                                                                <div className="text-xl font-bold tracking-wider flex items-center gap-2">
+                                                                <div className="text-2xl font-bold flex items-center gap-2">
                                                                   <Landmark
-                                                                    size={20}
+                                                                    size={24}
+                                                                    className="opacity-80"
                                                                   />
                                                                   {bankCode ||
-                                                                    "請見綠界通知信"}
+                                                                    "請見信件"}
                                                                 </div>
                                                               </div>
                                                               <div className="text-right">
                                                                 <p className="text-xs opacity-80 mb-1">
-                                                                  繳費期限
+                                                                  應付金額
                                                                 </p>
-                                                                <div className="text-sm font-medium flex items-center gap-1 justify-end">
-                                                                  <Calendar
-                                                                    size={14}
-                                                                  />{" "}
-                                                                  {
-                                                                    displayExpireDate
-                                                                  }
-                                                                </div>
+                                                                <p className="text-xl font-bold text-yellow-300">
+                                                                  {formatMoneyNT(
+                                                                    Number(
+                                                                      o.total,
+                                                                    ),
+                                                                  )}
+                                                                </p>
                                                               </div>
                                                             </div>
+
                                                             <p className="text-xs opacity-80 mb-1">
-                                                              ATM 專屬虛擬帳號
+                                                              專屬虛擬帳號 (ATM)
                                                             </p>
-                                                            <div className="text-2xl font-mono font-black tracking-widest flex items-center justify-between bg-white/10 px-3 py-2 rounded-md">
+                                                            <div className="text-xl sm:text-2xl font-mono font-black tracking-widest flex items-center justify-between bg-black/15 px-3 py-2 rounded-md mb-4">
                                                               {atmAccount}
                                                               <button
                                                                 onClick={(
@@ -1774,35 +1775,63 @@ export default function AccountPage() {
                                                                   navigator.clipboard.writeText(
                                                                     atmAccount,
                                                                   );
+                                                                  alert(
+                                                                    "已複製虛擬帳號",
+                                                                  );
                                                                 }}
                                                                 className="hover:scale-110 active:scale-95 transition-transform bg-white/20 p-1.5 rounded"
+                                                                title="複製帳號"
                                                               >
                                                                 <Copy
                                                                   size={18}
                                                                 />
                                                               </button>
                                                             </div>
+
+                                                            <div className="flex items-center justify-between pt-3 border-t border-current/20 text-xs">
+                                                              <span className="flex items-center gap-1 opacity-90">
+                                                                <Calendar
+                                                                  size={14}
+                                                                />{" "}
+                                                                繳費期限：
+                                                              </span>
+                                                              <span className="font-bold">
+                                                                {
+                                                                  displayExpireDate
+                                                                }
+                                                              </span>
+                                                            </div>
                                                           </div>
                                                         );
                                                       }
 
-                                                      // ✅ 情況 D：已付款或其他不需代碼的支付方式
+                                                      // ✅ 情況 C：已付款 或 不需代碼的付款方式 (如刷卡)
                                                       return (
-                                                        <div className="text-sm text-gray-500 bg-white border border-gray-200 p-4 rounded-md">
-                                                          付款方式:{" "}
-                                                          <span className="font-medium text-gray-900">
-                                                            {pTitle}
-                                                          </span>
+                                                        <div className="text-sm text-gray-600 bg-white border border-gray-200 p-4 rounded-md shadow-sm">
+                                                          <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
+                                                            <span>
+                                                              付款方式：
+                                                            </span>
+                                                            <span className="font-bold text-gray-900">
+                                                              {pTitle}
+                                                            </span>
+                                                          </div>
+
                                                           {o.status ===
                                                             "processing" ||
                                                           o.status ===
-                                                            "已完成" ? (
-                                                            <p className="mt-1 text-xs text-emerald-600 font-bold">
-                                                              付款已完成，系統處理中。
-                                                            </p>
+                                                            "已完成" ||
+                                                          o.status ===
+                                                            "completed" ? (
+                                                            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded mt-2">
+                                                              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                              <span className="font-bold text-xs">
+                                                                付款已成功，系統處理中
+                                                              </span>
+                                                            </div>
                                                           ) : (
-                                                            <p className="mt-1 text-xs opacity-70">
-                                                              此訂單目前無須額外代碼，請依系統指示操作。
+                                                            <p className="text-xs opacity-70 mt-2">
+                                                              此訂單目前無須額外繳費代碼。若有疑問請聯繫客服。
                                                             </p>
                                                           )}
                                                         </div>
@@ -1822,18 +1851,18 @@ export default function AccountPage() {
                                                         (item, idx) => (
                                                           <div
                                                             key={idx}
-                                                            className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50"
+                                                            className="px-4 py-3 flex justify-between border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
                                                           >
                                                             <div>
                                                               <p className="text-sm font-bold text-gray-900">
                                                                 {item.name}
                                                               </p>
-                                                              <p className="text-xs text-gray-500">
+                                                              <p className="text-xs text-gray-500 mt-0.5">
                                                                 數量:{" "}
                                                                 {item.quantity}
                                                               </p>
                                                             </div>
-                                                            <p className="text-sm font-mono font-medium">
+                                                            <p className="text-sm font-mono font-medium text-gray-700">
                                                               {item.total
                                                                 ? formatMoneyNT(
                                                                     Number(
@@ -1845,34 +1874,16 @@ export default function AccountPage() {
                                                           </div>
                                                         ),
                                                       )}
-                                                      <div className="bg-gray-50 px-4 py-3 flex justify-between items-center font-black">
-                                                        <span>總計金額</span>
-                                                        <span className="text-lg text-emerald-700">
+                                                      <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t border-gray-200">
+                                                        <span className="font-bold text-gray-700 text-sm">
+                                                          訂單總計
+                                                        </span>
+                                                        <span className="text-lg font-black text-emerald-700">
                                                           {formatMoneyNT(
                                                             Number(o.total),
                                                           )}
                                                         </span>
                                                       </div>
-                                                    </div>
-
-                                                    <div className="mt-4 p-4 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg overflow-auto max-h-48">
-                                                      <div className="text-white mb-2 font-bold flex items-center gap-2">
-                                                        🛠️
-                                                        系統偵錯：尋找綠界隱藏欄位
-                                                      </div>
-                                                      <div className="mb-2 text-yellow-400 border-b border-white/20 pb-2">
-                                                        [Customer Note]:
-                                                        <br />
-                                                        {o.customer_note ||
-                                                          "無備註內容"}
-                                                      </div>
-                                                      <pre className="whitespace-pre-wrap leading-relaxed">
-                                                        {JSON.stringify(
-                                                          o.meta_data,
-                                                          null,
-                                                          2,
-                                                        )}
-                                                      </pre>
                                                     </div>
                                                   </div>
                                                 </div>
