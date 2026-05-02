@@ -73,29 +73,30 @@ export default function FeatureScrollSection() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full bg-[#f4f4f6] text-[#2c2c2c] py-20 lg:py-32"
+      className="relative w-full bg-[#f4f4f6] text-[#2c2c2c] py-12 lg:py-32"
     >
       {/* === 背景大文字凍結效果 === */}
-      <div className="absolute top-[10%] left-0 w-full z-0 pointer-events-none select-none overflow-hidden">
-        <h2 className="text-[25vw] font-black text-[#e8e8eb] leading-none whitespace-nowrap -ml-[5%]">
+      <div className="absolute top-[3%] lg:top-[10%] left-0 w-full z-0 pointer-events-none select-none overflow-hidden opacity-50 lg:opacity-100">
+        <h2 className="text-[35vw] lg:text-[25vw] font-black text-[#e8e8eb] leading-none whitespace-nowrap -ml-[5%]">
           UFLOW UFLOW
         </h2>
       </div>
 
-      {/* 🚨 items-start 是 Flexbox 搭配 Sticky 必備的條件 */}
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-start gap-12 lg:gap-24">
-        {/* === 左側：固定區塊 (Sticky) === */}
-        {/* 將 sticky 設定在元素本身，並給予 top 值 */}
-        <div className="w-full lg:w-5/12 sticky top-[18vh] z-20 pb-10">
-          <span className="text-sm font-bold text-yellow-500 tracking-widest mb-4 uppercase inline-block">
+      {/* 💡 RWD 優化：手機版將整體佈局間距 gap 大幅縮小為 gap-2 (原本是 gap-8) */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-start gap-2 lg:gap-24">
+        {/* === 左側：文字區塊 === */}
+        {/* 💡 RWD 優化：大幅減少手機版的 pb (bottom padding) */}
+        <div className="w-full lg:w-5/12 static lg:sticky lg:top-[18vh] z-20 pb-2 lg:pb-10 pt-6 lg:pt-0">
+          <span className="text-xs sm:text-sm font-bold text-yellow-500 tracking-widest mb-3 lg:mb-4 uppercase inline-block">
             Our feature
           </span>
-          <h2 className="text-4xl lg:text-3xl font-black leading-[1.3] tracking-wider mb-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-3xl font-black leading-[1.4] tracking-wider mb-5 lg:mb-8 text-[#1a1a1a]">
             UFLOW 陪伴使用者找回了那份消失已久的「輕盈穩定感」。
-            <br /> <br />
+            <br className="hidden sm:block" />{" "}
+            <br className="hidden sm:block" />
             我們不只提供產品，更想邀你一起，感受身體重新開機、能量再次流動的美好時刻。
           </h2>
-          <p className="text-stone-700 leading-loose mb-10 text-[15px] lg:text-[16px] max-w-md">
+          <p className="text-stone-600 leading-loose mb-6 lg:mb-10 text-sm sm:text-[15px] lg:text-[16px] max-w-md">
             我們想做的，不是一盒放在架上的商品，而是一個能讓身體「活」起來的開關。為了實踐「流動
             (Flow)」的核心理念，研發過程比預期艱辛。
             <br />
@@ -105,7 +106,7 @@ export default function FeatureScrollSection() {
           </p>
 
           <Link href="">
-            <button className="bg-[#1a1a1a] text-white rounded-full px-8 py-4 font-bold w-fit flex items-center gap-4 hover:bg-gray-800 transition-colors duration-300 shadow-xl">
+            <button className="bg-[#1a1a1a] text-white rounded-full px-6 lg:px-8 py-3.5 lg:py-4 text-sm lg:text-base font-bold w-fit flex items-center gap-3 lg:gap-4 hover:bg-gray-800 transition-colors duration-300 shadow-xl">
               我們的產品
               <svg
                 width="16"
@@ -125,36 +126,41 @@ export default function FeatureScrollSection() {
 
         {/* === 右側：滾動焦點卡片區塊 === */}
         <div className="w-full lg:w-7/12 flex flex-col relative z-10">
-          <div className="pt-[20vh] pb-[20vh] flex flex-col gap-[35vh]">
+          {/* 💡 RWD 優化：手機版上方留白縮小為 pt-4，卡片與卡片的間距縮小為 gap-4 (原本是 gap-16) */}
+          <div className="pt-4 lg:pt-[20vh] lg:pb-[20vh] flex flex-col gap-4 sm:gap-6 lg:gap-[35vh]">
             {featuresData.map((data, index) => (
               <div
                 key={index}
-                // ✨ 預設套用 Tailwind 的 opacity-20 與 scale-80，確保一開始就是半透明的
-                className="feature-card opacity-90 scale-80 will-change-transform bg-white rounded-[40px] p-8 lg:p-14  w-full max-w-2xl mx-auto origin-center"
+                // ✨ 預設套用 Tailwind 的 opacity-90 與 scale-80
+                className="feature-card opacity-90 scale-80 will-change-transform bg-white rounded-[24px] lg:rounded-[40px] p-6 sm:p-8 lg:p-14 w-full max-w-2xl mx-auto origin-center shadow-sm"
               >
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-blue-600 font-bold tracking-widest text-sm uppercase">
+                <div className="flex items-center gap-3 lg:gap-4 mb-4 lg:mb-6">
+                  <span className="text-blue-600 font-bold tracking-widest text-[11px] lg:text-sm uppercase">
                     Point
                   </span>
-                  <div className="w-8 h-[2px] bg-blue-600"></div>
-                  <span className="text-blue-600 font-bold text-lg">
+                  <div className="w-6 lg:w-8 h-[2px] bg-blue-600"></div>
+                  <span className="text-blue-600 font-bold text-[15px] lg:text-lg">
                     {data.id}
                   </span>
                 </div>
 
-                <h3 className="text-2xl lg:text-3xl font-bold leading-[1.5] mb-6 text-[#2c2c2c] whitespace-pre-line">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-[1.5] mb-3 lg:mb-6 text-[#2c2c2c] whitespace-pre-line">
                   {data.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed text-[15px] lg:text-[16px]">
+                <p className="text-gray-600 leading-relaxed text-[13px] sm:text-[15px] lg:text-[16px]">
                   {data.desc}
                 </p>
 
-                <div className="mt-10 relative w-full h-[200px] flex justify-end items-center">
+                <div className="mt-6 lg:mt-10 relative w-full h-[120px] lg:h-[200px] flex justify-end items-center">
                   <div
-                    className={`w-32 h-32 rounded-full ${data.bgColor} absolute right-10 top-0 opacity-80 mix-blend-multiply`}
+                    className={`w-20 h-20 lg:w-32 lg:h-32 rounded-full ${data.bgColor} absolute right-6 lg:right-10 top-0 opacity-80 mix-blend-multiply`}
                   ></div>
-                  <div className="w-40 h-40 bg-gray-50 rounded-2xl relative z-10 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-200">
-                    <img src="/images/植萃天然.jpg" alt="" />
+                  <div className="w-24 h-24 lg:w-40 lg:h-40 bg-gray-50 rounded-2xl relative z-10 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-200 overflow-hidden">
+                    <img
+                      src="/images/植萃天然.jpg"
+                      alt={data.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
               </div>

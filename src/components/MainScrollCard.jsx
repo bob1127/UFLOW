@@ -155,10 +155,10 @@ export default function Home() {
                       </span>
                       <div className="flex flex-col text-[14px]">
                         <span className="line-through text-gray-400">
-                          原價 $1580/盒
+                          原價 $1620/盒
                         </span>
                         <span className="text-red-500 font-bold">
-                          會員價 NT$1230/盒
+                          優惠價 NT$1050/盒
                         </span>
                       </div>
                     </div>
@@ -196,10 +196,10 @@ export default function Home() {
                       </span>
                       <div className="flex flex-col text-[14px]">
                         <span className="line-through text-gray-400">
-                          原價 $1880/盒
+                          原價 $2280/盒
                         </span>
                         <span className="text-red-500 font-bold">
-                          115新春會員價 NT$1380/盒
+                          優惠價 NT$1480/盒
                         </span>
                       </div>
                     </div>
@@ -237,10 +237,10 @@ export default function Home() {
                       </span>
                       <div className="flex flex-col text-[14px]">
                         <span className="line-through text-gray-400">
-                          原價 $1680/盒
+                          原價 $2280/盒
                         </span>
                         <span className="text-red-500 font-bold">
-                          115新春會員價 NT$1300/盒
+                          優惠價 NT$1380/盒
                         </span>
                       </div>
                     </div>

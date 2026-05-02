@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Phone,
@@ -112,7 +113,7 @@ export default function ContactPage() {
                     required
                     type="text"
                     className="w-full bg-[#f4f5f7] border-transparent rounded-md px-5 py-4 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    placeholder="例）王小明"
+                    placeholder="輸入名稱姓名"
                   />
                 </div>
               </motion.div>
@@ -133,7 +134,7 @@ export default function ContactPage() {
                     required
                     type="tel"
                     className="w-full bg-[#f4f5f7] border-transparent rounded-md px-5 py-4 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    placeholder="例）0912-345-678"
+                    placeholder="你的聯絡電話"
                   />
                 </div>
               </motion.div>
@@ -150,7 +151,7 @@ export default function ContactPage() {
                   <input
                     type="email"
                     className="w-full bg-[#f4f5f7] border-transparent rounded-md px-5 py-4 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    placeholder="例）example@mail.com"
+                    placeholder=" example@mail.com"
                   />
                 </div>
               </motion.div>
@@ -202,12 +203,12 @@ export default function ContactPage() {
               >
                 <p className="text-sm text-gray-500 mb-8 tracking-wider text-center">
                   送出表單前，請確認您已了解並同意我們的
-                  <a
+                  <Link
                     href="/privacy"
                     className="text-blue-600 underline underline-offset-4 mx-1 hover:text-[#2e2e2e]"
                   >
                     隱私權政策
-                  </a>
+                  </Link>
                   。
                 </p>
                 <button

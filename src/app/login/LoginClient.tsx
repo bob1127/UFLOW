@@ -50,9 +50,9 @@ const SlideOneVisual = () => (
       </div>
       <div>
         <div className="text-[10px] text-gray-500 font-medium">
-          Payment Received
+          你的健康指數
         </div>
-        <div className="font-bold text-sm">+$34,908.00</div>
+        <div className="font-bold text-sm">+999</div>
       </div>
     </motion.div>
   </div>
@@ -95,14 +95,12 @@ const SlideTwoVisual = () => (
       transition={{ delay: 0.7, type: "spring" }}
       className="absolute -left-6 bottom-6 bg-white text-gray-800 p-3 rounded-xl shadow-lg flex items-center gap-3 z-10"
     >
-      <div className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-lg">
-        🎁
-      </div>
+      <div className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-lg"></div>
       <div>
         <div className="text-[10px] text-gray-500 font-medium">
-          Reward Unlocked
+          加入會員，成為夥伴
         </div>
-        <div className="font-bold text-sm">+500 Points</div>
+        <div className="font-bold text-sm">+UFLOW</div>
       </div>
     </motion.div>
   </div>

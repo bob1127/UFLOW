@@ -32,8 +32,11 @@ function TopAnnouncementBar({ isVisible }) {
 
   return (
     <div
+      // 💡 針對手機版 (max-md) 強制設定高度與透明度，電腦版保留原本動畫邏輯
       className={`w-full bg-[#f58a9c] transition-all duration-300 ease-in-out overflow-hidden ${
-        isVisible ? "h-9 opacity-100" : "h-0 opacity-0"
+        isVisible
+          ? "h-9 opacity-100"
+          : "max-md:h-9 max-md:opacity-100 md:h-0 md:opacity-0"
       }`}
     >
       <div className="relative h-9 w-full">
@@ -464,11 +467,11 @@ export default function App() {
   return (
     <>
       <header
+        // 💡 加入 max-md:translate-y-0 確保手機版永遠不會被往上推而隱藏
         className={`sticky top-0 z-[1000] w-full bg-white border-b border-gray-100 transition-all duration-300 ease-in-out ${
-          hidden ? "-translate-y-full" : "translate-y-0"
+          hidden ? "max-md:translate-y-0 md:-translate-y-full" : "translate-y-0"
         } ${isScrolled ? "shadow-md" : "shadow-none"}`}
       >
-        {/* 🚀 改由 showPinkBar 嚴格控制是否出現 */}
         <TopAnnouncementBar isVisible={showPinkBar} />
 
         <div className="mx-auto flex w-full justify-between px-4 lg:px-8">

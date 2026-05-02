@@ -1,30 +1,98 @@
 // app/blog/[slug]/page.js
 import Image from "next/image";
 import Link from "next/link";
-import { getPostBySlug, getAllPostSlugs } from "@/lib/wordpress";
+import { getAllPostSlugs } from "@/lib/wordpress";
 import { notFound } from "next/navigation";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
+// ===================== 🌟 共用圖片萃取工具 =====================
+function getPostImage(post) {
+  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
+  let rawUrl =
+    post.jetpack_featured_media_url ||
+    featuredMedia?.media_details?.sizes?.large?.source_url ||
+    featuredMedia?.media_details?.sizes?.full?.source_url ||
+    featuredMedia?.source_url;
+
+  if (!rawUrl && post.content?.rendered) {
+    const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
+    if (imgMatch && imgMatch[1]) rawUrl = imgMatch[1];
+  }
+  return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
+}
+
+// ===================== 🌟 API 抓取函式 (單篇文章) =====================
+async function getPostBySlugWithDebug(slug) {
+  const rawBase =
+    process.env.WORDPRESS_API_URL ||
+    "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+  const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
+  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?slug=${slug}&_embed`;
+
+  try {
+    const res = await fetch(fetchUrl, {
+      next: { revalidate: 3600 },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+        Accept: "application/json",
+      },
+    });
+    if (!res.ok) return null;
+    const posts = await res.json();
+    return Array.isArray(posts) && posts.length > 0 ? posts[0] : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// ===================== 🌟 API 抓取函式 (最新文章 NEWS) =====================
+async function getRecentPosts(currentSlug) {
+  const rawBase =
+    process.env.WORDPRESS_API_URL ||
+    "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+  const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
+  // 多抓幾筆，以防其中一筆是當前文章
+  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=4`;
+
+  try {
+    const res = await fetch(fetchUrl, {
+      next: { revalidate: 3600 },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+      },
+    });
+    if (!res.ok) return [];
+    const posts = await res.json();
+    if (!Array.isArray(posts)) return [];
+    // 過濾掉當前正在閱讀的文章，並只取前 3 篇
+    return posts.filter((p) => p.slug !== currentSlug).slice(0, 3);
+  } catch (error) {
+    return [];
+  }
+}
+
 // 1. 產生靜態路徑 (SSG)
 export async function generateStaticParams() {
-  const posts = await getAllPostSlugs();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const posts = await getAllPostSlugs();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    return [];
+  }
 }
 
 // 2. 動態 Metadata (頂級 SEO)
 export async function generateMetadata({ params }) {
-  const post = await getPostBySlug(params.slug);
+  const post = await getPostBySlugWithDebug(params.slug);
   if (!post) return {};
 
-  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-  const imageUrl =
-    post.jetpack_featured_media_url ||
-    featuredMedia?.source_url ||
-    `${SITE_URL}/images/logo/uflow.png`;
-
+  const imageUrl = getPostImage(post);
   const cleanDescription =
     post.excerpt?.rendered.replace(/<[^>]+>/g, "").substring(0, 160) ||
     "UFLOW 保健知識專欄";
@@ -51,40 +119,26 @@ export async function generateMetadata({ params }) {
         },
       ],
     },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title.rendered,
-      description: cleanDescription,
-      images: [imageUrl],
-    },
   };
 }
 
-// 3. 頁面組件 (LIG Style UI)
+// 3. 頁面組件 (日系極簡 UI)
 export default async function BlogPostPage({ params }) {
-  const post = await getPostBySlug(params.slug);
+  const post = await getPostBySlugWithDebug(params.slug);
 
   if (!post) {
     notFound();
   }
 
-  // 🛡️ 防彈圖片萃取邏輯 (延續我們先前的強大解法)
-  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-  let rawUrl =
-    post.jetpack_featured_media_url ||
-    featuredMedia?.media_details?.sizes?.large?.source_url ||
-    featuredMedia?.media_details?.sizes?.full?.source_url ||
-    featuredMedia?.source_url;
+  // 同時抓取最新的推薦文章
+  const recentPosts = await getRecentPosts(params.slug);
 
-  if (!rawUrl && post.content?.rendered) {
-    const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
-    if (imgMatch && imgMatch[1]) rawUrl = imgMatch[1];
-  }
-  const imageUrl = rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
+  // 取得主圖
+  const mainImageUrl = getPostImage(post);
 
-  // 日期格式化為 LIG 風格 (YYYY.MM.DD)
+  // 日期格式化為圖示風格 (YYYY/MM/DD)
   const dateObj = new Date(post.date);
-  const formattedDate = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, "0")}.${String(dateObj.getDate()).padStart(2, "0")}`;
+  const formattedDate = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
 
   // ===================== 👑 官方標準結構化資料 JSON-LD =====================
   const articleSchema = {
@@ -98,7 +152,7 @@ export default async function BlogPostPage({ params }) {
           {
             "@type": "ListItem",
             position: 2,
-            name: "保健知識",
+            name: "BLOG",
             item: `${SITE_URL}/blog`,
           },
           { "@type": "ListItem", position: 3, name: post.title.rendered },
@@ -109,7 +163,7 @@ export default async function BlogPostPage({ params }) {
         "@id": `${SITE_URL}/blog/${post.slug}/#article`,
         isPartOf: { "@id": `${SITE_URL}/blog/${post.slug}/#breadcrumb` },
         headline: post.title.rendered,
-        image: imageUrl,
+        image: mainImageUrl,
         datePublished: new Date(post.date).toISOString(),
         dateModified: new Date(post.modified).toISOString(),
         author: {
@@ -125,149 +179,107 @@ export default async function BlogPostPage({ params }) {
             url: `${SITE_URL}/images/logo/uflow.png`,
           },
         },
-        description: post.excerpt?.rendered
-          .replace(/<[^>]+>/g, "")
-          .substring(0, 160),
       },
     ],
   };
 
   return (
-    <article className="bg-[#FAF9F7] mt-5 sm:mt-20 min-h-screen pt-24 pb-32 font-sans text-slate-800 selection:bg-[#f58a9c] selection:text-white">
+    <article className="bg-[#fafafa] mt-[60px] min-h-screen pt-16 pb-32 font-sans text-gray-900 selection:bg-gray-200 selection:text-black">
       {/* 注入 SEO 結構化資料 */}
-      <div style={{ display: "none" }} aria-hidden="true">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+
+      {/* ================= 文章主要內容區塊 ================= */}
+      <div className="max-w-[800px] mx-auto px-5 lg:px-8">
+        {/* 標題與日期區 */}
+        <header className="mb-10 mt-10">
+          <h1
+            className="text-[24px] md:text-[30px] font-bold leading-snug mb-4 text-[#111]"
+            dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+          />
+          <div className="flex items-center gap-4 text-[11px] md:text-[12px] tracking-widest text-[#111]">
+            <span>{formattedDate}</span>
+            <span>NEWS</span>
+          </div>
+        </header>
+
+        {/* 文章內文 Content (已縮小字體與調整行距) */}
+        <div
+          className="
+            prose prose-base max-w-none
+            prose-headings:font-bold prose-headings:text-[#111] prose-headings:mb-6 prose-headings:mt-12
+            prose-h2:text-[20px] md:prose-h2:text-[22px] prose-h2:border-none prose-h2:pl-0
+            prose-h3:text-[16px] md:prose-h3:text-[18px]
+            prose-p:text-[#333] prose-p:text-[14px] md:prose-p:text-[15px] prose-p:leading-[2.2] prose-p:tracking-[0.05em] prose-p:mb-8
+            prose-a:text-[#111] prose-a:underline hover:prose-a:text-gray-500 prose-a:underline-offset-4
+            prose-img:w-full prose-img:my-10 prose-img:rounded-none prose-img:shadow-none
+            prose-li:text-[#333] prose-li:text-[14px] md:prose-li:text-[15px] prose-li:leading-[2.2]
+            prose-strong:text-[#111] prose-strong:font-bold
+          "
+          dangerouslySetInnerHTML={{ __html: post.content.rendered }}
         />
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-5 lg:px-8">
-        {/* 麵包屑 Breadcrumbs */}
-        <nav className="text-[13px] text-gray-500 mb-10 flex gap-2 items-center">
-          <Link href="/" className="hover:text-[#f58a9c] transition-colors">
-            Home
-          </Link>
-          <span>›</span>
-          <Link href="/blog" className="hover:text-[#f58a9c] transition-colors">
-            保健知識
-          </Link>
-          <span>›</span>
-          <span
-            className="text-gray-400 truncate max-w-[200px] md:max-w-md"
-            dangerouslySetInnerHTML={{ __html: post.title.rendered }}
-          />
-        </nav>
+      {/* ================= 底部 NEWS 相關文章區塊 ================= */}
+      {recentPosts && recentPosts.length > 0 && (
+        <div className="max-w-[1000px] mx-auto px-5 lg:px-8 mt-24 pt-16 border-t border-gray-200">
+          <h2 className="text-[18px] md:text-[20px] font-bold text-[#111] mb-10 tracking-wider uppercase">
+            NEWS
+          </h2>
 
-        <div className="flex flex-col lg:flex-row relative">
-          {/* 左側黏性分享列 (Sticky Sidebar - LIG Style) */}
-          <aside className="hidden lg:flex flex-col w-[80px] shrink-0 relative">
-            <div className="sticky top-32 flex flex-col items-center gap-6">
-              <span
-                className="writing-vertical text-xs font-bold tracking-widest text-gray-400 mb-2"
-                style={{ writingMode: "vertical-rl" }}
-              >
-                Share
-              </span>
-              {/* FB Icon */}
-              <button className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#1877F2] hover:text-white transition-colors duration-300">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </button>
-              {/* X (Twitter) Icon */}
-              <button className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-colors duration-300">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-              </button>
-              {/* LINE Icon */}
-              <button className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#00B900] hover:text-white transition-colors duration-300">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 3.901 8.868 9.351 9.585.367.078.871.24 1 .557.117.291.076.749.035 1.056l-.168 1.014c-.053.315-.24 1.157 1.013.628 1.254-.528 6.772-3.993 9.426-6.953C22.951 14.153 24 12.339 24 10.304zm-14.735 2.158H6.551v-4.52h2.714v.938H7.554v.846h1.711v.938H7.554v.86h1.711v.938zm3.253 0h-.995v-4.52h.995v4.52zm3.334 0h-1.07l-1.571-2.222v2.222h-.994v-4.52h1.07l1.571 2.222v-2.222h.994v4.52zm3.435-3.582h-1.711v.846h1.711v.938h-1.711v.86h1.711v.938h-2.706v-4.52h2.706v.938z" />
-                </svg>
-              </button>
-            </div>
-          </aside>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
+            {recentPosts.map((recentPost) => {
+              const rImageUrl = getPostImage(recentPost);
+              const rDateObj = new Date(recentPost.date);
+              const rFormattedDate = `${rDateObj.getFullYear()}/${String(rDateObj.getMonth() + 1).padStart(2, "0")}/${String(rDateObj.getDate()).padStart(2, "0")}`;
 
-          {/* 右側主要內容區 Main Content */}
-          <div className="flex-1 max-w-[850px]">
-            {/* 標題區 */}
-            <h1
-              className="text-[28px] md:text-[38px] lg:text-[42px] font-bold leading-[1.4] mb-8 text-[#222]"
-              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
-            />
+              return (
+                <Link
+                  key={recentPost.id}
+                  href={`/blog/${recentPost.slug}`}
+                  className="block group"
+                >
+                  {/* 縮圖 */}
+                  <div className="relative w-full aspect-[4/3] sm:aspect-square mb-4 overflow-hidden bg-gray-100">
+                    <Image
+                      src={rImageUrl}
+                      alt={recentPost.title.rendered.replace(/<[^>]+>/g, "")}
+                      fill
+                      className="object-cover transition-opacity duration-300 group-hover:opacity-80"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
 
-            {/* 作者、日期與標籤列 */}
-            <div className="flex flex-wrap items-center gap-4 mb-10 pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                {/* 作者大頭貼 (可替換真實頭像) */}
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative">
-                  <Image
-                    src="/images/logo/uflow.png"
-                    alt="UFLOW"
-                    fill
-                    className="object-cover p-1"
+                  {/* 日期與標籤 */}
+                  <div className="text-[10px] md:text-[11px] leading-tight text-[#111] font-medium tracking-wider mb-2">
+                    <div>{rFormattedDate}</div>
+                    <div className="mt-[2px]">NEWS</div>
+                  </div>
+
+                  {/* 標題 */}
+                  <h3
+                    className="text-[13px] md:text-[14px] text-[#111] leading-snug line-clamp-3 group-hover:text-gray-500 transition-colors"
+                    dangerouslySetInnerHTML={{
+                      __html: recentPost.title.rendered,
+                    }}
                   />
-                </div>
-                <div className="flex items-center gap-3 text-[14px] text-gray-500 font-medium">
-                  <span className="text-gray-800">UFLOW 編輯團隊</span>
-                  <span>{formattedDate}</span>
-                </div>
-              </div>
-
-              {/* 分類標籤 (假如有分類的話可以動態 map) */}
-              <div className="flex gap-2 ml-auto">
-                <span className="bg-gray-100 text-gray-600 px-3 py-1 text-[12px] font-bold rounded">
-                  保健知識
-                </span>
-                <span className="bg-gray-100 text-gray-600 px-3 py-1 text-[12px] font-bold rounded">
-                  健康專欄
-                </span>
-              </div>
-            </div>
-
-            {/* 文章內文 Content */}
-            <div
-              className="
-                prose prose-lg max-w-none
-                prose-headings:font-bold prose-headings:text-[#222] prose-headings:mb-6 prose-headings:mt-12
-                prose-h2:text-[24px] md:prose-h2:text-[28px] prose-h2:border-l-4 prose-h2:border-[#f58a9c] prose-h2:pl-4
-                prose-h3:text-[20px] md:prose-h3:text-[22px]
-                prose-p:text-[#444] prose-p:leading-[1.9] prose-p:tracking-[0.03em] prose-p:mb-8
-                prose-a:text-[#f58a9c] hover:prose-a:text-[#dd6f81] prose-a:underline-offset-4
-                prose-img:rounded-lg prose-img:shadow-md prose-img:my-10
-                prose-li:text-[#444] prose-li:leading-[1.8]
-                prose-strong:text-[#222] prose-strong:bg-yellow-100/50
-              "
-              dangerouslySetInnerHTML={{ __html: post.content.rendered }}
-            />
-
-            {/* 手機版底部分享列 (隱藏於桌機) */}
-            <div className="lg:hidden mt-16 pt-8 border-t border-gray-200 flex flex-col items-center gap-4">
-              <span className="text-sm font-bold tracking-widest text-gray-400">
-                SHARE
-              </span>
-              <div className="flex gap-4">
-                <button className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                </button>
-                <button className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </button>
-                <button className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 3.901 8.868 9.351 9.585.367.078.871.24 1 .557.117.291.076.749.035 1.056l-.168 1.014c-.053.315-.24 1.157 1.013.628 1.254-.528 6.772-3.993 9.426-6.953C22.951 14.153 24 12.339 24 10.304zm-14.735 2.158H6.551v-4.52h2.714v.938H7.554v.846h1.711v.938H7.554v.86h1.711v.938zm3.253 0h-.995v-4.52h.995v4.52zm3.334 0h-1.07l-1.571-2.222v2.222h-.994v-4.52h1.07l1.571 2.222v-2.222h.994v4.52zm3.435-3.582h-1.711v.846h1.711v.938h-1.711v.86h1.711v.938h-2.706v-4.52h2.706v.938z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
+      )}
+
+      {/* 底部返回按鈕 */}
+      <div className="mt-16 flex justify-center">
+        <Link
+          href="/blog"
+          className="text-[12px] md:text-[13px] tracking-widest text-[#111] hover:text-gray-500 transition-colors uppercase border-b border-[#111] hover:border-gray-500 pb-1"
+        >
+          ← Back to Blog
+        </Link>
       </div>
     </article>
   );

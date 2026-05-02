@@ -1,11 +1,10 @@
 // app/products/[slug]/Client.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-// 🌟 引入 Swiper 的型別，解決 thumbsSwiper 的紅底線報錯
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation, Pagination, Thumbs, FreeMode } from "swiper/modules";
 
@@ -16,6 +15,20 @@ import "swiper/css/free-mode";
 import "swiper/css/thumbs";
 
 import { useCartStore } from "@/lib/cartStore";
+
+// ===================== 🌟 圖片 SEO 自動萃取工具 (強化版) =====================
+const getAltTextFromUrl = (url: string, fallbackName: string) => {
+  if (!url) return fallbackName;
+  try {
+    const filename = url.split("/").pop()?.split(".")[0] || "";
+    const decoded = decodeURIComponent(filename).replace(/[-_]/g, " ");
+    // 將檔名與備用商品名稱結合，創造更豐富的長尾關鍵字
+    return decoded ? `${fallbackName} | ${decoded}` : fallbackName;
+  } catch (e) {
+    return fallbackName;
+  }
+};
+// ====================================================================
 
 // ===================== 型別宣告區 =====================
 interface AccordionItemProps {
@@ -77,11 +90,9 @@ const FLAVOR_COLORS = [
   "bg-orange-200",
 ];
 
-// 🌟 加上 ProductProps 型別
 export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const router = useRouter();
 
-  // 加上 Zustand state 型別
   const addItem = useCartStore((s: any) => s.addItem);
   const openCart = useCartStore((s: any) => s.open);
 
@@ -104,8 +115,10 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [initialSlide, setInitialSlide] = useState<number>(0);
 
-  // 🌟 給予正確的 Swiper 型別
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+
+  // 🌟 綁定 WordPress 文章區塊的 Ref
+  const contentRef = useRef<HTMLElement>(null);
 
   const flavorOptions = useMemo(() => {
     if (!safeProduct.attributes) return [];
@@ -115,7 +128,6 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     return attr?.options || [];
   }, [safeProduct]);
 
-  // 取得規格選項 (雖然畫面上只顯示一個，但購物車還是需要這個資料)
   const pkgOptions = useMemo(() => {
     if (!safeProduct.attributes) return [];
     const attr = safeProduct.attributes.find((a: any) =>
@@ -128,14 +140,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     if (flavorOptions.length > 0 && !flavor) {
       setFlavor(flavorOptions[0]);
     }
-    // 永遠預設選擇第一個規格，如果沒有就預設 "1盒 (單件組)"
     if (!pkg) {
       setPkg(pkgOptions.length > 0 ? pkgOptions[0] : "1盒 (單件組)");
     }
   }, [flavorOptions, pkgOptions, flavor, pkg]);
 
   useEffect(() => {
-    // 因為現在只有單一選項，直接抓取主商品的價格
     setDisplayPrice(Number(safeProduct.price || 0));
     setDisplayRegularPrice(
       Number(safeProduct.regularPrice || safeProduct.price || 0),
@@ -154,6 +164,46 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     const t = setTimeout(() => setShowAdded(false), 2500);
     return () => clearTimeout(t);
   }, [showAdded]);
+
+  // ===================== 🌟 終極攔截：處理 WordPress 圖片 =====================
+  useEffect(() => {
+    // 給予 150ms 延遲，確保 React dangerouslySetInnerHTML 完全將 DOM 掛載完畢
+    const timer = setTimeout(() => {
+      if (tab === "desc" && contentRef.current) {
+        const images = contentRef.current.querySelectorAll("img");
+
+        images.forEach((img, index) => {
+          // 取得原本的 alt，有時候 WordPress 給的是純粹的 alt="" (沒有內容)
+          const currentAlt = img.getAttribute("alt");
+
+          // 只要 alt 是空的或 null，我們就強制複寫！
+          if (!currentAlt || currentAlt.trim() === "") {
+            const autoAlt = getAltTextFromUrl(
+              img.src,
+              `${safeProduct.name || "商品"} - 功效與詳細說明圖 ${index + 1}`,
+            );
+
+            // 雙管齊下：同時設定 Attribute 與 DOM Property，確保爬蟲絕對抓得到
+            img.setAttribute("alt", autoAlt);
+            img.alt = autoAlt;
+          }
+
+          // 效能優化：強制加上原生 Lazy Loading
+          if (!img.getAttribute("loading")) {
+            img.setAttribute("loading", "lazy");
+            img.loading = "lazy";
+          }
+
+          // 防破版機制
+          img.style.maxWidth = "100%";
+          img.style.height = "auto";
+        });
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [tab, safeProduct.name, safeProduct.description, safeProduct.acf]);
+  // ===========================================================================
 
   function handleBuyNow() {
     const optionVariant = [flavor, pkg].filter(Boolean).join(" / ");
@@ -201,7 +251,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
               }}
               modules={[FreeMode, Navigation, Thumbs]}
-              className="w-full mb-4  group main-image-swiper"
+              className="w-full mb-4 group main-image-swiper"
             >
               {images.map((src: string, i: number) => (
                 <SwiperSlide key={i}>
@@ -211,11 +261,16 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   >
                     <Image
                       src={src}
-                      alt={`${safeProduct.name} - ${i}`}
+                      alt={getAltTextFromUrl(
+                        src,
+                        `${safeProduct.name} - 官方正品商品圖 ${i + 1}`,
+                      )}
                       fill
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      quality={85}
                       priority={i === 0}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition backdrop-blur-sm z-10 pointer-events-none">
                       <svg
@@ -261,9 +316,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   <div className="relative w-full aspect-square bg-gray-50">
                     <Image
                       src={src}
-                      alt={`Thumb ${i}`}
+                      alt={`${getAltTextFromUrl(src, safeProduct.name)} 預覽縮圖`}
                       fill
                       sizes="(max-width: 1024px) 20vw, 10vw"
+                      quality={60}
+                      loading="lazy"
                       className="object-cover object-center"
                     />
                   </div>
@@ -274,9 +331,17 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
           {/* 右側：商品資訊 & 購買區 */}
           <div className="w-full lg:w-2/5 flex flex-col p-4 sm:p-8 lg:sticky lg:top-24 lg:self-start h-fit">
+            {/* 🌟 SEO 標題優化：視覺可見的主標題 */}
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
               {safeProduct.name}
             </h1>
+
+            {/* 🌟 SEO 標題優化：隱藏的 H2，用來塞滿相關的長尾關鍵字，且不會破壞畫面設計 */}
+            <h2 className="sr-only">
+              {safeProduct.name} - UFLOW
+              專業科學實證保健食品、天然植萃配方推薦、健康維持、日常調理
+            </h2>
+
             <p className="text-gray-500 text-lg mb-4">{safeProduct.subname}</p>
 
             <div className="flex items-end gap-3 mb-6">
@@ -313,14 +378,14 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               全館滿 NT$ 2,000 免運費
             </div>
 
-            {/* 🌟 規格選擇：只保留單一選項 */}
+            {/* 規格選擇 */}
             <div className="mb-8 rounded-xl border border-rose-100 bg-rose-500 p-4">
               <div className="mb-3 flex items-center justify-between border-b border-rose-100 pb-2">
                 <span className="text-sm font-bold text-slate-50">
                   商品規格
                 </span>
                 <span className="text-xs font-medium bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full">
-                  期間限定五折折扣
+                  期間限定折扣
                 </span>
               </div>
               <div className="flex flex-col gap-2">
@@ -523,6 +588,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
           <div className="max-w-4xl w-full mx-auto">
             {tab === "desc" && (
               <article
+                ref={contentRef} // 🌟 3. 將 Ref 綁定到這裡，確保 useEffect 能抓到內部的 HTML！
                 className="prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
                 dangerouslySetInnerHTML={{
                   __html:
@@ -586,9 +652,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   <div className="relative w-full h-full flex items-center justify-center">
                     <Image
                       src={src}
-                      alt={`Detail ${i}`}
+                      alt={`放大檢視 - ${getAltTextFromUrl(src, safeProduct.name)}`}
                       width={1200}
                       height={1200}
+                      quality={90}
+                      loading="lazy"
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>

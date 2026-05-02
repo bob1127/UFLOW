@@ -6,7 +6,7 @@ import AnimatedLink from "../AnimatedLink";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/scrollbar";
-
+import Image from "next/image";
 /**
  * @param {Object} props
  * @param {Array<{image:string, href?:string, title?:string, subtitle?:string, overlay?:boolean, alt?:string}>} props.banners
@@ -76,7 +76,7 @@ export default function SwiperCardAbout({
   })();
 
   return (
-    <div className="w-full mx-auto mt-[110px]  p-0">
+    <div className="w-full mx-auto mt-[10px] md:mt-[30px] xl:mt-[110px]  p-0">
       {!ratioPadding && (
         <style jsx>{`
           .banner-fixed-height {
@@ -119,28 +119,81 @@ export default function SwiperCardAbout({
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          <img
-            src="/images/index/slider/重返17歲の元氣.webp"
-            className="absolute inset-0 h-full w-full object-cover"
-            decoding="async"
-            referrerPolicy="no-referrer"
-          />
+          <Image
+            src="/images/index/slider/1920x850/重返17歲の元氣_主打微脂體肽晶芙蓉_uflow-慶安有福保健食品.webp"
+            width={1920}
+            height={850}
+            placeholder="empty"
+            priority
+            className="w-full xl:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/1024x576/重建17歲的元氣.webp"
+            width={1024}
+            height={576}
+            placeholder="empty"
+            priority
+            className="w-full xl:hidden md:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/600x600/重建17歲的元氣.webp"
+            width={600}
+            height={600}
+            placeholder="empty"
+            priority
+            className="w-full md:hidden block "
+          ></Image>
         </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          <img
-            src="/images/鎂鎂香蜂草/節奏管理，不必等臨界線失控--.png"
-            className="absolute inset-0 h-full w-full object-cover"
-            decoding="async"
-            referrerPolicy="no-referrer"
-          />
+          <Image
+            src="/images/index/slider/1920x850/輕得自在_好菌留得住_維他菌合生元-uflow-慶安有福保健食品.png"
+            width={1920}
+            height={850}
+            placeholder="empty"
+            priority
+            className="w-full xl:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/1024x576/維他菌合生元.webp"
+            width={1024}
+            height={576}
+            placeholder="empty"
+            priority
+            className="w-full xl:hidden md:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/600x600/維他菌合生元.webp"
+            width={600}
+            height={600}
+            placeholder="empty"
+            priority
+            className="w-full md:hidden block "
+          ></Image>
         </SwiperSlide>
         <SwiperSlide className="overflow-hidden group relative duration-1000">
-          <img
-            src="/images/維他菌合生元/維他菌合生元-1.png"
-            className="absolute inset-0 h-full w-full object-cover"
-            decoding="async"
-            referrerPolicy="no-referrer"
-          />
+          <Image
+            src="/images/index/slider/1920x850/節奏管理_不必等臨界線失控_GABA鎂鎂香蜂草_uflow-慶安有福保健食品.webp"
+            width={1920}
+            height={850}
+            placeholder="empty"
+            priority
+            className="w-full xl:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/1024x576/節奏管理_不必等臨界線失控.webp"
+            width={1024}
+            height={576}
+            placeholder="empty"
+            priority
+            className="w-full xl:hidden md:block  hidden"
+          ></Image>
+          <Image
+            src="/images/index/slider/600x600/節奏管理_不必等臨界線失控.webp"
+            width={600}
+            height={600}
+            placeholder="empty"
+            priority
+          ></Image>
         </SwiperSlide>
       </Swiper>
     </div>

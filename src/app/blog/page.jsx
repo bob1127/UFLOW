@@ -1,3 +1,4 @@
+// app/blog/page.jsx
 import HomeClient from "./ProjectListClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
@@ -22,11 +23,12 @@ async function getPosts() {
   const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
   const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=10`;
 
-  console.log(`🌐 [ISR 生成中] 正在抓取數據以建立靜態頁面: ${fetchUrl}`);
+  console.log(`🌐 [除錯 - 網址確認] 準備請求 API: ${fetchUrl}`);
 
   try {
     const res = await fetch(fetchUrl, {
-      // 這裡不寫 cache: "no-store"，改用 next.revalidate 讓它變成 ISR
+      // 💡 如果你要在 Vercel 立即看到除錯結果，建議先暫時改為 cache: "no-store"
+      // 測試成功抓到資料後，再改回 next: { revalidate: 3600 }
       next: { revalidate: 3600 },
       headers: {
         "User-Agent":
@@ -35,15 +37,39 @@ async function getPosts() {
       },
     });
 
+    console.log(`📡 [除錯 - 回應狀態]: HTTP ${res.status} ${res.statusText}`);
+
     if (!res.ok) {
-      console.error(`❌ WP API 響應錯誤: ${res.status}`);
+      // 🛑 完整除錯：印出被拒絕的真正原因 (例如印出 Bluehost 防火牆的 HTML)
+      const errorText = await res.text();
+      console.error(
+        `❌ [除錯 - API 響應錯誤]: \n`,
+        errorText.substring(0, 500),
+      ); // 取前 500 字元避免 log 爆掉
+      return [];
+    }
+
+    // 🛑 完整除錯：確認回傳的是不是真的 JSON，防止 200 OK 卻回傳 HTML 錯誤頁
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error(
+        `❌ [除錯 - 資料格式錯誤] API 回傳的不是 JSON，而是: ${contentType}`,
+      );
+      const badText = await res.text();
+      console.error(`❌ [除錯 - 內容預覽]: \n`, badText.substring(0, 500));
       return [];
     }
 
     const posts = await res.json();
+    console.log(
+      `✅ [除錯 - 抓取成功]: 共取得 ${Array.isArray(posts) ? posts.length : 0} 篇文章`,
+    );
     return Array.isArray(posts) ? posts : [];
   } catch (error) {
-    console.error("❌ ISR 抓取失敗，將回傳上次快取的內容:", error);
+    console.error(
+      "❌ [除錯 - Fetch 執行失敗] 完全連不上 API，錯誤原因:",
+      error.message || error,
+    );
     return [];
   }
 }

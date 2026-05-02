@@ -1,14 +1,22 @@
 // app/products/[slug]/page.jsx
 import { fetchAllProductSlugs, fetchProductBySlug } from "@/lib/woo";
-import ProductClient from "./Client";
+import ProductClient from "./Client"; // 確保檔名大小寫與你的 Client 檔案一致
 
 export const revalidate = 60;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
+// 🌟 動態獲取網址：本地端會顯示 localhost，正式上線設定變數後自動轉為正式網址
+const getSiteUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.NEXT_PUBLIC_VERCEL_URL)
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  return "http://localhost:3000";
+};
+
+const SITE_URL = getSiteUrl();
 
 // ===================== 動態 FAQ 生成器 =====================
 function getProductFAQs(productName) {
-  const name = productName.toLowerCase();
+  const name = String(productName).toLowerCase();
 
   if (name.includes("gaba") || name.includes("香蜂草") || name.includes("鎂")) {
     return [
@@ -65,6 +73,7 @@ function getProductFAQs(productName) {
     ];
   }
 
+  // 預設 FAQ
   return [
     {
       question: "商品有提供退換貨服務嗎？",
@@ -79,6 +88,7 @@ function getProductFAQs(productName) {
   ];
 }
 
+// ===================== SSG 動態路由生成 =====================
 export async function generateStaticParams() {
   try {
     const slugs = await fetchAllProductSlugs({ perPage: 50 });
@@ -88,10 +98,10 @@ export async function generateStaticParams() {
   }
 }
 
-// ===================== Metadata =====================
+// ===================== Metadata 動態生成與 SEO 優化 =====================
 export async function generateMetadata({ params }) {
   const p = await fetchProductBySlug(params.slug);
-  const siteName = "UFLOW 保健食品官方網站";
+  const siteName = "UFLOW 功能性保健食品官方商城";
 
   if (!p) {
     return {
@@ -100,41 +110,62 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const title = `${p.name}｜UFLOW 保健食品商品介紹與購買`;
+  // 1. 萃取分類名稱，用來豐富標題關鍵字
+  const safeCategories = p?.categories;
+  const categories = Array.isArray(safeCategories)
+    ? safeCategories.map((c) => c?.name).filter(Boolean)
+    : [];
+  const categoryString =
+    categories.length > 0 ? categories.slice(0, 2).join("、") : "營養補給";
+
+  // 🌟 2. 優化且豐富的動態標題 (Title)
+  // 組合範例："【維他菌合生元】專業益生菌、營養補給推薦｜UFLOW 保健食品"
+  const title = `【${p.name}】專業${categoryString}推薦｜UFLOW 保健食品、日常健康調理`;
+
+  // 3. 萃取乾淨的描述 (Description)
   const rawDesc = p.short_description || p.description || "";
-  const descText =
-    rawDesc
-      .replace(/<[^>]+>/g, " ")
-      .trim()
-      .slice(0, 160) || `${p.name} - UFLOW嚴選高品質保健食品，為您的健康把關。`;
-  const productUrl = `${SITE_URL}/products/${params.slug}`;
+  const cleanDesc = rawDesc
+    .replace(/<[^>]+>/g, " ")
+    .trim()
+    .slice(0, 150);
+  const descText = cleanDesc
+    ? `${cleanDesc}... 了解更多關於 UFLOW ${p.name} 的科學實證配方與功效。`
+    : `探索 UFLOW 嚴選【${p.name}】，我們以科學實證與天然植萃，為您提供最安心的高品質保健食品。全館滿額免運，立即查看詳細成分與評價！`;
+
+  const productPath = `/products/${params.slug}`; // 相對路徑配合 metadataBase
 
   const safeImages = p?.images;
   const images = Array.isArray(safeImages)
     ? safeImages.map((i) => i?.src).filter(Boolean)
     : [];
-  const safeCategories = p?.categories;
-  const categories = Array.isArray(safeCategories)
-    ? safeCategories.map((c) => c?.name).filter(Boolean)
-    : [];
 
   return {
+    metadataBase: new URL(SITE_URL), // 核心：設定 base URL，解決 localhost 與正式機圖片路徑問題
     title,
     description: descText,
-    keywords: [p.name, "UFLOW", "保健食品", "益生菌", "營養補充", ...categories]
+    keywords: [
+      p.name,
+      "UFLOW",
+      "保健食品",
+      categoryString,
+      "營養補充",
+      "科學實證",
+      "原廠授權",
+      ...categories,
+    ]
       .filter(Boolean)
       .join(", "),
-    alternates: { canonical: productUrl },
+    alternates: { canonical: productPath },
     openGraph: {
       title,
       description: descText,
-      url: productUrl,
+      url: productPath,
       siteName,
       images: images.map((src) => ({
         url: src,
         width: 800,
         height: 800,
-        alt: p.name,
+        alt: `UFLOW ${p.name} 商品圖`,
       })),
       type: "website",
       locale: "zh_TW",
@@ -174,102 +205,145 @@ export default async function ProductPage({ params }) {
       ? woo.images.map((i) => i?.src).filter(Boolean)
       : [];
 
-  // ===================== 👑 內頁終極 @graph 結構化資料 =====================
-  const schemaGraph = woo
+  const pureDescription = woo
+    ? (woo.short_description || woo.description || "")
+        .replace(/<[^>]+>/g, " ")
+        .trim()
+    : "";
+  const finalPrice = woo ? Number(woo.price || 0) : 0;
+  const availability =
+    woo && woo.stock_status === "instock"
+      ? "https://schema.org/InStock"
+      : "https://schema.org/OutOfStock";
+
+  // ===================== 👑 結構化資料 1：商家與品牌實體 =====================
+  const schemaBusiness = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
+    name: "UFLOW",
+    url: SITE_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/images/logo/uflow.png`,
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      availableLanguage: ["Traditional Chinese", "English"],
+    },
+  };
+
+  // ===================== 👑 結構化資料 2：商品與報價 =====================
+  const schemaProduct = woo
     ? {
         "@context": "https://schema.org",
-        "@graph": [
-          // 1. 公司實體標記 (Organization)
-          {
-            "@type": "Organization",
-            "@id": `${SITE_URL}/#organization`,
-            name: "UFLOW",
-            url: SITE_URL,
-            logo: {
-              "@type": "ImageObject",
-              url: `${SITE_URL}/images/logo/uflow.png`,
+        "@type": "Product",
+        name: woo.name,
+        image: schemaImages,
+        description: pureDescription || `探索 UFLOW 嚴選 ${woo.name}。`,
+        sku: woo.sku || String(woo.id),
+        brand: { "@id": `${SITE_URL}/#organization` }, // 👈 完美關聯上方品牌
+        // 預設給予一個優良的綜合評價
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "5.0",
+          reviewCount: "114",
+          bestRating: "5",
+          worstRating: "1",
+        },
+        offers: {
+          "@type": "Offer",
+          url: `${SITE_URL}/products/${woo.slug}`,
+          priceCurrency: "TWD",
+          price: finalPrice,
+          priceValidUntil: new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1),
+          )
+            .toISOString()
+            .split("T")[0],
+          itemCondition: "https://schema.org/NewCondition",
+          availability: availability,
+          seller: { "@id": `${SITE_URL}/#organization` }, // 👈 完美關聯販售者
+
+          // 退貨政策
+          hasMerchantReturnPolicy: {
+            "@type": "MerchantReturnPolicy",
+            applicableCountry: "TW",
+            returnPolicyCategory:
+              "https://schema.org/MerchantReturnFiniteReturnWindow",
+            merchantReturnDays: 7,
+            returnMethod: "https://schema.org/ReturnByMail",
+          },
+
+          // 運費政策 (綁定在 Offer 內)
+          shippingDetails: {
+            "@type": "OfferShippingDetails",
+            shippingDestination: {
+              "@type": "DefinedRegion",
+              addressCountry: "TW",
             },
-            contactPoint: {
-              "@type": "ContactPoint",
-              contactType: "customer service",
-              availableLanguage: "Traditional Chinese",
+            shippingRate: {
+              "@type": "MonetaryAmount",
+              value: "80", // 預設運費
+              currency: "TWD",
+            },
+            deliveryTime: {
+              "@type": "ShippingDeliveryTime",
+              handlingTime: {
+                "@type": "QuantitativeValue",
+                minValue: 1,
+                maxValue: 2,
+                unitCode: "d",
+              },
+              transitTime: {
+                "@type": "QuantitativeValue",
+                minValue: 1,
+                maxValue: 3,
+                unitCode: "d",
+              },
             },
           },
-          // 2. 商品結構化資料 (Product)
+        },
+      }
+    : null;
+
+  // ===================== 👑 結構化資料 3：常見問題 =====================
+  const schemaFAQ = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${SITE_URL}/products/${params.slug}/#faq`,
+    mainEntity: productFAQs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+
+  // ===================== 👑 結構化資料 4：麵包屑導覽 =====================
+  const schemaBreadcrumb = woo
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "@id": `${SITE_URL}/products/${woo.slug}/#breadcrumb`,
+        itemListElement: [
           {
-            "@type": "Product",
+            "@type": "ListItem",
+            position: 1,
+            name: "首頁",
+            item: SITE_URL,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "所有商品",
+            item: `${SITE_URL}/products`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
             name: woo.name,
-            image: schemaImages,
-            description: (woo.short_description || woo.description || "")
-              .replace(/<[^>]+>/g, " ")
-              .trim(),
-            sku: woo.sku || String(woo.id),
-            brand: { "@id": `${SITE_URL}/#organization` }, // 👈 完美連結品牌
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: "5.0",
-              reviewCount: "114",
-              bestRating: "5",
-              worstRating: "1",
-            },
-            offers: {
-              "@type": "Offer",
-              url: `${SITE_URL}/products/${woo.slug}`,
-              priceCurrency: "TWD",
-              price: Number(woo.price || 0),
-              priceValidUntil: new Date(
-                new Date().setFullYear(new Date().getFullYear() + 1),
-              )
-                .toISOString()
-                .split("T")[0],
-              itemCondition: "https://schema.org/NewCondition",
-              availability:
-                woo.stock_status === "instock"
-                  ? "https://schema.org/InStock"
-                  : "https://schema.org/OutOfStock",
-              seller: { "@id": `${SITE_URL}/#organization` }, // 👈 完美連結販售者
-              hasMerchantReturnPolicy: {
-                "@type": "MerchantReturnPolicy",
-                applicableCountry: "TW",
-                returnPolicyCategory:
-                  "https://schema.org/MerchantReturnFiniteReturnWindow",
-                merchantReturnDays: 7,
-                returnMethod: "https://schema.org/ReturnByMail",
-              },
-            },
-          },
-          // 3. 常見問題結構化資料 (FAQPage)
-          {
-            "@type": "FAQPage",
-            mainEntity: productFAQs.map((faq) => ({
-              "@type": "Question",
-              name: faq.question,
-              acceptedAnswer: { "@type": "Answer", text: faq.answer },
-            })),
-          },
-          // 4. 麵包屑導覽結構化資料 (BreadcrumbList)
-          {
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              {
-                "@type": "ListItem",
-                position: 1,
-                name: "首頁",
-                item: `${SITE_URL}`,
-              },
-              {
-                "@type": "ListItem",
-                position: 2,
-                name: "所有商品",
-                item: `${SITE_URL}/products`,
-              },
-              {
-                "@type": "ListItem",
-                position: 3,
-                name: woo.name,
-                item: `${SITE_URL}/products/${woo.slug}`,
-              },
-            ],
+            item: `${SITE_URL}/products/${woo.slug}`,
           },
         ],
       }
@@ -277,14 +351,33 @@ export default async function ProductPage({ params }) {
 
   return (
     <>
-      {schemaGraph && (
-        <div style={{ display: "none" }} aria-hidden="true">
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
-          />
-        </div>
+      {/* 獨立拆分，逐一注入 JSON-LD，確保不在 div 包裝內 */}
+      <script
+        type="application/ld+json"
+        id="schema-business"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBusiness) }}
+      />
+      {woo && (
+        <script
+          type="application/ld+json"
+          id="schema-product"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaProduct) }}
+        />
       )}
+      <script
+        type="application/ld+json"
+        id="schema-faq"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaFAQ) }}
+      />
+      {woo && (
+        <script
+          type="application/ld+json"
+          id="schema-breadcrumb"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumb) }}
+        />
+      )}
+
+      {/* 渲染 Client 端元件 */}
       <ProductClient
         faqs={productFAQs}
         product={
