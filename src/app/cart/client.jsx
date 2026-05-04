@@ -511,7 +511,7 @@ function Input({ label, error, ...props }) {
           error ? "border-red-500" : "border-gray-200"
         } rounded-lg px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-[#008060] outline-none ${
           props.readOnly
-            ? "bg-gray-50 text-gray-500 cursor-not-allowed border-dashed"
+            ? "bg-gray-50 text-gray-500 cursor-not-allowed border-dashed" // 🌟 已經自帶漂亮的 ReadOnly 樣式
             : ""
         }`}
       />
@@ -858,7 +858,6 @@ function CartStep({
                 </div>
                 <div className="flex justify-between items-end">
                   <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    {/* ✅ 修正：使用 id 或 wcProductId 來呼叫更新數量 */}
                     <button
                       type="button"
                       className="px-3 py-2 hover:bg-gray-50 transition"
@@ -991,6 +990,7 @@ function CheckoutStep({
   onApplyCoupon,
   onClearCoupon,
   membership,
+  isLoggedIn, // 🌟 接收是否登入的狀態
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -1002,7 +1002,7 @@ function CheckoutStep({
     sessionStorage.setItem("checkout_shipMethod", shipMethod);
     sessionStorage.setItem("checkout_payMethod", payMethod);
     sessionStorage.setItem("checkout_step", "2");
-    sessionStorage.setItem("checkout_items", JSON.stringify(items)); // ✅ 一併儲存商品
+    sessionStorage.setItem("checkout_items", JSON.stringify(items));
   };
 
   const openEzShipMap = () => {
@@ -1169,6 +1169,7 @@ function CheckoutStep({
             </span>
             <h2 className="text-xl font-bold tracking-tight">聯絡資訊</h2>
           </div>
+          {/* 🌟 修改點：判斷如果登入，就鎖住並唯讀 */}
           <Input
             label="電子郵件 (作為訂單通知使用)"
             required
@@ -1177,6 +1178,7 @@ function CheckoutStep({
             onChange={(e) => setContact({ ...contact, email: e.target.value })}
             error={errors.email}
             placeholder="請輸入訂單通知信箱"
+            readOnly={isLoggedIn} // ✅ 若已登入則鎖定不可修改
           />
         </section>
 
@@ -1554,6 +1556,9 @@ function CartContent() {
   const [referralCoupons, setReferralCoupons] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
+  // 🌟 新增登入狀態
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [pricing, setPricing] = useState({
     subtotal: 0,
     memberDiscountAmount: 0,
@@ -1662,17 +1667,27 @@ function CartContent() {
 
     setItemsLoaded(true);
 
-    const fetchMembership = async () => {
+    // 🌟 修正會員資料抓取，同步寫入 Email
+    const fetchProfile = async () => {
       try {
         const res = await fetch("/api/account/profile");
         const data = await res.json();
-        if (data.loggedIn && data.membership) {
-          setMembership(data.membership);
-          setDiscountRate(TIER_DISCOUNTS[data.membership.tierName] || 1);
+        if (data.loggedIn) {
+          setIsLoggedIn(true); // 標記為已登入
+
+          if (data.customer?.email) {
+            // 自動綁定信箱，並覆蓋掉任何從 sessionStorage 讀到的舊資料
+            setContact((prev) => ({ ...prev, email: data.customer.email }));
+          }
+
+          if (data.membership) {
+            setMembership(data.membership);
+            setDiscountRate(TIER_DISCOUNTS[data.membership.tierName] || 1);
+          }
         }
       } catch (e) {}
     };
-    fetchMembership();
+    fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1867,6 +1882,7 @@ function CartContent() {
                 }}
                 onClearCart={clearCart}
                 membership={membership}
+                isLoggedIn={isLoggedIn} // 🌟 傳遞登入狀態給 CheckoutStep
               />
             </motion.div>
           )}

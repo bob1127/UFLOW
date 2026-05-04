@@ -4,6 +4,8 @@ import { Link } from "next-view-transitions";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+// ✅ 修正 1：加上大括號作具名匯入
+import { useCartStore } from "@/lib/cartStore";
 
 // ============================================================================
 // 子組件區塊
@@ -32,7 +34,6 @@ function TopAnnouncementBar({ isVisible }) {
 
   return (
     <div
-      // 💡 針對手機版 (max-md) 強制設定高度與透明度，電腦版保留原本動畫邏輯
       className={`w-full bg-[#f58a9c] transition-all duration-300 ease-in-out overflow-hidden ${
         isVisible
           ? "h-9 opacity-100"
@@ -346,8 +347,14 @@ export default function App() {
   const openerRef = useRef(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({ name: "", email: "", avatarUrl: "" });
-  const [cartCount, setCartCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // ✅ 修正 2：對齊 Store 中正確的狀態屬性 `items` 和 `qty`
+  const cartItems = useCartStore((state) => state.items) || [];
+  const cartCount = cartItems.reduce(
+    (total, item) => total + (item.qty || 0),
+    0,
+  );
 
   // 🚀 狀態控制：主導覽列隱藏、粉色公告欄顯示
   const [hidden, setHidden] = useState(false);
@@ -467,7 +474,6 @@ export default function App() {
   return (
     <>
       <header
-        // 💡 加入 max-md:translate-y-0 確保手機版永遠不會被往上推而隱藏
         className={`sticky top-0 z-[1000] w-full bg-white border-b border-gray-100 transition-all duration-300 ease-in-out ${
           hidden ? "max-md:translate-y-0 md:-translate-y-full" : "translate-y-0"
         } ${isScrolled ? "shadow-md" : "shadow-none"}`}

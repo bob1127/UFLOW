@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: hhttp://localhost:3000
+Host: http://localhost:3000
 
 # Sitemaps
-Sitemap: hhttp://localhost:3000/sitemap.xml
+Sitemap: http://localhost:3000/sitemap.xml

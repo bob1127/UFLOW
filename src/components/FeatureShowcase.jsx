@@ -5,15 +5,8 @@ import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Play,
-  Phone,
-  MapPin,
-  PenLine,
-} from "lucide-react";
-
+import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import Link from "next/link";
 // 註冊 GSAP
 gsap.registerPlugin(useGSAP);
 
@@ -59,9 +52,31 @@ const slides = [
 
 export default function FeatureShowcase() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isScrollingUp, setIsScrollingUp] = useState(false); // 🚀 新增：判斷是否往回滾動
   const containerRef = useRef(null);
   const isAnimating = useRef(false);
   const total = slides.length;
+
+  // --- 🚀 新增：偵測滑鼠滾動方向 ---
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // 如果目前的捲動高度 小於 上一次的捲動高度，代表正在「往回滾(向上)」
+      if (currentScrollY < lastScrollY) {
+        setIsScrollingUp(true);
+      } else {
+        setIsScrollingUp(false);
+      }
+
+      lastScrollY = currentScrollY > 0 ? currentScrollY : 0;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // --- 🚀 新增：自動輪播邏輯 ---
   useEffect(() => {
@@ -200,7 +215,13 @@ export default function FeatureShowcase() {
           左側 Sticky 導覽列
           ============================================== */}
       <div className="left-nav w-[60px] md:w-[80px] shrink-0 p-1 relative z-40">
-        <aside className="sticky-nav bg-white rounded-[6px] h-[calc(100vh-80px)] w-full sticky top-[85px] md:top-[120px] flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)]">
+        <aside
+          className={`sticky-nav bg-white rounded-[6px] h-[calc(100vh-80px)] w-full sticky flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)] transition-all duration-300 ease-in-out ${
+            isScrollingUp
+              ? "top-[85px] md:top-[150px]" // 往回滾時的 top
+              : "top-[15px] md:top-[2px]" // 往下滾時的 top
+          }`}
+        >
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 border-2 border-gray-800 rounded-full rounded-tr-none flex items-center justify-center">
               <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
@@ -418,21 +439,20 @@ export default function FeatureShowcase() {
           <div className="max-w-[1400px] mx-auto">
             <div className="flex justify-between items-end mb-16 border-b border-gray-200 pb-6">
               <h2 className="text-5xl md:text-[64px] font-serif text-[#333333] tracking-tight">
-                Consultation
+                Products
               </h2>
               <span className="text-sm font-bold text-gray-700 tracking-widest mb-2">
-                專業營養諮詢
+                慶安有福 保健食品
               </span>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
               <div className="lg:col-span-5 lg:pr-8 pt-4">
                 <p className="text-gray-800 leading-[2.2] mb-8 font-medium text-[16px] md:text-[18px]">
-                  我們相信，健康是一種生活方式。為了幫助您找到最適合的營養補給，UFLOW
-                  提供專業的一對一健康諮詢服務。
+                  我們嚴格挑選成分，確保每一項產品都能帶來實質的健康助益。慶安有福，與您一起守護健康每一天。
                 </p>
                 <p className="text-gray-600 leading-[2.2] text-[16px] md:text-[18px]">
-                  每個人的體質與生活習慣都不相同，透過深入的了解與評估，我們能為您量身打造專屬的日常保健計畫，讓健康變得更簡單。
+                  從養顏美容到日常舒壓，我們提供多樣化的保健食品選擇。探索我們的產品，為您量身打造專屬的保健計畫。
                 </p>
               </div>
 
@@ -442,7 +462,7 @@ export default function FeatureShowcase() {
                     src="/images/DSCF7850.jpg"
                     fill
                     className="object-cover"
-                    alt="Consultation"
+                    alt="Products"
                   />
                 </div>
 
@@ -450,70 +470,71 @@ export default function FeatureShowcase() {
                   <div className="relative z-20 w-full md:max-w-[65%] lg:max-w-[70%]">
                     <div className="text-center mb-10 relative">
                       <span className="bg-[#f2f6f7] px-4 text-[11px] font-bold tracking-widest text-gray-800 relative z-10 uppercase">
-                        Nutrition Plan
+                        Our Products
                       </span>
                       <div className="absolute top-1/2 left-0 w-full border-t border-dotted border-gray-400 z-0"></div>
                     </div>
 
                     <div className="inline-block bg-[#f57d7d] text-white text-sm font-bold px-6 py-2.5 rounded-full mb-8 tracking-widest">
-                      一對一諮詢
+                      熱銷推薦
                     </div>
 
                     <h3 className="text-lg md:text-[22px] font-bold text-gray-900 leading-[1.8] mb-12">
                       <span className="border-b-[1.5px] border-gray-800 pb-1">
-                        由專業營養師為您評估
+                        探索慶安有福全系列保健食品
                       </span>
                       <br />
                       <span className="border-b-[1.5px] border-gray-800 pb-1 inline-block mt-3">
-                        並建議專屬保健方案。
+                        找到最適合您的健康方案。
                       </span>
                     </h3>
 
                     <div className="flex flex-col mb-10">
                       <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
                         <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
-                          諮詢費用
+                          產品種類
                         </span>
                         <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          免費
+                          多樣選擇
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
                         <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
-                          預計時間
+                          品質保證
                         </span>
                         <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          約 15 - 30 分鐘
+                          多項國際與台灣專業檢驗認證
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-5 border-t border-b border-dotted border-gray-400">
                         <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider leading-relaxed">
-                          個人生活習慣評估・
+                          嚴選成分・
                           <br />
-                          飲食建議與保健規劃
+                          高效吸收
                         </span>
                         <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          完整提供
+                          科學實證
                         </span>
                       </div>
                     </div>
 
                     <div className="text-[10px] md:text-[11px] text-gray-500 leading-[1.8] tracking-wider">
+                      <p>※ 產品詳細資訊請參閱包裝標示。</p>
                       <p>
                         ※
-                        我們的專業營養師團隊將透過線上客服系統為您提供即時建議。
-                      </p>
-                      <p>
-                        ※ 若您有特殊疾病或正在服用藥物，建議先諮詢您的主治醫師。
+                        孕婦、哺乳期婦女或患有特殊疾病者，食用前建議先諮詢醫師意見。
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <button className="w-full bg-[#f5a49f] hover:bg-[#f87777] transition-colors duration-300 py-6 md:py-8 px-8 md:px-12 flex justify-between items-center group rounded-b-sm relative z-20">
-                  <span className="text-gray-900 font-bold text-lg tracking-widest">
-                    立即預約諮詢
-                  </span>
+                  <Link href="/products">
+                    {" "}
+                    <span className="text-gray-900 font-bold text-lg tracking-widest">
+                      探索所有產品
+                    </span>
+                  </Link>
                   <div className="w-7 h-7 rounded-full bg-[#3b3f42] flex items-center justify-center text-white group-hover:translate-x-2 transition-transform duration-300">
                     <ArrowRight size={14} strokeWidth={3} />
                   </div>

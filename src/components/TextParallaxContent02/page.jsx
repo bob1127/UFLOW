@@ -72,7 +72,7 @@ const TextParallaxContentExample = () => {
         {/* 第一段：產品 + 文案 (已修復 RWD 並改用背景圖) */}
         <section
           // ✨ 改用 CSS 背景圖片，設定 cover 與 center
-          className="relative w-full min-h-screen   mt-20 overflow-hidden flex flex-col justify-center items-center bg-[url('/images/三種02.png')] bg-cover bg-[center_center] md:bg-[center_top] lg:bg-center bg-no-repeat"
+          className="relative w-full   mt-20 overflow-hidden flex flex-col justify-center items-center bg-[url('/images/三種02.png')] bg-cover bg-[center_center] md:bg-[center_top] lg:bg-center bg-no-repeat"
         >
           {/* ✨ 新增：手機版專用黑色半透明遮罩，提升文字可讀性，電腦版隱藏 */}
           <div className="absolute inset-0 bg-black/60 lg:hidden z-0"></div>
@@ -257,7 +257,7 @@ const TextParallaxContentExample = () => {
         {/* 第三段：sticky parallax（這裡也加 isolate） */}
         <section
           ref={sectionRef}
-          className="relative min-h-[230vh] bg-white isolate"
+          className="relative  pt-[300px] bg-white isolate"
         >
           <div className="sticky top-0 h-screen overflow-hidden">
             {/* 圖片層 */}
@@ -266,8 +266,6 @@ const TextParallaxContentExample = () => {
               style={{
                 scale,
                 y: yImg,
-                opacity: imgOpacity,
-                filter: blurFilter,
               }}
             >
               <Image
@@ -276,7 +274,7 @@ const TextParallaxContentExample = () => {
                 width={1400}
                 height={900}
                 priority
-                className="w-[70vw] max-w-[360px] min-w-[320px] h-auto object-contain"
+                className="w-[25vw] max-w-[360px] min-w-[320px] h-auto  "
               />
             </motion.div>
 
@@ -290,13 +288,13 @@ const TextParallaxContentExample = () => {
                   UFLOW
                 </div>
                 是身體的指揮家
-                <div className="w-full overflow-hidden max-w-[500px] mt-4">
+                <div className="w-full overflow-hidden  max-w-[220px] lg:max-w-[450px] mt-4">
                   <Marquee>
                     <div className="flex justify-center items-center w-full overflow-hidden">
                       {Array.from({ length: 3 }).map((_, idx) => (
                         <div
                           key={idx}
-                          className="mx-2 flex justify-center items-center w-full"
+                          className="mx-2 flex justify-center items-center w-[8%] xl:w-[20%]"
                         >
                           <Image
                             src="https://coralclub.ru/images/labels/icon-gluten-free.svg"
@@ -305,7 +303,7 @@ const TextParallaxContentExample = () => {
                             loading="lazy"
                             width={200}
                             height={200}
-                            className="max-w-[140px]"
+                            className="max-w-[100px]"
                           />
                           <span className="text-base ml-2 mlr-4">
                             純天然的成分

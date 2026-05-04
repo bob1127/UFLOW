@@ -9,7 +9,26 @@ const BASE = process.env.WC_API_BASE;
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 const RESET_SECRET = process.env.RESET_TOKEN_SECRET!;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+// 🚀 智慧網址判斷機制 (防呆 + 自動抓取正式環境)
+const getBaseUrl = () => {
+  let url = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
+  
+  // 防呆：自動修復 .env 中可能手滑打錯的 hhttp
+  if (url.startsWith("hhttp")) {
+    url = url.replace("hhttp", "http");
+  }
+  
+  // 如果在 Vercel 且沒有設定 NEXT_PUBLIC_SITE_URL，自動吃 Vercel 提供的正式網址
+  if (process.env.VERCEL_URL && !process.env.NEXT_PUBLIC_SITE_URL) {
+    url = `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // 確保結尾沒有斜線
+  return url.replace(/\/$/, "");
+};
+
+const SITE_URL = getBaseUrl();
 
 function basicAuth() {
   if (!CK || !CS) throw new Error("缺少 WooCommerce consumer key/secret");
@@ -38,7 +57,7 @@ function createTransport() {
    ✅ referral helpers
 ========================= */
 
-// 你前面方案用 UF{id} 當 refCode，這裡直接解析
+// 解析 refCode (UF{id})
 function parseAmbassadorId(ref?: string | null): number | null {
   if (!ref) return null;
   const s = String(ref).trim();
@@ -48,7 +67,7 @@ function parseAmbassadorId(ref?: string | null): number | null {
   return n;
 }
 
-// 確認這個 ambassadorId 真的存在（避免亂填）
+// 確認大使是否存在
 async function ensureAmbassadorExists(id: number): Promise<boolean> {
   try {
     const r = await fetch(`${BASE}/wp-json/wc/v3/customers/${id}`, {
@@ -65,7 +84,6 @@ async function ensureAmbassadorExists(id: number): Promise<boolean> {
 async function grantFriendCoupon(newCustomerId: number, ambassadorId: number) {
   const authHeader = { Authorization: basicAuth() };
 
-  // 讀新客 meta，確認沒給過
   const uRes = await fetch(`${BASE}/wp-json/wc/v3/customers/${newCustomerId}`, {
     headers: authHeader,
     cache: "no-store",
@@ -78,11 +96,10 @@ async function grantFriendCoupon(newCustomerId: number, ambassadorId: number) {
   );
   if (already) return;
 
-  const code = `UFFRD-${newCustomerId}`; // 一人一碼
+  const code = `UFFRD-${newCustomerId}`;
   const expires = new Date();
   expires.setMonth(expires.getMonth() + 2);
 
-  // 建 coupon（限定 email）
   await fetch(`${BASE}/wp-json/wc/v3/coupons`, {
     method: "POST",
     headers: { ...authHeader, "Content-Type": "application/json" },
@@ -103,7 +120,6 @@ async function grantFriendCoupon(newCustomerId: number, ambassadorId: number) {
     }),
   });
 
-  // 寫 meta 防止重發
   await fetch(`${BASE}/wp-json/wc/v3/customers/${newCustomerId}`, {
     method: "PUT",
     headers: { ...authHeader, "Content-Type": "application/json" },
@@ -145,7 +161,7 @@ export async function POST(req: Request) {
     // 1) 建立 WooCommerce customer，預設 email 未驗證
     const meta_data: any[] = [{ key: "email_verified", value: "0" }];
 
-    // ✅ referral: 若 ref 合法，先寫 uf_referred_by
+    // referral: 若 ref 合法，先寫 uf_referred_by
     if (ambassadorOk && ambassadorId) {
       meta_data.push({
         key: "uf_referred_by",
@@ -178,24 +194,18 @@ export async function POST(req: Request) {
     }
 
     const newCustomerId: number = data.id;
-
-    // ✅ WooCommerce 實際建立的 email（防止前端送錯、或 WC 回傳不同值）
     const createdEmail = String(data?.email || email).trim().toLowerCase();
 
-    /* =========================
-       ✅ referral: grant 50 after create
-       - 避免自我推薦: ambassadorId !== newCustomerId
-    ========================= */
+    // 給推薦禮
     if (ambassadorOk && ambassadorId && ambassadorId !== newCustomerId) {
       try {
         await grantFriendCoupon(newCustomerId, ambassadorId);
       } catch (e) {
         console.error("grantFriendCoupon error:", e);
-        // 不影響註冊流程
       }
     }
 
-    // 2) 產生驗證 token（用 createdEmail）
+    // 2) 產生驗證 token（🚀 更改為 15 分鐘過期）
     const token = jwt.sign(
       {
         type: "verify-email",
@@ -203,49 +213,66 @@ export async function POST(req: Request) {
         customerId: newCustomerId,
       },
       RESET_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "15m" }
     );
 
     const url = new URL("/verify-email", SITE_URL);
     url.searchParams.set("token", token);
 
-    // 3) 寄出驗證信（可觀測 + 不吞錯）
+    // 3) 寄出驗證信（加上美化樣式與 LINE 連結）
     try {
       const transporter = createTransport();
-
-      // ✅ 先 verify SMTP 連線
       await transporter.verify();
 
       const mailFrom = process.env.SMTP_USER!;
+      
+      // 🚀 優化信件排版 HTML
       const html = `
-        <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6;">
-          <h2>會員註冊信箱驗證</h2>
+        <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <h2 style="color: #222; border-bottom: 2px solid #f58a9c; padding-bottom: 10px;">會員註冊信箱驗證</h2>
           <p>親愛的會員您好：</p>
-          <p>感謝您註冊 UFLOW 會員，請點擊下方按鈕完成信箱驗證：</p>
-          <p style="margin: 24px 0;">
-            <a href="${url.toString()}"
-               style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;">
+          <p>感謝您註冊 UFLOW 慶安有福，請點擊下方按鈕完成信箱驗證：</p>
+          
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${url.toString()}" target="_blank"
+               style="display: inline-block; padding: 14px 28px; background-color: #f58a9c; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; letter-spacing: 1px;">
               完成信箱驗證
             </a>
-          </p>
-          <p>如果按鈕無法點擊，請將以下連結複製到瀏覽器開啟：</p>
-          <p style="word-break: break-all;">${url.toString()}</p>
-          <p>此連結將在 24 小時後失效。</p>
-          <p style="margin-top: 24px;">UFLOW 官方網站</p>
+          </div>
+
+          <p style="font-size: 14px; color: #666; margin-bottom: 8px;">如果按鈕無法點擊，請將以下連結複製並貼上到瀏覽器網址列開啟：</p>
+          <div style="background-color: #f8f9fa; padding: 12px; border-radius: 4px; word-break: break-all; font-size: 13px; color: #0056b3;">
+            ${url.toString()}
+          </div>
+          
+          <p style="color: #e63946; font-weight: bold; margin-top: 20px;">⚠️ 此驗證連結將在 15 分鐘後失效。</p>
+
+          <hr style="border: none; border-top: 1px solid #eaeaea; margin: 30px 0;" />
+
+          <p style="font-size: 14px; color: #666;">若您在驗證過程中遇到任何問題，或需要協助，歡迎隨時透過 LINE 官方客服與我們聯繫：</p>
+          <div style="margin-top: 15px;">
+            <a href="https://lin.ee/uKRvV64" target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #00B900; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">
+              💬 聯繫 LINE 客服
+            </a>
+          </div>
+          
+          <div style="margin-top: 40px; font-size: 12px; color: #999; text-align: center;">
+            <p>UFLOW 慶安有福 | 您的健康生活夥伴</p>
+          </div>
         </div>
       `;
 
       const info = await transporter.sendMail({
-        from: mailFrom,
+        from: `"UFLOW 慶安有福" <${mailFrom}>`, // 加上寄件者名稱更正式
         to: createdEmail,
-        subject: "UFLOW – 信箱驗證",
+        subject: "UFLOW – 會員信箱驗證",
         html,
       });
 
       console.log("[verify-email] sent:", info.messageId, info.response);
     } catch (e) {
       console.error("send verify email error:", e);
-      // ✅ 寄信失敗就不要假裝成功
       return NextResponse.json(
         { ok: false, message: "驗證信寄送失敗，請稍後重試或聯絡客服。" },
         { status: 500 }

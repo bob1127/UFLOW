@@ -192,7 +192,7 @@ export default function Home({ faqs = [] }) {
         <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
           <div className="grid grid-cols-1 md:grid-cols-2">
             <Link
-              href="/products/peptide-crystal-hibiscus"
+              href="/products/肽晶芙蓉"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
             >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
@@ -224,7 +224,7 @@ export default function Home({ faqs = [] }) {
             </Link>
 
             <Link
-              href="/products/gaba-magnesium"
+              href="/products/gaba鎂鎂香蜂草"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
             >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />

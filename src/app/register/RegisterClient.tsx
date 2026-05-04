@@ -335,21 +335,6 @@ export default function RegisterPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center space-y-6">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
           <h2 className="text-2xl font-bold text-gray-800">🎉 註冊成功！</h2>
           <p className="text-gray-600 leading-relaxed text-sm">
             我們已寄出一封{" "}
