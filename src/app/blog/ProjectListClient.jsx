@@ -1,9 +1,9 @@
+// app/blog/ProjectListClient.jsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Link } from "next-view-transitions";
 import Image from "next/image";
-// 引入你原本的組件
 import ImageTextSlider from "../../components/ImageTextSlider.jsx";
 import HeroSlider from "../../components/HeroSlideContact/page";
 import { ReactLenis } from "@studio-freight/react-lenis";
@@ -22,7 +22,7 @@ export default function HomeClient({ posts }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🚀 【圖片萃取邏輯】獨立抽出來，不影響排版
+  // 🚀 【圖片萃取邏輯】
   const getCleanImageUrl = (post) => {
     const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
     let rawUrl =
@@ -52,7 +52,7 @@ export default function HomeClient({ posts }) {
         wheelMultiplier: 1.2,
       }}
     >
-      <div className="">
+      <div>
         {/* Hero Slider */}
         <section className="pb-[100px]">
           <HeroSlider />
@@ -67,8 +67,9 @@ export default function HomeClient({ posts }) {
         <section className="section_where_go h-auto mt-[10px]">
           <div className="section-title py-[50px] flex flex-col justify-center items-center ">
             <h2 className="text-slate-900 text-[45px]">關於保健知識？</h2>
-            <p>BLOG</p>
+            <p className="tracking-widest text-gray-500">BLOG</p>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {posts && posts.length > 0 ? (
               posts.map((post, idx) => {
@@ -85,14 +86,14 @@ export default function HomeClient({ posts }) {
                     className="block h-full"
                   >
                     <div className="article-card bg-white group border-[.5px] border-gray-200 h-full flex flex-col">
-                      <div className="card-img aspect-[4/3] overflow-hidden relative">
+                      <div className="card-img aspect-[4/4] overflow-hidden relative">
                         <Image
                           src={imageUrl}
                           alt={post.title.rendered.replace(/<[^>]+>/g, "")}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          priority={idx < 4} // SEO優化：前四張圖片優先載入，不影響視覺
+                          priority={idx < 4} // 前四張圖片優先載入
                         />
                       </div>
                       <div className="card-conetent group px-5 py-3 flex flex-col flex-1">
@@ -104,11 +105,7 @@ export default function HomeClient({ posts }) {
                             }}
                           />
                           <p className="max-w-[300px]">
-                            <span
-                              className="
-                              inline bg-gradient-to-r from-black to-black bg-[length:0%_2px] bg-no-repeat bg-left-bottom group-hover:bg-[length:100%_2px] transition-[background-size] duration-500 text-[.9rem] tracking-wider text-gray-600
-                            "
-                            >
+                            <span className="inline bg-gradient-to-r from-black to-black bg-[length:0%_2px] bg-no-repeat bg-left-bottom group-hover:bg-[length:100%_2px] transition-[background-size] duration-500 text-[.9rem] tracking-wider text-gray-600">
                               {cleanExcerpt}
                             </span>
                           </p>
@@ -140,13 +137,6 @@ export default function HomeClient({ posts }) {
               </div>
             )}
           </div>
-
-          <Link
-            href="/blog"
-            className="more-btn bg-[#f58a9c] hover:bg-[#dd6f81] duration-200 text-[20px] flex justify-center text-white py-6 cursor-pointer"
-          >
-            更多文章
-          </Link>
         </section>
       </div>
     </ReactLenis>

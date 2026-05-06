@@ -1,131 +1,103 @@
-// app/products/Client.tsx
 "use client";
 
 import Image from "next/image";
-import { Link } from "next-view-transitions"; // 若您沒有使用 View Transitions，可改用 "next/link"
+import { Link } from "next-view-transitions";
 
-// 定義 Product Type
-// 確保後端回傳的資料包含這些欄位
 export type Product = {
   id: number;
-  slug: string; // 這是連結的關鍵
+  slug: string;
   name: string;
   price: string;
   regular_price?: string;
   sale_price?: string;
   images: { src: string; alt?: string }[];
+  meta_desc?: string;
+  meta_ingredients?: string;
+  meta_spec?: string;
 };
 
-const COLORS = {
-  cardBg: "#f7f3ef",
-  buyText: "#111111",
-  buyBorder: "#111111",
-  newBg: "#f6b595",
-  newText: "#ffffff",
-  nameText: "#111111",
-  metaText: "#6b7280",
-};
+const AudioGuideIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="mt-[2px] md:w-4 md:h-4"
+  >
+    <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+  </svg>
+);
 
 export default function Client({ items }: { items: Product[] }) {
-  // 安全取得第一張圖片
-  const firstImg = (p: Product) => p.images?.[0]?.src || "/placeholder.png";
-
-  // 判斷是否有特價 (有 sale_price 且不為空)
-  const isNew = (p: Product) => !!p.sale_price && p.sale_price !== "";
+  const firstImg = (p: Product) =>
+    p.images?.[0]?.src || "/images/logo/uflow.png";
 
   return (
-    <div className="bg-slate-50">
-      {/* HERO 橫幅 */}
-      <div
-        className="w-full md:aspect-[1080/576] aspect-square xl:aspect-[1920/700] bg-center bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: "url('/images/植物01.png')",
-        }}
-      />
-
-      <main className="mx-auto max-w-6xl px-4 py-16">
-        {/* 標題 + 說明 */}
-        <h1
-          className="text-3xl xl:text-5xl font-semibold tracking-wide text-stone-700"
-          style={{ letterSpacing: ".02em" }}
-        >
-          熱銷產品
+    <div className="bg-white min-h-screen text-[#111] font-sans selection:bg-gray-200">
+      <main className="mx-auto max-w-[1400px] px-4 md:px-12 py-16 md:py-24">
+        {/* 標題 */}
+        <h1 className="text-lg md:text-2xl font-normal tracking-widest text-[#111] mb-12 mt-20 uppercase">
+          Product Gallery
         </h1>
-        <p className="mt-4 leading-relaxed tracking-widest text-[15px] text-[#2b2b2b]/80">
-          作為美味基礎的重要原材料是「大豆」。 <br />
-          為了能夠享受到大豆本來的甜味和美味，
-          <br />
-          我們努力製作簡單的味道
-        </p>
 
-        {/* 商品格狀卡片 */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-          {items.map((p) => (
+        {/* 🚀 關鍵修改：grid-cols-2 讓手機版強制兩排，並微調 gap 間距 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 md:gap-x-8 gap-y-12 md:gap-y-20">
+          {items.map((p, idx) => (
             <Link
               key={p.id}
-              // ✅ 修正連結：確保導向 /products/[slug]
-              // 這裡假設您的單一商品頁路徑是 app/products/[slug]/page.tsx
               href={`/products/${p.slug}`}
               className="group block"
             >
-              {/* 卡片本體 */}
-              <div
-                className="relative rounded-3xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg border border-black/5"
-                style={{ backgroundColor: COLORS.cardBg }}
-              >
-                {/* BUY 標籤 */}
-                <div
-                  className="absolute left-5 top-5 px-3 py-1 rounded-full text-xs tracking-widest"
-                  style={{
-                    color: COLORS.buyText,
-                    border: `1px solid ${COLORS.buyBorder}`,
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  BUY
-                </div>
-
-                {/* NEW (或 SALE) 標籤 */}
-                {isNew(p) && (
-                  <div
-                    className="absolute right-5 top-5 px-3 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      backgroundColor: COLORS.newBg,
-                      color: COLORS.newText,
-                    }}
-                  >
-                    NEW
-                  </div>
-                )}
-
-                {/* 商品主圖 */}
-                <div className="relative mx-auto my-6 w-[82%] aspect-[3/4] overflow-hidden">
+              {/* 圖片容器 */}
+              <div className="relative w-full aspect-square bg-[#f7f7f7] mb-4 md:mb-6 overflow-hidden flex items-center justify-center">
+                <div className="relative w-[70%] h-[70%]">
                   <Image
                     src={firstImg(p)}
                     alt={p.images?.[0]?.alt || p.name}
                     fill
-                    sizes="(min-width:1024px) 28vw, (min-width:768px) 30vw, 80vw"
-                    className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    className="object-contain transition-transform duration-700 group-hover:scale-105"
                   />
                 </div>
               </div>
 
-              {/* 名稱 + 價格 */}
-              <div className="mt-4">
-                <div className="text-[18px] md:text-[20px] leading-7 text-[#111]">
-                  “{p.name}”
-                </div>
-                <div
-                  className="mt-1 text-sm font-medium flex items-center gap-2"
-                  style={{ color: COLORS.metaText }}
-                >
-                  {/* 若有特價，顯示原價刪除線 */}
-                  {isNew(p) && (
-                    <span className="line-through text-xs opacity-60">
-                      NT$ {p.regular_price || parseInt(p.price) * 1.2}
+              {/* 資訊區塊 (針對手機版縮小字級，避免擁擠) */}
+              <div className="flex justify-between items-start px-1">
+                <div className="flex-1 pr-2 md:pr-4">
+                  <h2 className="text-[14px] md:text-[15px] font-bold uppercase tracking-wider mb-3 md:mb-4 text-[#111] line-clamp-2">
+                    {p.name}
+                  </h2>
+
+                  {/* UFLOW 專屬短文案 */}
+                  <div className="text-[13px] md:text-[14px] text-[#666] leading-relaxed tracking-wide space-y-1">
+                    <p className="text-[#333] font-medium mb-1 md:mb-2 line-clamp-2">
+                      {p.meta_desc || "維持日常健康機能，打造純淨好體質"}
+                    </p>
+                    <p className="line-clamp-1">
+                      主成分：{p.meta_ingredients || "專利植萃配方"}
+                    </p>
+                    <p>規　格：{p.meta_spec || "30包 / 盒"}</p>
+                  </div>
+
+                  <div className="mt-4 md:mt-6 text-right text-[10px] md:text-[11px] font-medium tracking-wider text-[#111]">
+                    NT$ {p.price}
+                    <span className="text-[8px] md:text-[9px] text-[#666] ml-1">
+                      (含稅)
                     </span>
-                  )}
-                  <span>NT$ {p.price}</span>
+                  </div>
+                </div>
+
+                {/* 語音導覽編號 */}
+                <div className="flex items-start gap-[2px] text-[#111]">
+                  <AudioGuideIcon />
+                  <span className="text-[12px] md:text-[15px] font-medium leading-none">
+                    {idx + 1}
+                  </span>
                 </div>
               </div>
             </Link>

@@ -78,8 +78,8 @@ export async function POST(req: Request) {
 
     const email = data.user_email || "";
 
-    // 2) 檢查 Woo customer 是否已完成 email 驗證
-    let verified = true;
+  // 2) 檢查 Woo customer 是否已完成 email 驗證
+    let isBlocked = false; // 🌟 改為「預設不阻擋」
     const authHeader = basicAuth();
 
     if (authHeader && email) {
@@ -97,12 +97,16 @@ export async function POST(req: Request) {
           const customer = Array.isArray(arr) && arr.length > 0 ? arr[0] : null;
 
           if (customer?.meta_data) {
-            const hasVerified = customer.meta_data.some(
-              (m: any) =>
-                m?.key === "email_verified" &&
-                String(m?.value) === "1"
+            // 尋找是否有 email_verified 標記
+            const verifyMeta = customer.meta_data.find(
+              (m: any) => m?.key === "email_verified"
             );
-            if (!hasVerified) verified = false;
+            
+            // 🌟 關鍵修正：只有當標記「明確存在」且值為 "0" 時，才進行阻擋
+            // 這樣沒有標記的管理員 (Admin) 與舊會員就能安全登入
+            if (verifyMeta && String(verifyMeta.value) === "0") {
+              isBlocked = true;
+            }
           }
         }
       } catch (e) {
@@ -110,7 +114,7 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!verified) {
+    if (isBlocked) {
       return NextResponse.json(
         {
           message: "此帳號尚未完成信箱驗證，請先至信箱點擊驗證連結。",

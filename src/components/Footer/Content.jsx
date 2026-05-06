@@ -90,6 +90,11 @@ export default function Content() {
 // ============================================================================
 // Footer 內容區塊
 // ============================================================================
+// ... (前面其他的引入與 Icons 定義保留不變)
+
+// ============================================================================
+// Footer 內容區塊
+// ============================================================================
 const Section2 = () => {
   return (
     <footer className="w-full bg-[#EDEEEF] pt-16 pb-32 lg:pt-24 lg:pb-32 px-6 sm:px-10 lg:px-20 xl:px-32">
@@ -171,6 +176,11 @@ const Section2 = () => {
             <div className="flex justify-center gap-6 sm:gap-8">
               {/* 🌟 補上真實的連結 href */}
               <SocialIcon
+                href="https://lin.ee/uKRvV64" // ✅ 新增的 LINE 連結
+                icon={Icons.Line}
+                label="LINE"
+              />
+              <SocialIcon
                 href="https://www.instagram.com/uflow"
                 icon={Icons.Instagram}
                 label="Instagram"
@@ -215,6 +225,7 @@ const Section2 = () => {
   );
 };
 
+// ... (後面其他的 Helper Components 與 ShareWidget 保留不變)
 // ============================================================================
 // Helper Components
 // ============================================================================

@@ -292,6 +292,7 @@ const TW_CITIES = {
     "前金區",
     "苓雅區",
     "前鎮區",
+    "前鎮區",
     "旗津區",
     "小港區",
     "鳳山區",
@@ -479,6 +480,7 @@ function calcPricing(
     subtotalAfterMember,
   );
   const finalSubtotal = Math.max(0, subtotalAfterMember - safeCouponDiscount);
+  // 如果小計大於等於免運門檻，或購物車為空，則運費為 0
   const shipping =
     finalSubtotal >= freeShipThreshold || finalSubtotal === 0
       ? 0
@@ -1096,8 +1098,9 @@ function CheckoutStep({
         : `${addr.storeName} (${addr.storeId}) - ${addr.storeAddr}`;
 
     const payload = {
+      // 🚀 關鍵防護：確保 wcProductId 絕對有值
       items: items.map((it) => ({
-        wcProductId: it.wcProductId,
+        wcProductId: it.wcProductId || it.id,
         qty: it.qty,
         price: it.price,
         title: it.name || it.title,
@@ -1259,7 +1262,7 @@ function CheckoutStep({
               >
                 {pricing.discountedSubtotal >= pricing.freeShipThreshold
                   ? "免運費"
-                  : "運費 NT$80"}
+                  : "免運費"}
               </span>
             </button>
 
@@ -1280,7 +1283,7 @@ function CheckoutStep({
               >
                 {pricing.discountedSubtotal >= pricing.freeShipThreshold
                   ? "免運費"
-                  : "運費 NT$80"}
+                  : "免運費"}
               </span>
             </button>
           </div>
@@ -1397,9 +1400,9 @@ function CheckoutStep({
                 />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-sm text-gray-900">綠界安全支付</p>
+                <p className="font-bold text-sm text-gray-900">綠界整合金流</p>
                 <p className="text-[11px] text-gray-500 mt-0.5">
-                  信用卡 / ATM / 超商代碼
+                  信用卡 / Apple Pay / ATM / 超商代碼
                 </p>
               </div>
               {payMethod === "card" && (
@@ -1420,11 +1423,9 @@ function CheckoutStep({
                 />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-sm text-gray-900">
-                  LINE Pay 官方支付
-                </p>
+                <p className="font-bold text-sm text-gray-900">LINE Pay</p>
                 <p className="text-[11px] text-gray-500 mt-0.5">
-                  使用 LINE 點數與綁定信用卡
+                  透過綠界安全跳轉 LINE Pay
                 </p>
               </div>
               {payMethod === "linepay" && (
@@ -1451,7 +1452,7 @@ function CheckoutStep({
           >
             {isSubmitting
               ? payMethod === "linepay"
-                ? "導向 LINE Pay 中..."
+                ? "連線至 LINE Pay..."
                 : "安全連線中..."
               : "確認付款並下單"}
           </button>
@@ -1459,7 +1460,7 @@ function CheckoutStep({
       </div>
 
       <aside className="w-full lg:w-[380px]">
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm lg:sticky lg:top-24">
+        <div className="bg-slate-50 border border-gray-100 rounded-3xl p-6 shadow-sm lg:sticky lg:top-24">
           <CouponPicker
             title="可用折價券"
             subtitle="點擊即可套用折扣"
@@ -1770,7 +1771,9 @@ function CartContent() {
   useEffect(() => {
     if (!itemsLoaded) return;
     const discount = appliedCoupon?.amount || 0;
-    const shippingBase = shipMethod === "000" ? 0 : 0;
+    // 🌟 修正運費判斷邏輯：宅配 105，超商 0
+    const shippingBase = shipMethod === "000" ? 105 : 0;
+
     setPricing(
       calcPricing(
         items,

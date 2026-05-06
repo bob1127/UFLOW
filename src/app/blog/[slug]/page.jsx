@@ -4,6 +4,9 @@ import Link from "next/link";
 import { getAllPostSlugs } from "@/lib/wordpress";
 import { notFound } from "next/navigation";
 
+// 引入結構化資料元件
+import ArticleJsonLd from "./ArticleJsonLd";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
 // ===================== 🌟 共用圖片萃取工具 =====================
@@ -22,7 +25,7 @@ function getPostImage(post) {
   return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
 }
 
-// ===================== 🌟 API 抓取函式 (單篇文章) =====================
+// ===================== 🌟 API 抓取單篇文章 =====================
 async function getPostBySlugWithDebug(slug) {
   const rawBase =
     process.env.WORDPRESS_API_URL ||
@@ -35,7 +38,7 @@ async function getPostBySlugWithDebug(slug) {
       next: { revalidate: 3600 },
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         Accept: "application/json",
       },
     });
@@ -47,14 +50,15 @@ async function getPostBySlugWithDebug(slug) {
   }
 }
 
-// ===================== 🌟 API 抓取函式 (最新文章 NEWS) =====================
-async function getRecentPosts(currentSlug) {
+// ===================== 🌟 API 隨機抓取其他文章 =====================
+async function getRandomPosts(currentSlug) {
   const rawBase =
     process.env.WORDPRESS_API_URL ||
     "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
   const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
-  // 多抓幾筆，以防其中一筆是當前文章
-  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=4`;
+
+  // 🚀 智慧隨機法：多抓一點資料回來 (例如 15 筆)，然後在程式裡隨機洗牌
+  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=15`;
 
   try {
     const res = await fetch(fetchUrl, {
@@ -65,11 +69,19 @@ async function getRecentPosts(currentSlug) {
         Accept: "application/json",
       },
     });
+
     if (!res.ok) return [];
     const posts = await res.json();
     if (!Array.isArray(posts)) return [];
-    // 過濾掉當前正在閱讀的文章，並只取前 3 篇
-    return posts.filter((p) => p.slug !== currentSlug).slice(0, 3);
+
+    // 1. 過濾掉當前正在閱讀的文章
+    const filteredPosts = posts.filter((p) => p.slug !== currentSlug);
+
+    // 2. 隨機洗牌演算法 (Fisher-Yates 簡易版)
+    const shuffledPosts = filteredPosts.sort(() => 0.5 - Math.random());
+
+    // 3. 取出前 3 篇作為隨機推薦文章
+    return shuffledPosts.slice(0, 3);
   } catch (error) {
     return [];
   }
@@ -87,7 +99,7 @@ export async function generateStaticParams() {
   }
 }
 
-// 2. 動態 Metadata (頂級 SEO)
+// 2. 動態 Metadata
 export async function generateMetadata({ params }) {
   const post = await getPostBySlugWithDebug(params.slug);
   if (!post) return {};
@@ -122,7 +134,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// 3. 頁面組件 (日系極簡 UI)
+// 3. 頁面組件
 export default async function BlogPostPage({ params }) {
   const post = await getPostBySlugWithDebug(params.slug);
 
@@ -130,70 +142,20 @@ export default async function BlogPostPage({ params }) {
     notFound();
   }
 
-  // 同時抓取最新的推薦文章
-  const recentPosts = await getRecentPosts(params.slug);
-
-  // 取得主圖
+  // 🚀 改為呼叫隨機文章函式
+  const randomPosts = await getRandomPosts(params.slug);
   const mainImageUrl = getPostImage(post);
 
-  // 日期格式化為圖示風格 (YYYY/MM/DD)
   const dateObj = new Date(post.date);
   const formattedDate = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
 
-  // ===================== 👑 官方標準結構化資料 JSON-LD =====================
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "@id": `${SITE_URL}/blog/${post.slug}/#breadcrumb`,
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "BLOG",
-            item: `${SITE_URL}/blog`,
-          },
-          { "@type": "ListItem", position: 3, name: post.title.rendered },
-        ],
-      },
-      {
-        "@type": "Article",
-        "@id": `${SITE_URL}/blog/${post.slug}/#article`,
-        isPartOf: { "@id": `${SITE_URL}/blog/${post.slug}/#breadcrumb` },
-        headline: post.title.rendered,
-        image: mainImageUrl,
-        datePublished: new Date(post.date).toISOString(),
-        dateModified: new Date(post.modified).toISOString(),
-        author: {
-          "@type": "Organization",
-          name: "UFLOW 專業營養團隊",
-          url: SITE_URL,
-        },
-        publisher: {
-          "@type": "Organization",
-          name: "UFLOW",
-          logo: {
-            "@type": "ImageObject",
-            url: `${SITE_URL}/images/logo/uflow.png`,
-          },
-        },
-      },
-    ],
-  };
-
   return (
     <article className="bg-[#fafafa] mt-[60px] min-h-screen pt-16 pb-32 font-sans text-gray-900 selection:bg-gray-200 selection:text-black">
-      {/* 注入 SEO 結構化資料 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-      />
+      {/* 🚀 載入 4 大分類的 SEO 結構化資料 */}
+      <ArticleJsonLd post={post} siteUrl={SITE_URL} imageUrl={mainImageUrl} />
 
       {/* ================= 文章主要內容區塊 ================= */}
       <div className="max-w-[800px] mx-auto px-5 lg:px-8">
-        {/* 標題與日期區 */}
         <header className="mb-10 mt-10">
           <h1
             className="text-[24px] md:text-[30px] font-bold leading-snug mb-4 text-[#111]"
@@ -205,7 +167,6 @@ export default async function BlogPostPage({ params }) {
           </div>
         </header>
 
-        {/* 文章內文 Content (已縮小字體與調整行距) */}
         <div
           className="
             prose prose-base max-w-none
@@ -222,47 +183,44 @@ export default async function BlogPostPage({ params }) {
         />
       </div>
 
-      {/* ================= 底部 NEWS 相關文章區塊 ================= */}
-      {recentPosts && recentPosts.length > 0 && (
+      {/* ================= 底部隨機推薦文章區塊 ================= */}
+      {randomPosts && randomPosts.length > 0 && (
         <div className="max-w-[1000px] mx-auto px-5 lg:px-8 mt-24 pt-16 border-t border-gray-200">
           <h2 className="text-[18px] md:text-[20px] font-bold text-[#111] mb-10 tracking-wider uppercase">
-            NEWS
+            為您推薦
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
-            {recentPosts.map((recentPost) => {
-              const rImageUrl = getPostImage(recentPost);
-              const rDateObj = new Date(recentPost.date);
+            {randomPosts.map((randomPost) => {
+              const rImageUrl = getPostImage(randomPost);
+              const rDateObj = new Date(randomPost.date);
               const rFormattedDate = `${rDateObj.getFullYear()}/${String(rDateObj.getMonth() + 1).padStart(2, "0")}/${String(rDateObj.getDate()).padStart(2, "0")}`;
 
               return (
                 <Link
-                  key={recentPost.id}
-                  href={`/blog/${recentPost.slug}`}
+                  key={randomPost.id}
+                  href={`/blog/${randomPost.slug}`}
                   className="block group"
                 >
-                  {/* 縮圖 */}
                   <div className="relative w-full aspect-[4/3] sm:aspect-square mb-4 overflow-hidden bg-gray-100">
                     <Image
                       src={rImageUrl}
-                      alt={recentPost.title.rendered.replace(/<[^>]+>/g, "")}
+                      alt={randomPost.title.rendered.replace(/<[^>]+>/g, "")}
                       fill
                       className="object-cover transition-opacity duration-300 group-hover:opacity-80"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   </div>
 
-                  {/* 日期與標籤 */}
                   <div className="text-[10px] md:text-[11px] leading-tight text-[#111] font-medium tracking-wider mb-2">
                     <div>{rFormattedDate}</div>
-                    <div className="mt-[2px]">NEWS</div>
+                    <div className="mt-[2px]">RECOMMENDED</div>
                   </div>
 
-                  {/* 標題 */}
                   <h3
                     className="text-[13px] md:text-[14px] text-[#111] leading-snug line-clamp-3 group-hover:text-gray-500 transition-colors"
                     dangerouslySetInnerHTML={{
-                      __html: recentPost.title.rendered,
+                      __html: randomPost.title.rendered,
                     }}
                   />
                 </Link>
@@ -272,7 +230,6 @@ export default async function BlogPostPage({ params }) {
         </div>
       )}
 
-      {/* 底部返回按鈕 */}
       <div className="mt-16 flex justify-center">
         <Link
           href="/blog"

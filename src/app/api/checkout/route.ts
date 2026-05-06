@@ -1,3 +1,4 @@
+// app/api/checkout/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { getServerSession } from "next-auth";
@@ -16,12 +17,12 @@ const ECPAY_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cas
 
 const LINEPAY_CHANNEL_ID = process.env.LINEPAY_CHANNEL_ID!;
 const LINEPAY_CHANNEL_SECRET = process.env.LINEPAY_CHANNEL_SECRET!;
-const LINEPAY_URL = process.env.LINEPAY_API_URL || "https://api-pay.line.me/v3/payments/request"; 
+const LINEPAY_BASE_URL = process.env.LINEPAY_BASE_URL || "https://api-pay.line.me"; 
 
-interface CartItem { wcProductId: number; qty: number; price: number; title: string; }
+interface CartItem { wcProductId: number; qty: number; price: number; title: string; id?: string | number; }
 interface ContactInfo { email: string; }
 interface AddressInfo { firstName: string; lastName: string; line1: string; phone: string; storeId?: string; storeName?: string; storeAddr?: string; }
-interface RequestBody { items: CartItem[]; contact: ContactInfo; addr: AddressInfo; total: number; shipMethod: string; payMethod?: string; coupon?: { code: string; amount: number } | null; }
+interface RequestBody { items: CartItem[]; contact: ContactInfo; addr: AddressInfo; total: number; shipMethod: string; payMethod?: string; coupon?: { code: string; amount: number } | null; memberDiscount?: number; }
 
 function getEcpayDate(): string {
   const d = new Date();
@@ -71,7 +72,43 @@ export async function POST(req: Request) {
     let loggedInCustomerId = (session as any)?.customerId || 0;
 
     const body: RequestBody = await req.json();
-    const { items, contact, addr, total, shipMethod, payMethod, coupon } = body;
+    const { items, contact, addr, total, shipMethod, payMethod, coupon, memberDiscount } = body;
+
+    // ============================================================================
+    // 🛡️ 後端計價防護網 (平衡版：嚴格驗算數學邏輯，完美相容 WooCommerce 變體與外掛)
+    // ============================================================================
+    let calculatedSubtotal = 0;
+    for (const item of items) {
+      // 確保至少有傳入 ID
+      if (!item.wcProductId && !item.id) {
+        return NextResponse.json({ ok: false, message: "商品資料異常" }, { status: 400 });
+      }
+      // 計算小計：單價 x 數量
+      calculatedSubtotal += Number(item.price) * Number(item.qty);
+    }
+
+    const claimedMemberDiscount = Number(memberDiscount) || 0;
+    const claimedCouponDiscount = coupon ? Number(coupon.amount) || 0 : 0;
+    const totalDiscount = claimedMemberDiscount + claimedCouponDiscount;
+    const discountedSubtotal = Math.max(0, calculatedSubtotal - totalDiscount);
+
+    // 🌟 後端真實運費邏輯
+    const freeShipThreshold = 1500;
+    let realShippingCost = 0;
+    
+    if (discountedSubtotal < freeShipThreshold && discountedSubtotal > 0) {
+      // ⚠️ 如果之後要改回超商 80 元，把下面這行的 0 改成 80 即可！
+      realShippingCost = shipMethod === "000" ? 105 : 0; 
+    }
+
+    const secureTotalAmount = discountedSubtotal + realShippingCost;
+
+    // 比對前端傳來的總金額是否與後端算出來的一致 (容許1元誤差)
+    if (Math.abs(secureTotalAmount - Number(total)) > 1) {
+      console.error(`[資安攔截] 數學驗算不符！前端金額:${total} / 後端計算金額:${secureTotalAmount}`);
+      return NextResponse.json({ ok: false, message: "訂單金額驗證失敗，請重新整理頁面。" }, { status: 403 });
+    }
+    // ============================================================================
 
     const safeLastName = (addr.lastName || "").replace(/\s+/g, "");
     const safeFirstName = (addr.firstName || "").replace(/\s+/g, "");
@@ -85,9 +122,7 @@ export async function POST(req: Request) {
         });
         if (cRes.ok) {
           const cArr = await cRes.json();
-          if (Array.isArray(cArr) && cArr.length > 0) {
-            loggedInCustomerId = cArr[0].id;
-          }
+          if (Array.isArray(cArr) && cArr.length > 0) loggedInCustomerId = cArr[0].id;
         }
       } catch (e) {}
     }
@@ -113,34 +148,25 @@ export async function POST(req: Request) {
           let finalStoreId = String(addr.storeId);
           const sName = addr.storeName || "";
           
-          // 🚀 精準物流分流與「客製化補零」防呆機制
           if (shipMethod === "711" || sName.includes("7-11") || sName.includes("統一")) {
             methodId = "ry_ecpay_shipping_cvs_711"; 
             shippingTitle = "綠界物流 超商取貨 7-ELEVEN";
-            finalStoreId = finalStoreId.padStart(6, '0'); // 7-11 補滿 6 碼
-            
+            finalStoreId = finalStoreId.padStart(6, '0');
           } else if (shipMethod === "HILIFE" || sName.includes("萊爾富")) {
             methodId = "ry_ecpay_shipping_cvs_hilife"; 
             shippingTitle = "綠界物流 超商取貨 萊爾富";
-            // ⚠️ 萊爾富通常為 4 碼，絕對不可強制補滿 6 碼！移除前端可能誤補的 00
-            if (finalStoreId.length > 4 && finalStoreId.startsWith("00")) {
-              finalStoreId = finalStoreId.replace(/^0+/, ''); 
-            }
-            
+            if (finalStoreId.length > 4 && finalStoreId.startsWith("00")) finalStoreId = finalStoreId.replace(/^0+/, ''); 
           } else if (shipMethod === "OKMART" || sName.includes("OK") || sName.toUpperCase().includes("OKMART")) {
             methodId = "ry_ecpay_shipping_cvs_ok"; 
             shippingTitle = "綠界物流 超商取貨 OK超商";
-            // OK 超商維持原樣傳送
-            
           } else {
             methodId = "ry_ecpay_shipping_cvs_family"; 
             shippingTitle = "綠界物流 超商取貨 全家";
-            finalStoreId = finalStoreId.padStart(6, '0'); // 全家必須補滿 6 碼
+            finalStoreId = finalStoreId.padStart(6, '0');
           }
           
           finalAddress = `${addr.storeName} (${finalStoreId}) - ${addr.storeAddr}`;
           
-          // 🚀 100% 原生極簡 Meta Data (不再亂塞暗號，回歸最純淨的 C2C 呼叫)
           meta_data.push(
             { key: "_shipping_cvs_store_ID", value: finalStoreId },
             { key: "_shipping_cvs_store_name", value: addr.storeName },
@@ -150,6 +176,10 @@ export async function POST(req: Request) {
         }
 
         if (coupon?.code) meta_data.push({ key: "_used_coupon_code", value: coupon.code });
+
+        const fee_lines = [];
+        if (claimedMemberDiscount > 0) fee_lines.push({ name: "UFLOW 會員專屬優惠", total: String(-claimedMemberDiscount) });
+        if (claimedCouponDiscount > 0 && coupon?.code) fee_lines.push({ name: `優惠券折抵 (${coupon.code})`, total: String(-claimedCouponDiscount) });
 
         const wcOrderPayload = {
           customer_id: loggedInCustomerId, 
@@ -165,8 +195,10 @@ export async function POST(req: Request) {
             first_name: safeFirstName, last_name: safeLastName,
             address_1: finalAddress, country: "TW",
           },
-          shipping_lines: [{ method_id: methodId, method_title: shippingTitle, total: "80" }],
-          line_items: items.map((it) => ({ product_id: it.wcProductId, quantity: it.qty })),
+          shipping_lines: [{ method_id: methodId, method_title: shippingTitle, total: String(realShippingCost) }],
+          fee_lines: fee_lines,
+          // 🚀 防呆：如果 wcProductId 是 undefined，就抓 id
+          line_items: items.map((it) => ({ product_id: Number(it.wcProductId || it.id), quantity: Number(it.qty) })),
           meta_data: meta_data, 
         };
 
@@ -182,7 +214,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const totalAmountString = Math.floor(Number(total) || 0).toString();
+    const finalGatewayAmount = Math.round(secureTotalAmount).toString(); 
     const domain = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; 
 
     if (payMethod === "linepay") {
@@ -193,24 +225,26 @@ export async function POST(req: Request) {
       const nonce = crypto.randomUUID();
       const uri = "/v3/payments/request";
       const lpPayload = {
-        amount: Number(totalAmountString),
+        amount: Number(finalGatewayAmount),
         currency: "TWD",
         orderId: tradeNo,
         packages: [
           {
             id: `PKG_${orderId}`,
-            amount: Number(totalAmountString),
+            amount: Number(finalGatewayAmount),
             name: "UFLOW 訂單",
-            products: items.map(it => ({
-              id: String(it.wcProductId || "product"),
-              name: it.title,
-              quantity: it.qty,
-              price: it.price
-            }))
+            products: [
+              {
+                id: "ORDER_TOTAL",
+                name: "UFLOW 官方商城訂單總計",
+                quantity: 1,
+                price: Number(finalGatewayAmount) 
+              }
+            ]
           }
         ],
         redirectUrls: {
-          confirmUrl: `${domain}/api/linepay/confirm?orderId=${orderId}&tradeNo=${tradeNo}`, 
+          confirmUrl: `${domain}/api/linepay/confirm?orderId=${orderId}&tradeNo=${tradeNo}&amount=${finalGatewayAmount}`, 
           cancelUrl: `${domain}/cart` 
         }
       };
@@ -218,7 +252,7 @@ export async function POST(req: Request) {
       const payloadString = JSON.stringify(lpPayload);
       const signature = generateLinePaySignature(uri, payloadString, nonce);
 
-      const lpRes = await fetch(LINEPAY_URL, {
+      const lpRes = await fetch(`${LINEPAY_BASE_URL}${uri}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -243,7 +277,7 @@ export async function POST(req: Request) {
         MerchantTradeNo: tradeNo,
         MerchantTradeDate: getEcpayDate(),
         PaymentType: "aio",
-        TotalAmount: totalAmountString,
+        TotalAmount: finalGatewayAmount,
         TradeDesc: ecpayEncode("Uflow_Shop"),
         ItemName: cleanItemName,
         ReturnURL: `${domain}/api/ecpay/callback`,
@@ -253,7 +287,7 @@ export async function POST(req: Request) {
         EncryptType: "1",
         CustomField1: String(orderId),
         CustomField2: contact.email,
-        CustomField3: totalAmountString,
+        CustomField3: finalGatewayAmount,
       };
 
       const checkMacValue = generateCheckMacValue(ecpayParams);
@@ -269,6 +303,6 @@ export async function POST(req: Request) {
     }
 
   } catch (e: any) {
-    return NextResponse.json({ ok: false, message: e.message || "Unknown Error" }, { status: 500 });
+    return NextResponse.json({ ok: false, message: "伺服器發生錯誤" }, { status: 500 });
   }
 }

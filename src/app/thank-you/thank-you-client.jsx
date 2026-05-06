@@ -12,7 +12,7 @@ function ThankYouContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 pb-20">
-      <div className="max-w-md w-full bg-white border border-gray-100 shadow-2xl shadow-emerald-900/5 rounded-3xl p-10 text-center animate-in zoom-in-95 duration-500">
+      <div className="max-w-md w-full bg-white border mt-20 border-gray-100  shadow-emerald-900/5  p-10 text-center animate-in zoom-in-95 duration-500">
         {/* 成功圖示 */}
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center relative">

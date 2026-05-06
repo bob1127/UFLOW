@@ -43,6 +43,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gcm.org.tw', // 🚀 新增這個網域，解決 Invalid src prop 報錯
       }
     ],
   },
