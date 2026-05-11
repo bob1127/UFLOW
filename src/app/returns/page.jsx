@@ -64,7 +64,7 @@ export default function ReturnsPage() {
                       聯絡我們
                     </Link>{" "}
                     或撥打客服專線
-                    0978-138-979，提供您的「訂單編號」及「退貨原因」。
+                    0978-038-797，提供您的「訂單編號」及「退貨原因」。
                   </li>
                   <li>
                     <span className="font-bold text-gray-900">確認退貨：</span>

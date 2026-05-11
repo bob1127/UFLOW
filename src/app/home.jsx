@@ -272,8 +272,7 @@ export default function Home({ faqs = [] }) {
                   重返 17 歲的元氣，遠離惡體質。
                 </p>
                 <p className="tracking-wider text-sm sm:text-[15px] font-normal leading-relaxed">
-                  堅持「植萃天然」與「科學創新」。
-                  我們選用國際大廠專利原料，以科學實證的足量配方，為您找回身體原本的循環與平衡，打造簡單且富有活力的健康生活。
+                  選用國際大廠專利原料，以科學的足量，為您找回身體原本的循環與平衡，打造簡單且富有活力的健康生活。
                 </p>
               </div>
             </div>

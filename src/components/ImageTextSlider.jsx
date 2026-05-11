@@ -14,31 +14,20 @@ const data = [
     price: "重建17歲の素顏元氣",
     description: "不用蘋果光 也會有的澎澎自然",
     detail:
-      "不用打光，肌膚也能自帶澎潤感！UFLOW 肽晶芙蓉專為對美極度要求的妳設計 。嚴選四大國際專利原料：美國微脂體穀胱甘肽提升 200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦光傷害，抑制黑色素 ；搭配 24 小時長效維生素 C 與比利時正矽酸 ，由內而外撐起肌膚的「彈、緊、嫩」。",
-    mainImages: [
-      "/images/DSCF7850.jpg",
-      "/images/粉色01.png",
-    ],
-    subImages: [
-      "/images/粉003.png",
-      "/images/DSCF7774.jpg",
-    ],
+      "  不用打光，也能自帶澎潤感！UFLOW肽晶芙蓉專為對美極度要求的妳設計嚴選四大國際專利原料：美國微脂體穀胱甘肽提升200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦傷害， 搭配維生素C 與比利時美適矽(正矽酸復合物)，由內而外撐起神級美「彈、緊、嫩」。",
+    mainImages: ["/images/DSCF7850.jpg", "/images/粉色01.png"],
+    subImages: ["/images/粉003.png", "/images/DSCF7774.jpg"],
   },
   {
     title: "GABA鎂鎂香蜂草",
-    subtitle: "不是一次性「把身體壓下來」，而是陪伴身體，走過一整天的節奏變化。",
+    subtitle:
+      "不是一次性「把身體壓下來」，而是陪伴身體，走過一整天的節奏變化。",
     price: "國際原廠，專利足量",
-    description:
-      "節奏管理，不必等臨界線失控 ",
-    detail: "不是失眠才需要，而是為了不過勞的你！UFLOW 獨創「1+1」保養哲學：白天一顆維持專注活力，夜晚一顆溫柔撫慰入眠 。嚴選三大國際頂規原料：韓國專利 GABA 穩定情緒、義大利高吸收鎂幫助代謝、法國香蜂草深層放鬆 。全成分產地、劑量透明公開，無藥性、零依賴，素食可食 。",
-    mainImages: [
-      "/images/鎂鎂香峰草-01.jpg",
-      "/images/DSCF7801.jpg",
-    ],
-    subImages: [
-      "/images/三種01.png",
-      "/images/藍色.png",
-    ],
+    description: "節奏管理，不必等臨界線失控 ",
+    detail:
+      "不是失眠才需要，而是為了不過勞的你！UFLOW 獨創「1+1」保養哲學：白天一顆維持專注活力，夜晚一顆溫柔撫慰入眠 。嚴選三大國際頂規原料：韓國專利 GABA 穩定情緒、義大利高吸收鎂幫助代謝、法國香蜂草深層放鬆 。全成分產地、劑量透明公開，無藥性、零依賴，素食可食 。",
+    mainImages: ["/images/鎂鎂香峰草-01.jpg", "/images/DSCF7801.jpg"],
+    subImages: ["/images/三種01.png", "/images/藍色.png"],
   },
 ];
 
@@ -60,7 +49,7 @@ export default function ImageTextSlider({
         return next;
       });
     },
-    [total]
+    [total],
   );
 
   const next = useCallback(() => {

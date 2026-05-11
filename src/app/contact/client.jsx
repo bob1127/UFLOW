@@ -272,10 +272,10 @@ export default function ContactPage() {
               <span className="text-xl font-bold tracking-[0.2em]">TEL</span>
             </div>
             <a
-              href="tel:0978138979"
+              href="tel:0978038797"
               className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 hover:text-blue-400 transition-colors duration-300"
             >
-              0978-138-979
+              0978-038-797
             </a>
             <p className="text-stone-700 text-sm tracking-widest bg-white/10 px-4 py-2 rounded-full">
               營業時間 09:00 - 18:00

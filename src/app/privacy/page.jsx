@@ -122,7 +122,7 @@ export default function PrivacyPage() {
                 如果您對我們的隱私權政策有任何疑問，歡迎透過以下方式聯繫：
                 <br />
                 電子信箱：uflowspace@gmail.com <br />
-                聯絡電話：0978-138-979
+                聯絡電話：0978-038-797
               </p>
             </div>
           </div>

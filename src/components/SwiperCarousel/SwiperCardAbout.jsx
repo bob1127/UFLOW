@@ -120,7 +120,7 @@ export default function SwiperCardAbout({
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
           <Image
-            src="/images/index/slider/1920x850/重返17歲の元氣_主打微脂體肽晶芙蓉_uflow-慶安有福保健食品.webp"
+            src="/images/index/slider/1920x850/重返17歲の元氣.png"
             width={1920}
             height={850}
             placeholder="empty"
@@ -128,7 +128,7 @@ export default function SwiperCardAbout({
             className="w-full xl:block  hidden"
           ></Image>
           <Image
-            src="/images/index/slider/1024x576/重建17歲的元氣.webp"
+            src="/images/index/slider/1024x576/重建17歲的元氣-01.png"
             width={1024}
             height={576}
             placeholder="empty"
@@ -136,7 +136,7 @@ export default function SwiperCardAbout({
             className="w-full xl:hidden md:block  hidden"
           ></Image>
           <Image
-            src="/images/index/slider/600x600/重建17歲的元氣.webp"
+            src="/images/index/slider/600x600/重建17歲的元氣-02.png"
             width={600}
             height={600}
             placeholder="empty"

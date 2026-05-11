@@ -89,13 +89,13 @@ const TextParallaxContentExample = () => {
             </h2>
             <div className="mt-5 text-center lg:text-left">
               <h3 className="text-lg sm:text-xl lg:text-2xl text-stone-50 font-normal my-2 drop-shadow-md">
-                舒壓好眠．能量代謝的科學新方
+                舒壓好眠．能量循環的科學新方
               </h3>
               <h3 className="text-lg sm:text-xl lg:text-2xl text-stone-50 font-normal my-2 drop-shadow-md">
                 專利GABA x 速可包覆鎂 x 法國香蜂草
               </h3>
             </div>
-            <p className="leading-relaxed text-stone-50 tracking-wider mt-4 text-justify lg:text-left text-sm sm:text-base drop-shadow-sm">
+            <p className="leading-relaxed text-stone-50 tracking-wider mt-4  !text-left t lg:text-left text-sm sm:text-base drop-shadow-sm">
               針對生活步調緊湊、壓力大與睡眠品質不佳的現代人設計 。嚴選韓國專利
               GABAEX® (500mg) 作為情緒煞車，搭配義大利 SideMag® 速可包覆鎂
               (200mg)，利用 Sucrosomial® 專利技術提升吸收率達 300%
@@ -212,7 +212,7 @@ const TextParallaxContentExample = () => {
                     </span>
                     。 這些菌株均經過業界最高標準的連續式酸性與膽鹽環境測試。
                     特別添加專利 Totipro® 益萃質®
-                    (PE0401)，經實驗證實能有效全面提升消化道表皮組織的屏障力，從根本打造健康的細菌叢生態。
+                    ，經實驗證實能有效全面提升消化道表皮組織的屏障力，從根本打造健康的細菌叢生態。
                   </p>
                 </div>
 
@@ -473,8 +473,10 @@ const ExampleContent = () => {
                   晶透源頭：LiposoMax® <br className="hidden lg:block" />
                   微脂體穀胱甘肽
                 </h3>
-                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
-                  採用美國專利微脂體技術，突破吸收極限，讓高濃度穀胱甘肽直達肌底，由內而外綻放極致透亮光采。
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed  !text-left t lg:text-center">
+                  採用美國專利微脂體技術，突破吸收極限， <br></br>
+                  讓高濃度穀胱甘肽直達肌底，
+                  <br></br>由內而外綻放極致透亮光采。
                 </p>
               </div>
             </div>
@@ -499,8 +501,10 @@ const ExampleContent = () => {
                   隱形防護：Phytonoid® <br className="hidden lg:block" />
                   日本冰晶番茄
                 </h3>
-                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
-                  嚴選日本專利冰晶番茄，富含珍稀植萃能量，有效抵禦外在光線刺激，為肌膚撐起全天候的隱形防護傘。
+                <p className="text-gray-600 !text-left text-sm lg:text-[15px] leading-relaxed   lg:text-center">
+                  嚴選日本專利冰晶番茄，富含珍稀植萃能量，
+                  <br></br> 有效抵禦外在光線刺激，<br></br>
+                  為肌膚撐起全天候的隱形防護傘。
                 </p>
               </div>
             </div>
@@ -528,8 +532,10 @@ const ExampleContent = () => {
                   彈力支撐：Mesoporosil® <br className="hidden lg:block" />
                   比利時正矽酸
                 </h3>
-                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
-                  比利時專利正矽酸複合物，能穩固膠原蛋白結構，精準支撐肌底彈力網，重現青春必備的緊緻與澎潤感。
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed  !text-left t lg:text-center">
+                  比利時專利正矽酸複合物， <br></br>能穩固膠原蛋白結構，{" "}
+                  <br></br>
+                  精準支撐肌底彈力網， <br></br>重現青春必備的緊緻與澎潤感。
                 </p>
               </div>
             </div>
@@ -554,9 +560,10 @@ const ExampleContent = () => {
                   抗氧封存：PUREWAY-C® <br className="hidden lg:block" />
                   複方維生素 C
                 </h3>
-                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed text-justify lg:text-center">
-                  結合美國複方維生素
-                  C，以卓越抗氧化力進行協同作用，全方位喚回肌膚彈、緊、嫩，打造無瑕芙蓉貴婦肌。
+                <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed  !text-left t lg:text-center">
+                  結合美國複方維生素 C， <br></br>以卓越抗氧化力進行協同作用，{" "}
+                  <br></br>
+                  全方位喚回肌膚 <br></br>彈、緊、嫩，打造無瑕芙蓉貴婦肌。
                 </p>
               </div>
             </div>

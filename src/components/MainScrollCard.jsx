@@ -168,7 +168,7 @@ export default function Home() {
                     <div className="mt-2">
                       <b>科學調配 </b>
                       <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                        足量攝取 能量代謝新配方
+                        足量攝取 能量循環新配方
                       </p>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="absolute top-20 right-0 text-3xl md:text-4xl font-bold text-white -rotate-6 hidden sm:block">
-                  能量代謝！
+                  能量循環！
                 </div>
                 <div className="absolute -top-6 md:-top-12 w-[180px] md:w-[260px] md:left-[43%] z-20">
                   <img
@@ -312,9 +312,9 @@ export default function Home() {
                     GABA鎂鎂香蜂草
                   </h2>
                   <p className="font-normal text-lg md:text-xl mb-4 text-[#f2f2f2] leading-relaxed drop-shadow-sm">
-                    科學調配 足量攝取 能量代謝新配方
+                    科學調配 足量攝取 能量循環新配方
                     <br />
-                    日間補充提振精神 +夜間補充助眠 +壓力時刻可緩解焦慮。
+                    日間補充提振精神 +夜間補充助眠
                   </p>
                   <Link href="http://localhost:3000/products/gaba%e9%8e%82%e9%8e%82%e9%a6%99%e8%9c%82%e8%8d%89">
                     <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-[#4492E3] transition duration-300 shadow-md">
@@ -390,7 +390,7 @@ export default function Home() {
                     <br />
                     台灣專利功能菌種配方保衛健康 合生元 (Synbiotics)
                     將益生菌與益生元結合，提升益生菌存活
-                    添加專利益萃質®維護細菌叢健康幫助消化
+                    添加專利益萃質®維護細菌叢健康
                   </p>
 
                   {/* ✨ 關鍵修改：模擬圖片中的列表和細節 (無襯線) */}
@@ -399,7 +399,7 @@ export default function Home() {
                     <div className="space-y-1 text-sm text-gray-600 font-medium">
                       <p>01-幫助消化</p>
                       <p>02-維持細菌叢健康</p>
-                      <p>03-提昇存活率</p>
+                      <p>03-提升益生菌續航力</p>
                     </div>
                     {/* ✨ 在列表旁邊添加一個空心圓裝飾，呼應線條終點 */}
                     <div className="w-[30px] h-[30px] border-[1px] border-gray-900/40 rounded-full hidden md:block"></div>
@@ -444,14 +444,14 @@ export default function Home() {
                     肽晶芙蓉
                   </h2>
                   <h3 className="text-xl md:text-2xl mb-4 font-medium relative z-10">
-                    重建 17 歲素顏元氣，醫美級的透亮保養
+                    重建 17 歲素顏元氣，醫美族的透亮保養
                   </h3>
                   <p className="text-sm md:text-base leading-7 md:leading-8 mb-8 text-white/90 relative z-10">
-                    不用打光，肌膚也能自帶澎潤感！UFLOW
+                    不用打光，也能自帶澎潤感！UFLOW
                     肽晶芙蓉專為對美極度要求的妳設計嚴選四大國際專利原料：美國微脂體穀胱甘肽提升
-                    200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦光傷害，抑制黑色素
-                    ；搭配 24 小時長效維生素 C 與比利時正矽酸
-                    ，由內而外撐起肌膚的「彈、緊、嫩」。
+                    200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦傷害， 搭配維生素
+                    C 與比利時美適矽(正矽酸復合物)
+                    ，由內而外撐起神級美「彈、緊、嫩」。
                   </p>
                   <Link href="https://www.uflow.space/products/%e8%82%bd%e6%99%b6%e8%8a%99%e8%93%89">
                     <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-stone-800 transition">
