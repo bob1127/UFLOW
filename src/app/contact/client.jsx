@@ -278,7 +278,7 @@ export default function ContactPage() {
               0978-038-797
             </a>
             <p className="text-stone-700 text-sm tracking-widest bg-white/10 px-4 py-2 rounded-full">
-              營業時間 09:00 - 18:00
+              營業時間 11:00 - 18:00
             </p>
           </div>
 

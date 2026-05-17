@@ -89,11 +89,11 @@ const EmblaCarousel = (props) => {
                 paddingLeft: "var(--slide-spacing)",
               }}
             >
-              <div className="bottom-btn absolute z-30 bottom-[-20px] left-1/2 -translate-x-1/2">
+              {/* <div className="bottom-btn absolute z-30 bottom-[-20px] left-1/2 -translate-x-1/2">
                 <div className="bg-[#333] w-[50px] rounded-full flex justify-center items-center h-[50px] text-white">
                   ▼
                 </div>
-              </div>
+              </div> */}
               <div
                 className="embla__slide__number border border-black bg-white pt-0 pb-[35px] flex flex-col items-center justify-center relative overflow-hidden"
                 style={{
@@ -113,7 +113,7 @@ const EmblaCarousel = (props) => {
                     {slide.content ? (
                       slide.content
                     ) : (
-                      <div className="w-full aspect-[3/3] p-10 relative overflow-hidden">
+                      <div className="w-full aspect-[3/3] p-2 relative overflow-hidden">
                         <Image
                           src={slide.image}
                           alt={slide.title}
@@ -126,9 +126,11 @@ const EmblaCarousel = (props) => {
                       </div>
                     )}
                     <div className="txt mt-5 flex-col flex justify-center items-center w-4/5 mx-auto">
-                      <p className="text-[14px] font-normal text-center">
-                        {slide.description}
-                      </p>
+                      <div className="w-[80%] h-[100px]">
+                        <p className="text-[14px] font-normal text-center">
+                          {slide.description}
+                        </p>
+                      </div>
                       <div className="mt-2 flex flex-wrap justify-center gap-2">
                         {slide.tags?.map((tag, i) => (
                           <span

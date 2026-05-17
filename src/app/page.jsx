@@ -1,5 +1,6 @@
 // app/page.jsx
 import Client from "./home";
+import { fetchAllProducts } from "@/lib/woo"; // 🚀 引入抓取商品的 API
 
 // 🌟 1. 動態獲取網址，解決本地端與正式機網址判定問題
 const getSiteUrl = () => {
@@ -11,7 +12,7 @@ const getSiteUrl = () => {
 
 const SITE_URL = getSiteUrl();
 
-// 🌟 首頁動態 FAQ 資料 (融入品牌核心關鍵字，提升語意豐富度)
+// 🌟 首頁動態 FAQ 資料
 const homeFAQs = [
   {
     question: "UFLOW 的保健食品與市售產品有何不同？",
@@ -31,7 +32,7 @@ const homeFAQs = [
 ];
 
 export const metadata = {
-  metadataBase: new URL(SITE_URL), // 設定 base URL，讓後續路徑可使用相對路徑
+  metadataBase: new URL(SITE_URL),
   title: "UFLOW 慶安有福｜功能性保健食品｜肽晶芙蓉・GABA鎂鎂・維他菌合生元",
   description:
     "UFLOW 專注於功能性保健食品，堅持「國際原廠、專利足量」。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，全系列通過第三方檢驗，為您打造科學營養補給。",
@@ -54,27 +55,27 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: "/", // 因為設了 metadataBase，這裡使用相對路徑
+    url: "/",
     siteName: "UFLOW 慶安有福",
     title: "UFLOW 慶安有福｜功能性保健食品｜專為亞洲體質研發",
     description:
       "堅持國際原廠、專利足量！從養顏美容(肽晶芙蓉)、日夜放鬆(GABA鎂鎂香蜂草)到消化道健康(維他菌合生元)，UFLOW 讓日常補給更科學、更有效率。",
     images: [
       {
-        url: "/images/肽晶芙蓉/重返17歲の元氣-850.png", // 使用相對路徑
+        url: "/images/肽晶芙蓉/重返17歲の元氣-850.png",
         width: 1200,
         height: 630,
         alt: "UFLOW 功能性保健食品品牌形象",
       },
     ],
   },
-  alternates: { canonical: "/" }, // 使用相對路徑
+  alternates: { canonical: "/" },
 };
 
 export const revalidate = 60;
 
-export default function Page() {
-  // ===================== 👑 結構化資料 1：網站基礎資訊 (WebSite) =====================
+// 🚀 改為 async 函式，支援伺服器端抓取資料
+export default async function Page() {
   const schemaWebSite = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -95,7 +96,6 @@ export default function Page() {
     },
   };
 
-  // ===================== 👑 結構化資料 2：公司/品牌實體 (Organization) =====================
   const schemaOrganization = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -127,7 +127,6 @@ export default function Page() {
     ],
   };
 
-  // ===================== 👑 結構化資料 3：網頁資訊 (WebPage) =====================
   const schemaWebPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -140,7 +139,6 @@ export default function Page() {
       "UFLOW 專注於功能性保健食品。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，讓你補得安心、每日有感。",
   };
 
-  // ===================== 👑 結構化資料 4：首頁常見問題 (FAQPage) =====================
   const schemaFAQ = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -155,7 +153,6 @@ export default function Page() {
     })),
   };
 
-  // ===================== 👑 結構化資料 5：焦點商品列表 (ItemList) =====================
   const schemaItemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -179,15 +176,23 @@ export default function Page() {
       {
         "@type": "ListItem",
         position: 3,
-        url: `${SITE_URL}/products/synbiotics`, // 若網址不同請自行修改 slug
+        url: `${SITE_URL}/products/synbiotics`,
         name: "維他菌合生元",
       },
     ],
   };
 
+  // 🚀 核心：在伺服器端抓取 WooCommerce 商品資料
+  let items = [];
+  try {
+    items = await fetchAllProducts();
+    console.log("🌐 [首頁] 成功抓取 WooCommerce 商品數量:", items?.length);
+  } catch (error) {
+    console.error("❌ 首頁抓取產品失敗:", error);
+  }
+
   return (
     <>
-      {/* 獨立拆分，逐一注入 JSON-LD，確保不在 div 包裝內 */}
       <script
         type="application/ld+json"
         id="schema-website"
@@ -214,7 +219,8 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaItemList) }}
       />
 
-      <Client faqs={homeFAQs} />
+      {/* 🚀 把 faqs 和 items 一起傳遞給前端畫面 */}
+      <Client faqs={homeFAQs} items={items} />
     </>
   );
 }

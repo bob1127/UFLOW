@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 // 註冊 GSAP
 gsap.registerPlugin(useGSAP);
 
@@ -365,72 +365,114 @@ export default function FeatureShowcase() {
 
         {/* --- 2. 雙卡片導覽區塊 --- */}
         <section className="w-full border-t border-gray-100 bg-white mt-1 rounded-[6px] overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3">
             {/* 卡片 1 */}
-            <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 border-b lg:border-b-0 lg:border-r border-gray-100 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
-              <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
-                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6 uppercase">
-                  .Philosophy
-                </span>
-                <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
-                  從日常找回健康節奏
-                </h3>
-                <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
-                  讓健康成為一種簡單、自然的生活方式
-                </p>
-
-                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
-                  <span className="text-[11px] font-bold text-gray-700 tracking-widest">
-                    了解更多
+            <Link href="/products/gaba鎂鎂香蜂草">
+              {" "}
+              <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 border-b lg:border-b-0 lg:border-r border-gray-100 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
+                <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
+                  <span className="font-serif text-gray-400 text-xl md:text-xl tracking-widest block mb-6 uppercase">
+                    .Philosophy
                   </span>
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
-                    <ArrowRight size={10} strokeWidth={2.5} />
+                  <h3 className="text-xl md:text-[20px] font-bold text-gray-900 mb-3 tracking-wide">
+                    從日常找回健康節奏
+                  </h3>
+                  <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
+                    讓健康成為一種簡單、自然的生活方式
+                  </p>
+
+                  <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                    <span className="text-[11px] font-bold text-gray-700 tracking-widest">
+                      了解更多
+                    </span>
+                    <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                      <ArrowRight size={10} strokeWidth={2.5} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                <Image
-                  src="/images/DSCF7801.jpg"
-                  fill
-                  className="object-cover"
-                  alt="Philosophy"
-                />
+                <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                  <Image
+                    src="/images/DSCF7801.jpg"
+                    fill
+                    className="object-cover"
+                    alt="科學調配-足量攝取能量代謝新方-GABA鎂鎂香蜂草"
+                    placeholder="empty"
+                  />
+                </div>
               </div>
-            </div>
-
+            </Link>
             {/* 卡片 2 */}
-            <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
-              <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
-                <span className="font-serif text-gray-400 text-xl md:text-2xl tracking-widest block mb-6 uppercase">
-                  .Quality & Safety
-                </span>
-                <h3 className="text-xl md:text-[22px] font-bold text-gray-900 mb-3 tracking-wide">
-                  嚴格把關的品質承諾
-                </h3>
-                <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
-                  全產品通過多項國際與台灣專業檢驗認證
-                </p>
-
-                <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
-                  <span className="text-[11px] font-bold text-gray-700 tracking-widest">
-                    了解更多
+            <Link href="/products/肽晶芙蓉">
+              {" "}
+              <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
+                <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
+                  <span className="font-serif text-gray-400 text-xl md:text-xl tracking-widest block mb-6 uppercase">
+                    .Quality & Safety
                   </span>
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
-                    <ArrowRight size={10} strokeWidth={2.5} />
+                  <h3 className="text-xl md:text-[20px] font-bold text-gray-900 mb-3 tracking-wide">
+                    嚴格把關的品質承諾
+                  </h3>
+                  <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
+                    全產品通過多項國際與台灣專業檢驗認證
+                  </p>
+
+                  <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                    <span className="text-[11px] font-bold text-gray-700 tracking-widest">
+                      了解更多
+                    </span>
+                    <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                      <ArrowRight size={10} strokeWidth={2.5} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                <Image
-                  src="/images/00912.png"
-                  fill
-                  className="object-cover"
-                  alt="Quality"
-                />
+                <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                  <Image
+                    src="/images/粉色01.png"
+                    fill
+                    className="object-cover"
+                    alt="維持日常健康機能，打造純淨好體質-肽晶芙蓉"
+                    placeholder="empty"
+                  />
+                </div>
               </div>
-            </div>
+            </Link>
+            <Link href="/products/synbiotics">
+              {" "}
+              <div className="group flex flex-col md:flex-row items-center justify-between p-10 md:p-16 lg:p-20 hover:bg-[#fafafa] transition-colors duration-500 cursor-pointer">
+                <div className="flex-1 pr-8 mb-8 md:mb-0 text-center md:text-left relative z-10">
+                  <span className="font-serif text-gray-400 text-xl md:text-xl tracking-widest block mb-6 uppercase">
+                    .Quality & Safety
+                  </span>
+                  <h3 className="text-xl md:text-[20px] font-bold text-gray-900 mb-3 tracking-wide">
+                    嚴格把關的品質承諾
+                  </h3>
+                  <p className="text-[13px] md:text-sm text-gray-500 mb-12 tracking-wider">
+                    全產品通過多項國際與台灣專業檢驗認證
+                  </p>
+
+                  <div className="inline-flex items-center gap-3 border-b border-gray-200 pb-2 group-hover:border-gray-800 transition-colors duration-300">
+                    <span className="text-[11px] font-bold text-gray-700 tracking-widest">
+                      了解更多
+                    </span>
+                    <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-gray-800 group-hover:text-white transition-all duration-300">
+                      <ArrowRight size={10} strokeWidth={2.5} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shrink-0 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                  <Image
+                    src="/images/DSCF7878.jpg"
+                    fill
+                    className="object-cover"
+                    alt="Quality"
+                    placeholder="empty"
+                  />
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
 
@@ -462,7 +504,8 @@ export default function FeatureShowcase() {
                     src="/images/DSCF7850.jpg"
                     fill
                     className="object-cover"
-                    alt="Products"
+                    alt="維他菌合生元 (Synbiotics)-結合益生菌與益生元之營養補給概念"
+                    placeholder="empty"
                   />
                 </div>
 

@@ -1,3 +1,4 @@
+// app/home.jsx
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
@@ -22,10 +23,29 @@ import Marquee from "react-fast-marquee";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// 🌟 接收 Server (page.jsx) 傳來的 faqs 資料
-export default function Home({ faqs = [] }) {
+// 🌟 接收 Server (page.jsx) 傳來的 faqs 與 items 資料
+export default function Home({ faqs = [], items = [] }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  // 🚀 智慧配對邏輯：自動從 WooCommerce 抓到的 items 找出對應商品
+  const peptidesData = items.find((p) => p.name?.includes("芙蓉"));
+  const peptides = {
+    name: peptidesData?.name || "肽晶芙蓉",
+    slug: peptidesData?.slug || "肽晶芙蓉",
+    price: peptidesData?.price || "---",
+    regular: peptidesData?.regular_price || "---",
+    image: peptidesData?.images?.[0]?.src || "/images/DSCF7894.jpg",
+  };
+
+  const gabaData = items.find((p) => p.name?.toUpperCase().includes("GABA"));
+  const gaba = {
+    name: gabaData?.name || "GABA 鎂鎂香蜂草",
+    slug: gabaData?.slug || "gaba鎂鎂香蜂草",
+    price: gabaData?.price || "---",
+    regular: gabaData?.regular_price || "---",
+    image: gabaData?.images?.[0]?.src || "/images/DSCF7801.jpg",
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -187,22 +207,24 @@ export default function Home({ faqs = [] }) {
           )}
         </AnimatePresence>
 
-        <MainScrollCard />
+        {/* 🚀 如果你的 MainScrollCard 裡面需要用到價格，就把 items 傳進去 */}
+        <MainScrollCard items={items} />
 
+        {/* 動態產品連結區塊 */}
         <section className="section-two-column xl:w-[95%] sm:w-[90%] w-full mx-auto pt-20">
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             <Link
-              href="/products/肽晶芙蓉"
+              href="/blog/專業驗光師大推-我選擇uflow-肽晶芙蓉-營養補給複"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
             >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
-                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-4xl 2xl:text-5xl">
+                    <h2 className="font-bold text-white leading-none text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
                       肽晶芙蓉
                     </h2>
-                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-4xl 2xl:text-5xl">
+                    <h2 className="font-bold text-white leading-none mt-2  text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
                       國際原廠 專利足量
                     </h2>
                   </div>
@@ -224,17 +246,17 @@ export default function Home({ faqs = [] }) {
             </Link>
 
             <Link
-              href="/products/gaba鎂鎂香蜂草"
+              href="/blog/藥師不藏私推薦-溫和幫助入睡採大廠頂尖原料-uflow-gaba"
               className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
             >
               <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
               <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
                 <div className="w-full h-full flex justify-between flex-col">
                   <div>
-                    <h2 className="font-bold text-white leading-none text-3xl sm:text-3xl md:text-3xl xl:text-3xl 2xl:text-5xl">
+                    <h2 className="font-bold text-white leading-none text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
                       GABA 鎂鎂香蜂草
                     </h2>
-                    <h2 className="font-bold text-white leading-none mt-2 text-3xl sm:text-3xl md:text-3xl xl:text-3xl 2xl:text-5xl">
+                    <h2 className="font-bold text-white leading-none mt-2  text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
                       國際原廠 專利足量
                     </h2>
                   </div>
@@ -255,9 +277,40 @@ export default function Home({ faqs = [] }) {
                 fill
               />
             </Link>
+            <Link
+              href="/blog/男神營養師：忙碌上班族的日常營養補給策略-uflow維"
+              className="aspect-[1/1] group relative overflow-hidden m-4 sm:m-5 block"
+            >
+              <div className="description border border-white scale-110 md:scale-125 group-hover:scale-100 duration-400 transition-all w-[94%] md:w-[90%] absolute z-50 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
+              <div className="description p-5 sm:p-7 md:p-10 duration-400 transition-all w-[94%] md:w-[90%] absolute z-40 h-[94%] md:h-[90%] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+                <div className="w-full h-full flex justify-between flex-col">
+                  <div>
+                    <h2 className="font-bold text-white leading-none  text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
+                      GABA 鎂鎂香蜂草
+                    </h2>
+                    <h2 className="font-bold text-white leading-none mt-2  text-lg sm:text-xl md:text-xl xl:text-2xl 2xl:text-3xl">
+                      國際原廠 專利足量
+                    </h2>
+                  </div>
+                  <div className="w-full lg:w-1/2 mt-4 md:mt-0">
+                    <p className="text-white tracking-widest leading-relaxed text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px]">
+                      適用族群： 高壓工作型態者、腦袋停不下來 作息與飲食不規律者
+                      調時差、長途搭機者 飲酒頻率較高者 睡眠品質不穩定者
+                      規律運動與健身族群
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Image
+                src="/images/DSCF7806.jpg"
+                alt="img"
+                className="object-cover scale-100 group-hover:scale-110 duration-500"
+                loading="lazy"
+                fill
+              />
+            </Link>
           </div>
         </section>
-
         <section className="section-main-products w-full pt-16 sm:pt-20">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="text max-w-xl md:max-w-[500px] pt-4 md:pt-0 pb-4 md:pb-0 md:pr-6">
@@ -309,7 +362,8 @@ export default function Home({ faqs = [] }) {
             className="w-full overflow-hidden mt-4 sm:mt-6"
             ref={carouselRef}
           >
-            <Carousel />
+            {/* 🚀 如果你的 Carousel 裡面需要用到價格，就把 items 傳進去 */}
+            <Carousel items={items} />
           </div>
         </section>
 

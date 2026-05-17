@@ -524,13 +524,13 @@ const ExampleContent = () => {
                   width={600}
                   height={400}
                   className="w-full h-auto object-contain"
-                  alt="Mesoporosil® 比利時正矽酸"
+                  alt="Mesoporosil® 美適矽正矽酸"
                 />
               </div>
               <div className="flex flex-col justify-center items-center w-full space-y-3 text-center">
                 <h3 className="text-lg lg:text-xl font-bold leading-snug">
                   彈力支撐：Mesoporosil® <br className="hidden lg:block" />
-                  比利時正矽酸
+                  美適矽正矽酸
                 </h3>
                 <p className="text-gray-600 text-sm lg:text-[15px] leading-relaxed  !text-left t lg:text-center">
                   比利時專利正矽酸複合物， <br></br>能穩固膠原蛋白結構，{" "}

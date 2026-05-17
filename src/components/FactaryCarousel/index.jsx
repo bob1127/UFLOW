@@ -12,7 +12,7 @@ const SLIDES = [
     link: "/products/gaba鎂鎂香蜂草", // 👈 加上專屬連結 (請依據實際 slug 修改)
     shortDescription: "舒緩放鬆，重拾夜間寧靜。",
     description:
-      "結合韓國 GABA、義大利 SideMag® 鎂與法國香蜂草萃取。科學調配，幫助入睡，讓您重返 17 歲的元氣。",
+      "結合韓國 GABA、義大利 SideMag® 鎂與法國香蜂草萃取。科學調配，幫助入睡。",
     tags: ["睡眠支援", "放鬆", "鎂"],
     publishDate: "Hot Sale",
     region: "Global Patents",
@@ -36,7 +36,7 @@ const SLIDES = [
     link: "/products/肽晶芙蓉", // 👈 加上專屬連結
     shortDescription: "煥發光采，由內而外的透亮自信。",
     description:
-      "專為美麗設計的植萃配方，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",
+      "專為美麗設計，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",
     tags: ["養顏美容", "青春光采", "植萃"],
     publishDate: "Best Seller",
     region: "Beauty",
@@ -48,7 +48,7 @@ const SLIDES = [
     link: "/products/gaba-magnesium", // 👈 對應連結
     shortDescription: "舒緩放鬆，重拾夜間寧靜。",
     description:
-      "結合韓國 GABA、義大利 SideMag® 鎂與法國香蜂草萃取。科學調配，幫助入睡，讓您重返 17 歲的元氣。",
+      "結合韓國 GABA、義大利 SideMag® 鎂與法國香蜂草萃取。科學調配，幫助入睡。",
     tags: ["睡眠支援", "放鬆", "鎂"],
     publishDate: "Hot Sale",
     region: "Global Patents",
@@ -70,7 +70,7 @@ const SLIDES = [
     link: "/products/肽晶芙蓉", // 👈 對應連結
     shortDescription: "煥發光采，由內而外的透亮自信。",
     description:
-      "專為美麗設計的植萃配方，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",
+      "專為美麗設計，滋補養顏，維持青春美麗。讓每一天都像盛開的芙蓉般耀眼迷人。",
     tags: ["養顏美容", "青春光采", "植萃"],
     publishDate: "Best Seller",
     region: "Beauty",
