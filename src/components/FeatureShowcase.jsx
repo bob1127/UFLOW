@@ -5,7 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Play } from "lucide-react";
 import { Link } from "next-view-transitions";
 // 註冊 GSAP
 gsap.registerPlugin(useGSAP);
@@ -214,7 +214,7 @@ export default function FeatureShowcase() {
       {/* ==============================================
           左側 Sticky 導覽列
           ============================================== */}
-      <div className="left-nav w-[60px] md:w-[80px] shrink-0 p-1 relative z-40">
+      <div className="left-nav w-[60px] hidden sm:block md:w-[80px] shrink-0 p-1 relative z-40">
         <aside
           className={`sticky-nav bg-white rounded-[6px] h-[calc(100vh-80px)] w-full sticky flex flex-col justify-between items-center py-8 border border-gray-100 shadow-[0_0_15px_rgba(0,0,0,0.03)] transition-all duration-300 ease-in-out ${
             isScrollingUp
@@ -258,7 +258,7 @@ export default function FeatureShowcase() {
       {/* ==============================================
           右側主要內容區塊 (Main)
           ============================================== */}
-      <div className="main flex-1 p-1 pl-0 min-w-0">
+      <div className="main w-full flex-1 p-1 min-w-0 md:pl-0">
         {/* --- 1. Hero Feature Slider 區塊 --- */}
         <section
           ref={containerRef}
@@ -476,112 +476,210 @@ export default function FeatureShowcase() {
           </div>
         </section>
 
-        {/* --- 3. Consultation 詳細預約區塊 --- */}
-        <section className="w-full py-24 px-6 md:px-12 lg:px-20 bg-white font-sans overflow-hidden border-t border-gray-100 mt-1 rounded-[6px]">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="flex justify-between items-end mb-16 border-b border-gray-200 pb-6">
-              <h2 className="text-5xl md:text-[64px] font-serif text-[#333333] tracking-tight">
+        {/* --- 3. Products 區塊 (HA-RU STAFF INTERVIEW style) --- */}
+        <section className="mt-1 w-full overflow-hidden rounded-[6px] border-t border-gray-100 bg-white px-6 py-16 font-sans md:px-12 md:py-20 lg:px-16">
+          <div className="mx-auto max-w-[1400px]">
+            <div className="mb-12 flex items-end justify-between border-b border-gray-200 pb-6 md:mb-16">
+              <h2 className="text-5xl font-black uppercase tracking-tight text-gray-900 md:text-[64px]">
                 Products
               </h2>
-              <span className="text-sm font-bold text-gray-700 tracking-widest mb-2">
+              <span className="mb-1 text-sm font-bold tracking-widest text-gray-700">
                 慶安有福 保健食品
               </span>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-              <div className="lg:col-span-5 lg:pr-8 pt-4">
-                <p className="text-gray-800 leading-[2.2] mb-8 font-medium text-[16px] md:text-[18px]">
+            {/* 文字區：HA-RU RECRUIT 雙欄排版 */}
+            <div className="mb-14 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
+              {/* 左：大標 + 內文 */}
+              <div className="lg:pr-6">
+                <h3 className="text-[clamp(1.75rem,4.5vw,3rem)] font-black leading-[1.15] tracking-tight text-gray-900">
+                  探索慶安有福全系列保健食品
+                </h3>
+                <p className="mt-4 text-base font-bold text-gray-900 md:text-lg">
+                  找到最適合您的健康方案。
+                </p>
+                <p className="mt-8 text-sm leading-[2.2] text-gray-700 md:text-[15px]">
                   我們嚴格挑選成分，確保每一項產品都能帶來實質的健康助益。慶安有福，與您一起守護健康每一天。
                 </p>
-                <p className="text-gray-600 leading-[2.2] text-[16px] md:text-[18px]">
+                <p className="mt-6 text-sm leading-[2.2] text-gray-700 md:text-[15px]">
                   從養顏美容到日常舒壓，我們提供多樣化的保健食品選擇。探索我們的產品，為您量身打造專屬的保健計畫。
                 </p>
+                <div className="mt-10 text-[10px] leading-[1.9] tracking-wide text-gray-500 md:text-[11px]">
+                  <p>※ 產品詳細資訊請參閱包裝標示。</p>
+                  <p className="mt-1">
+                    ※
+                    孕婦、哺乳期婦女或患有特殊疾病者，食用前建議先諮詢醫師意見。
+                  </p>
+                </div>
               </div>
 
-              <div className="lg:col-span-7 flex flex-col mt-8 lg:mt-0 relative">
-                <div className="hidden md:block absolute right-[-20px] lg:right-[-60px] top-[45%] -translate-y-1/2 w-64 h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden shadow-lg border-[6px] border-white z-20">
-                  <Image
-                    src="/images/DSCF7850.jpg"
-                    fill
-                    className="object-cover"
-                    alt="維他菌合生元 (Synbiotics)-結合益生菌與益生元之營養補給概念"
-                    placeholder="empty"
-                  />
-                </div>
+              {/* 右：項目列表 */}
+              <div className="flex flex-col">
+                {[
+                  ["產品種類", "多樣選擇"],
+                  ["品質保證", "多項國際與台灣專業檢驗認證"],
+                  ["嚴選成分・高效吸收", "科學實證"],
+                ].map(([label, value], index) => (
+                  <div
+                    key={label}
+                    className={`group py-8 md:py-10 ${
+                      index === 0 ? "border-t border-gray-200" : ""
+                    } border-b border-gray-200`}
+                  >
+                    <p className="text-xl font-black uppercase tracking-tight text-gray-900 md:text-2xl lg:text-[1.75rem]">
+                      {label}
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-gray-800 md:text-base">
+                      {value}
+                    </p>
+                    <div className="mt-4 h-[2px] w-10 bg-gray-900 transition-all duration-300 group-hover:w-20" />
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                <div className="bg-[#f2f6f7] p-8 md:p-12 lg:p-16 relative flex-1 z-10 rounded-t-sm">
-                  <div className="relative z-20 w-full md:max-w-[65%] lg:max-w-[70%]">
-                    <div className="text-center mb-10 relative">
-                      <span className="bg-[#f2f6f7] px-4 text-[11px] font-bold tracking-widest text-gray-800 relative z-10 uppercase">
-                        Our Products
-                      </span>
-                      <div className="absolute top-1/2 left-0 w-full border-t border-dotted border-gray-400 z-0"></div>
+            {/* 圖片展示網格 */}
+            <div className="relative">
+              <div className="absolute inset-0">
+                <div className="h-[42%] bg-white" />
+                <div className="h-[58%] bg-white " />
+              </div>
+
+              <div className="relative pb-28 pt-4 md:pb-32 md:pt-6">
+                {/* 三欄排版：整體縮窄，右欄頂部對齊中欄 */}
+                <div className="relative z-10 mx-auto w-full max-w-[880px] px-2 lg:max-w-[960px] md:px-0">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-10 md:items-start md:gap-4 lg:gap-5">
+                    {/* 手機版：標題放在第一區塊上方 */}
+                    <div className="relative z-10 px-2 md:hidden">
+                      <h3
+                        className="text-left font-black uppercase leading-none tracking-tight text-transparent"
+                        style={{
+                          fontSize: "clamp(2rem, 9vw, 3rem)",
+                          WebkitTextStroke: "1.5px #111",
+                          paintOrder: "stroke fill",
+                        }}
+                      >
+                        OUR
+                      </h3>
+                      <h3
+                        className="mt-1  font-black uppercase leading-none tracking-tight text-transparent"
+                        style={{
+                          fontSize: "clamp(2rem, 9vw, 3rem)",
+                          WebkitTextStroke: "1.5px #111",
+                          paintOrder: "stroke fill",
+                        }}
+                      >
+                        PRODUCTS
+                      </h3>
+                      <p className="mt-2  text-[10px] font-bold tracking-[0.3em] text-gray-900">
+                        全系列保健食品
+                      </p>
                     </div>
 
-                    <div className="inline-block bg-[#f57d7d] text-white text-sm font-bold px-6 py-2.5 rounded-full mb-8 tracking-widest">
-                      熱銷推薦
+                    {/* 左：直式高圖 */}
+                    <div className="group relative h-[400px] overflow-hidden rounded-tl-[70px] rounded-bl-[70px] bg-gray-300 sm:h-[420px] md:col-span-3 md:h-[580px] md:rounded-tl-[100px] md:rounded-bl-[100px] lg:h-[620px]">
+                      <Image
+                        src="/images/DSCF7801.jpg"
+                        fill
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        alt="GABA鎂鎂香蜂草"
+                        sizes="(max-width: 768px) 100vw, 35vw"
+                      />
+                      <div className="absolute inset-0 z-[1] bg-black/45 transition-colors duration-500 group-hover:bg-black/25" />
+                      <p className="absolute bottom-5 right-5 z-[2] text-right text-[10px] leading-relaxed text-white md:bottom-6 md:right-6 md:text-[11px]">
+                        <span className="opacity-90">植萃天然 / 嚴選原料</span>
+                        <br />
+                        <span className="text-sm font-bold md:text-base">
+                          GABA鎂鎂香蜂草
+                        </span>
+                      </p>
                     </div>
 
-                    <h3 className="text-lg md:text-[22px] font-bold text-gray-900 leading-[1.8] mb-12">
-                      <span className="border-b-[1.5px] border-gray-800 pb-1">
-                        探索慶安有福全系列保健食品
-                      </span>
-                      <br />
-                      <span className="border-b-[1.5px] border-gray-800 pb-1 inline-block mt-3">
-                        找到最適合您的健康方案。
-                      </span>
-                    </h3>
-
-                    <div className="flex flex-col mb-10">
-                      <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
-                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
-                          產品種類
-                        </span>
-                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          多樣選擇
-                        </span>
+                    {/* 中：標題 + 橫圖（縮窄） */}
+                    <div className="flex flex-col md:col-span-4 md:mt-20 md:h-[500px] lg:mt-24 lg:h-[520px]">
+                      <div className="pointer-events-none relative z-20 mb-0 hidden w-full md:mb-0 md:flex md:flex-1 md:pt-16 lg:pt-20">
+                        <div className="mx-auto w-full max-w-[260px] md:max-w-none">
+                          <h3
+                            className="text-left font-black uppercase leading-none tracking-tight text-transparent"
+                            style={{
+                              fontSize: "clamp(1.8rem, 4vw, 3.5rem)",
+                              WebkitTextStroke: "1.5px #111",
+                              paintOrder: "stroke fill",
+                            }}
+                          >
+                            OUR
+                          </h3>
+                          <h3
+                            className="mt-1 font-black uppercase leading-none tracking-tight text-transparent md:mt-2"
+                            style={{
+                              fontSize: "clamp(1.8rem, 4vw, 3.5rem)",
+                              WebkitTextStroke: "1.5px #111",
+                              paintOrder: "stroke fill",
+                            }}
+                          >
+                            PRODUCTS
+                          </h3>
+                          <p className="mt-2 text-[10px] font-bold tracking-[0.3em] text-gray-900 md:mt-3 md:text-[11px]">
+                            全系列保健食品
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center py-5 border-t border-dotted border-gray-400">
-                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider">
-                          品質保證
-                        </span>
-                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          多項國際與台灣專業檢驗認證
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-5 border-t border-b border-dotted border-gray-400">
-                        <span className="text-[13px] md:text-[15px] font-bold text-gray-700 tracking-wider leading-relaxed">
-                          嚴選成分・
+                      <div className="group relative h-[400px] shrink-0 overflow-hidden bg-gray-300 sm:h-[420px] md:h-[230px] lg:h-[250px]">
+                        <Image
+                          src="/images/粉色01.png"
+                          fill
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                          alt="肽晶芙蓉"
+                          sizes="(max-width: 768px) 100vw, 25vw"
+                        />
+                        <div className="absolute inset-0 z-[1] bg-black/45 transition-colors duration-500 group-hover:bg-black/25" />
+                        <p className="absolute bottom-5 right-5 z-[2] text-right text-[10px] leading-relaxed text-white md:bottom-6 md:right-6 md:text-[11px]">
+                          <span className="opacity-90">
+                            科學調配 / 透亮保養
+                          </span>
                           <br />
-                          高效吸收
-                        </span>
-                        <span className="text-[15px] md:text-[17px] font-bold text-gray-900">
-                          科學實證
-                        </span>
+                          <span className="text-sm font-bold md:text-base">
+                            肽晶芙蓉
+                          </span>
+                        </p>
                       </div>
                     </div>
 
-                    <div className="text-[10px] md:text-[11px] text-gray-500 leading-[1.8] tracking-wider">
-                      <p>※ 產品詳細資訊請參閱包裝標示。</p>
-                      <p>
-                        ※
-                        孕婦、哺乳期婦女或患有特殊疾病者，食用前建議先諮詢醫師意見。
+                    {/* 右：直式高圖，頂部對齊中欄圖片 */}
+                    <div className="group relative h-[400px] overflow-hidden rounded-tr-[70px] rounded-br-[70px] bg-gray-300 sm:h-[420px] md:col-span-3 md:mt-[350px] md:h-[400px] md:rounded-tr-[100px] md:rounded-br-[100px] lg:mt-[366px] lg:h-[560px]">
+                      <Image
+                        src="/images/DSCF7850.jpg"
+                        fill
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        alt="維他菌合生元"
+                        sizes="(max-width: 768px) 100vw, 30vw"
+                      />
+                      <div className="absolute inset-0 z-[1] bg-black/45 transition-colors duration-500 group-hover:bg-black/25" />
+                      <p className="absolute bottom-5 left-5 z-[2] text-[10px] leading-relaxed text-white md:bottom-6 md:left-6 md:text-[11px]">
+                        <span className="opacity-90">合生元 / 專利菌種</span>
+                        <br />
+                        <span className="text-sm font-bold md:text-base">
+                          維他菌合生元
+                        </span>
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-[#f5a49f] hover:bg-[#f87777] transition-colors duration-300 py-6 md:py-8 px-8 md:px-12 flex justify-between items-center group rounded-b-sm relative z-20">
-                  <Link href="/products">
-                    {" "}
-                    <span className="text-gray-900 font-bold text-lg tracking-widest">
+                {/* 右下探索連結 */}
+                <div className="absolute bottom-6 right-0 z-20 md:bottom-10">
+                  <Link
+                    href="/products"
+                    className="group inline-flex items-center gap-4 border-b border-gray-900 pb-2 transition-colors hover:border-gray-600"
+                  >
+                    <span className="text-sm font-bold tracking-widest text-gray-900 md:text-base">
                       探索所有產品
                     </span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-white transition-transform duration-300 group-hover:translate-x-1">
+                      <ArrowRight size={14} strokeWidth={3} />
+                    </span>
                   </Link>
-                  <div className="w-7 h-7 rounded-full bg-[#3b3f42] flex items-center justify-center text-white group-hover:translate-x-2 transition-transform duration-300">
-                    <ArrowRight size={14} strokeWidth={3} />
-                  </div>
-                </button>
+                </div>
               </div>
             </div>
           </div>

@@ -1417,7 +1417,7 @@ function CheckoutStep({
             >
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100 shadow-sm shrink-0 p-1">
                 <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/2/2a/LINE_logo.svg"
+                  src="/images/linepay-icon.png"
                   alt="LINE Pay"
                   className="w-full h-full object-contain"
                 />

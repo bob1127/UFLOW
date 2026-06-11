@@ -1,6 +1,33 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+/* Apple 中文官網字體堆疊（系統字體，零載入延遲） */
+@layer base {
+  :root {
+    --font-apple:
+      -apple-system, BlinkMacSystemFont,
+      "SF Pro TC", "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+      "PingFang TC", "PingFang SC",
+      "Helvetica Neue", Helvetica, Arial,
+      "Microsoft JhengHei", "Microsoft YaHei",
+      "Noto Sans TC", "Noto Sans SC",
+      sans-serif;
+  }
+
+  html {
+    font-family: var(--font-apple);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: inherit;
+    font-synthesis: none;
+  }
+}
+
 @font-face {
   font-family: 'DF-01';
   src: url('/fonts/DF-01.ttf') format('truetype');

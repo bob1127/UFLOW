@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/all";
 import dynamic from "next/dynamic";
 import { ReactLenis } from "lenis/react";
 import { Link } from "next-view-transitions";
+import { ArrowRight } from "lucide-react";
 import ShowCase from "../components/FeatureShowcase";
 import Image from "next/image";
 
@@ -16,38 +17,35 @@ const Slider = dynamic(
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const SLANT_HEIGHT = 150;
+const SLANT_HEIGHT = 120;
 
-const CardWrapper = ({ children, index, totalCards, className = "" }) => {
+const CardWrapper = ({ children, index, totalCards }) => {
   const isFirst = index === 0;
   const isLast = index === totalCards - 1;
   const hasSlant = !isFirst && !isLast;
 
   let cardStyle = {};
-  let innerPadding = "pt-20 md:pt-32";
+  let innerPadding = "pt-16 md:pt-24";
 
   if (hasSlant) {
     cardStyle = {
       clipPath: `polygon(0 ${SLANT_HEIGHT}px, 100% 0, 100% 100%, 0 100%)`,
       marginTop: `-${SLANT_HEIGHT}px`,
     };
-    innerPadding = "pt-[200px] md:pt-[220px]";
+    innerPadding = "pt-[140px] md:pt-[180px]";
   } else if (isLast) {
-    cardStyle = {
-      clipPath: "none",
-      marginTop: "0px",
-    };
-    innerPadding = "pt-20 md:pt-32";
+    cardStyle = { clipPath: "none", marginTop: "0px" };
+    innerPadding = "pt-16 md:pt-24";
   }
 
   return (
     <div
-      className={`card sticky top-0 flex w-full h-screen flex-col ${className}`}
+      className="card sticky top-0 flex h-screen w-full flex-col"
       id={`card-${index + 1}`}
       style={cardStyle}
     >
       <div
-        className={`card-inner relative overflow-hidden h-full w-full px-6 pb-20 md:px-12 ${innerPadding}`}
+        className={`card-inner group/card relative h-full w-full overflow-hidden ${innerPadding}`}
       >
         {children}
       </div>
@@ -55,10 +53,114 @@ const CardWrapper = ({ children, index, totalCards, className = "" }) => {
   );
 };
 
+const ProductScrollCard = ({
+  sectionLabel,
+  heading,
+  subLabel,
+  description,
+  price,
+  slug,
+  bgImage,
+}) => {
+  const [labelMain, labelSub] = sectionLabel.includes(" ")
+    ? sectionLabel.split(" ")
+    : [sectionLabel, ""];
+
+  return (
+    <>
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        {bgImage && (
+          <img
+            src={bgImage}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-105"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/70 transition-colors duration-700 group-hover/card:bg-black/60" />
+      </div>
+
+      {/* Content — CONTACT 風格三欄 */}
+      <div className="relative z-10 flex h-full flex-col justify-center px-6 py-16 md:px-12 md:py-20 lg:px-20">
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 items-end gap-10 md:grid-cols-12 md:gap-6 lg:gap-8">
+          {/* 左：描邊大標 + 副標 + 說明 */}
+          <div className="md:col-span-4 md:self-start md:pt-8 lg:pt-16">
+            <div className="pointer-events-none select-none">
+              <h2
+                className="font-black uppercase leading-[0.9] tracking-tight text-transparent"
+                style={{
+                  fontSize: "clamp(3rem, 9vw, 6.5rem)",
+                  WebkitTextStroke: "1.5px rgba(255,255,255,0.9)",
+                  paintOrder: "stroke fill",
+                }}
+              >
+                {labelMain}
+              </h2>
+              {labelSub && (
+                <h2
+                  className="-mt-1 font-black uppercase leading-[0.9] tracking-tight text-transparent md:-mt-2"
+                  style={{
+                    fontSize: "clamp(3rem, 9vw, 6.5rem)",
+                    WebkitTextStroke: "1.5px rgba(255,255,255,0.9)",
+                    paintOrder: "stroke fill",
+                  }}
+                >
+                  {labelSub}
+                </h2>
+              )}
+            </div>
+            <p className="mt-5 text-sm font-bold text-white md:mt-6 md:text-base">
+              {subLabel}
+            </p>
+            <p className="mt-4 max-w-sm text-xs leading-[1.9] text-white/75 md:text-sm">
+              {description}
+            </p>
+            <p className="mt-5 text-base font-bold text-white md:mt-6 md:text-lg">
+              優惠價 NT${price}
+            </p>
+          </div>
+
+          {/* 中：箭頭 */}
+          <div className="hidden md:col-span-1 md:flex md:items-end md:justify-center md:pb-[clamp(4rem,12vh,8rem)]">
+            <Link
+              href={`/products/${slug}`}
+              className="group/arrow flex h-16 w-16 items-center justify-center text-white/80 transition-all duration-500 hover:text-white"
+              aria-label="查看產品"
+            >
+              <ArrowRight
+                size={40}
+                strokeWidth={1.2}
+                className="transition-transform duration-500 group-hover/arrow:translate-x-2"
+              />
+            </Link>
+          </div>
+
+          {/* 右：大標主文案 */}
+          <div className="md:col-span-7 md:mt-16 lg:col-span-7 lg:mt-24">
+            <h3 className="text-3xl font-black leading-[1.05] tracking-tight text-white transition-transform duration-500 group-hover/card:-translate-y-1 sm:text-2xl md:text-ˇxl lg:text-[ˇ.5rem] xl:text-[ˋrem]">
+              {heading}
+            </h3>
+            <Link
+              href={`/products/${slug}`}
+              className="group/link mt-8 inline-flex items-center gap-3 border-b border-white/40 pb-2 text-sm font-bold tracking-widest text-white transition-colors hover:border-white md:mt-10 md:hidden"
+            >
+              了解更多
+              <ArrowRight
+                size={16}
+                className="transition-transform group-hover/link:translate-x-1"
+              />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // 🌟 關鍵修改：從 props 接收 items (所有商品資料)
 export default function HomeClient({ items = [] }) {
   const container = useRef();
-  const TOTAL_CARDS = 4;
+  const TOTAL_CARDS = 3;
 
   // 🚀 智慧配對邏輯：自動從 items 找出對應商品，若找不到則給予預設值防呆
   const gabaData = items.find((p) => p.name.toUpperCase().includes("GABA"));
@@ -68,7 +170,8 @@ export default function HomeClient({ items = [] }) {
     price: gabaData?.price || "---",
     regular: gabaData?.regular_price || "---",
     image: gabaData?.images?.[0]?.src || "/images/GABA鎂鎂香蜂草.png",
-    cardImage: "/images/DSCF7664.png", // 滿版情境圖維持不變
+    cardImage: "/images/70e8daf1-c621-49f1-a08f-54c933c6b82c.png",
+    // 滿版情境圖維持不變
   };
 
   const synbioticsData = items.find(
@@ -81,7 +184,7 @@ export default function HomeClient({ items = [] }) {
     price: synbioticsData?.price || "---",
     regular: synbioticsData?.regular_price || "---",
     image: synbioticsData?.images?.[0]?.src || "/images/維他菌-合生元.png",
-    cardImage: "/images/DSCF7622.png",
+    cardImage: "/images/6b538aec-f3e9-45c8-aeb4-3b85c814d251.png",
   };
 
   const peptidesData = items.find(
@@ -93,7 +196,7 @@ export default function HomeClient({ items = [] }) {
     price: peptidesData?.price || "---",
     regular: peptidesData?.regular_price || "---",
     image: peptidesData?.images?.[0]?.src || "/images/00912.png",
-    cardImage: "/images/粉紅.png",
+    cardImage: "/images/2894d77a-1a15-4b49-b982-8cc7a09e8029.png",
   };
 
   useGSAP(
@@ -287,186 +390,79 @@ export default function HomeClient({ items = [] }) {
           </div>
         </section>
 
-        {/* Cards Section */}
+        {/* Cards Section — Sansei-style diagonal scroll cards */}
         <section className="cards relative z-10 w-full">
-          {/* === CARD 1: GABA === */}
-          <CardWrapper
-            index={0}
-            totalCards={TOTAL_CARDS}
-            className="bg-gradient-to-b from-[#233DCC] via-[#4492E3] to-[#E0BBE1] text-white"
-          >
-            <div className="absolute right-10 top-40 opacity-10 font-black text-9xl rotate-90 hidden md:block pointer-events-none">
-              UFLOW
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full items-center">
-              <div className="md:col-span-7 relative min-h-[350px] md:min-h-[500px] flex items-center justify-center w-full">
-                <div className="absolute top-0 md:top-10 left-4 md:left-10 w-32 h-32 md:w-48 md:h-48 bg-white/30 rotate-[-12deg] shadow-lg rounded-lg overflow-hidden border-4 border-white">
-                  <img
-                    src="/images/難以入眠.jpg"
-                    className="w-full h-full object-cover"
-                    alt="Rusk"
-                  />
-                </div>
-                <div className="absolute bottom-10 md:top-40 right-4 md:left-60 w-32 h-32 md:w-48 md:h-48 bg-white/30 rotate-[-12deg] shadow-lg rounded-lg overflow-hidden border-4 border-white">
-                  <img
-                    src="/images/難以入眠.jpg"
-                    className="w-full h-full object-cover"
-                    alt="Rusk"
-                  />
-                </div>
-                <div className="relative md:absolute md:bottom-[-50%] left-[-45%] xl:left-[-10%] z-10 w-[400px] md:w-[750px]">
-                  <img
-                    src={gaba.cardImage}
-                    className="w-full h-auto object-contain"
-                    alt={gaba.name}
-                  />
-                </div>
-                <div className="absolute top-20 right-0 text-3xl md:text-4xl font-bold text-white -rotate-6 hidden sm:block">
-                  能量循環！
-                </div>
-                <div className="absolute -top-6 md:-top-12 w-[180px] md:w-[260px] md:left-[43%] z-20">
-                  <img
-                    src="/images/新配方.png"
-                    className="w-full h-auto object-contain"
-                    alt="New"
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-5 flex flex-col justify-center relative z-20 px-4 md:px-0 mt-8 md:mt-0">
-                <div className="max-w-md mx-auto md:mx-0">
-                  <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter text-[#f2f2f2] drop-shadow-sm">
-                    {gaba.name}
-                  </h2>
-                  <p className="font-normal text-lg md:text-xl mb-4 text-[#f2f2f2] leading-relaxed drop-shadow-sm">
-                    科學調配 足量攝取 能量循環新配方
-                    <br />
-                    日間補充穩定精神 +夜間補充助眠
-                  </p>
-                  <p className="text-xl font-bold text-white mb-4">
-                    優惠價 NT${gaba.price}
-                  </p>
-                  <Link href={`/products/${gaba.slug}`}>
-                    <button className="mt-6 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-[#4492E3] transition duration-300 shadow-md">
-                      MORE
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <CardWrapper index={0} totalCards={TOTAL_CARDS}>
+            <ProductScrollCard
+              heading={
+                <>
+                  科學調配 足量攝取
+                  <br />
+                  能量循環新配方
+                </>
+              }
+              subLabel={gaba.name}
+              sectionLabel="UFLOW 01"
+              description={
+                <>
+                  {gaba.name} — 科學調配 足量攝取 能量循環新配方。
+                  日間補充穩定精神 + 夜間補充助眠。
+                </>
+              }
+              price={gaba.price}
+              slug={gaba.slug}
+              bgImage={gaba.cardImage}
+            />
           </CardWrapper>
 
-          {/* === CARD 2: 合生元 === */}
-          <CardWrapper
-            index={1}
-            totalCards={TOTAL_CARDS}
-            className="bg-[#EAEAEA] text-gray-900 relative overflow-hidden"
-          >
-            <div className="absolute -bottom-[20%] -right-[10%] w-[80%] h-[80%] bg-[#bfff00] rounded-full mix-blend-multiply filter blur-[150px] opacity-70 pointer-events-none"></div>
-            <div className="absolute -bottom-[10%] -left-[10%] w-[60%] h-[60%] bg-[#00ffff] rounded-full mix-blend-multiply filter blur-[150px] opacity-50 pointer-events-none"></div>
-            <div className="absolute bottom-[35%] right-[10%] w-[40px] h-[40px] border-[0.5px] border-gray-900/40 rounded-full pointer-events-none hidden md:block"></div>
-            <svg
-              className="absolute top-0 right-0 w-[400px] h-full pointer-events-none stroke-gray-900/20 fill-none hidden md:block"
-              strokeWidth="0.5"
-            >
-              <path d="M 400 0 C 300 150, 100 200, 15 350" />
-            </svg>
-
-            <div className="flex flex-col md:flex-row-reverse h-full items-center justify-between gap-12 mt-12 md:mt-0 relative z-10 p-10">
-              <div className="flex-1 relative w-full flex justify-center">
-                <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-[500px] md:h-[500px] lg:w-[680px] lg:h-[680px]">
-                  <div className="absolute inset-0 md:top-[-10%]">
-                    <img
-                      src={synbiotics.cardImage}
-                      className="w-full h-full object-contain opacity-90 drop-shadow-xl"
-                      alt={synbiotics.name}
-                    />
-                  </div>
-                  <div className="absolute -top-6 -left-4 md:-top-10 md:-left-10 text-4xl md:text-6xl font-black text-gray-900/10 -rotate-12">
-                    UFLOW
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 w-full max-w-xl z-10 px-4 md:px-0">
-                <div className="md:pl-10 py-4 space-y-6 relative">
-                  <div className="absolute -top-6 -left-4 font-black text-gray-900/5 rotate-[-12deg] text-3xl hidden md:block">
-                    e
-                  </div>
-                  <h3 className="text-gray-600 font-bold tracking-widest text-sm md:text-base uppercase">
-                    合生元 (Synbiotics)
-                  </h3>
-                  <h2 className="text-5xl md:text-7xl font-serif font-black leading-none tracking-tight text-gray-900 pb-2 border-b border-gray-900">
-                    {synbiotics.name}
-                  </h2>
-                  <p className="text-base md:text-lg leading-loose text-gray-700 font-medium">
-                    科學調配 足量攝取 舒暢滿點
-                    <br />
-                    台灣專利功能菌種配方保衛健康 合生元 (Synbiotics)
-                    將益生菌與益生元結合，提升益生菌存活
-                    添加專利益萃質®維護細菌叢健康
-                  </p>
-                  <div className="flex items-center gap-10">
-                    <div className="space-y-1 text-sm text-gray-600 font-medium">
-                      <p>01-幫助消化</p>
-                      <p>02-維持細菌叢健康</p>
-                      <p>03-提升益生菌續航力</p>
-                    </div>
-                    <div className="w-[30px] h-[30px] border-[1px] border-gray-900/40 rounded-full hidden md:block"></div>
-                  </div>
-                  <p className="text-xl font-bold text-gray-900">
-                    優惠價 NT${synbiotics.price}
-                  </p>
-                  <Link href={`/products/${synbiotics.slug}`}>
-                    <button className="mt-4 border border-gray-900 text-gray-900 px-8 py-2.5 rounded-full font-bold hover:bg-gray-900 hover:text-white transition duration-300">
-                      MORE
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <CardWrapper index={1} totalCards={TOTAL_CARDS}>
+            <ProductScrollCard
+              heading={
+                <>
+                  台灣專利功能菌種
+                  <br />
+                  配方保衛健康
+                </>
+              }
+              subLabel="合生元 Synbiotics"
+              sectionLabel="UFLOW 02"
+              description={
+                <>
+                  {synbiotics.name} — 科學調配 足量攝取 舒暢滿點。合生元
+                  (Synbiotics)
+                  將益生菌與益生元結合，提升益生菌存活。添加專利益萃質®
+                  維護細菌叢健康。01-幫助消化、02-維持細菌叢健康、03-提升益生菌續航力。
+                </>
+              }
+              price={synbiotics.price}
+              slug={synbiotics.slug}
+              bgImage={synbiotics.cardImage}
+            />
           </CardWrapper>
 
-          {/* === CARD 3: 肽晶芙蓉 === */}
-          <CardWrapper
-            index={2}
-            totalCards={TOTAL_CARDS}
-            className="bg-[#f49898] text-white"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 h-full w-full gap-8">
-              <div className="w-full flex justify-center items-center relative min-h-[300px] md:min-h-full">
-                <img
-                  src={peptides.cardImage}
-                  className="w-3/4 max-w-[400px] md:max-w-full md:w-[80%] lg:w-[550px] object-contain"
-                  alt={peptides.name}
-                />
-              </div>
-              <div className="flex flex-col justify-center px-4 py-8 md:p-16">
-                <div className="relative">
-                  <span className="absolute -top-10 right-0 md:-top-20 md:-right-4 text-3xl md:text-5xl font-black rotate-12 text-white/40">
-                    國際原廠，專利足量
-                  </span>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6 md:mb-8 border-b-4 border-white/30 pb-4 inline-block relative z-10">
-                    {peptides.name}
-                  </h2>
-                  <h3 className="text-xl md:text-2xl mb-4 font-medium relative z-10">
-                    重建 17 歲素顏元氣，醫美族的透亮保養
-                  </h3>
-                  <p className="text-sm md:text-base leading-7 md:leading-8 mb-8 text-white/90 relative z-10">
-                    不用打光，也能自帶澎潤感！UFLOW
-                    肽晶芙蓉專為對美極度要求的妳設計嚴選四大國際專利原料：美國微脂體穀胱甘肽提升
-                    200% 吸收率，高效抗氧化 ；日本冰晶番茄抵禦傷害， 搭配維生素
-                    C 與比利時美適矽(正矽酸復合物) ，由內而外撐起神級美。
-                  </p>
-                  <p className="text-xl font-bold text-white mb-4">
-                    優惠價 NT${peptides.price}
-                  </p>
-                  <Link href={`/products/${peptides.slug}`}>
-                    <button className="mt-2 border-2 border-[#f7f7f7] text-[#f5f5f5] px-6 py-2 rounded-full font-bold hover:bg-[#efefef] hover:text-stone-800 transition">
-                      MORE
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <CardWrapper index={2} totalCards={TOTAL_CARDS}>
+            <ProductScrollCard
+              heading={
+                <>
+                  重建 17 歲素顏元氣
+                  <br />
+                  醫美族的透亮保養
+                </>
+              }
+              subLabel={peptides.name}
+              sectionLabel="UFLOW 03"
+              description={
+                <>
+                  不用打光，也能自帶澎潤感！UFLOW
+                  肽晶芙蓉專為對美極度要求的妳設計。嚴選四大國際專利原料：美國微脂體穀胱甘肽提升
+                  200% 吸收率，高效抗氧化；日本冰晶番茄抵禦傷害，搭配維生素 C
+                  與比利時美適矽（正矽酸復合物），由內而外撐起神級美。
+                </>
+              }
+              price={peptides.price}
+              slug={peptides.slug}
+              bgImage={peptides.cardImage}
+            />
           </CardWrapper>
         </section>
       </div>

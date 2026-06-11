@@ -1,7 +1,6 @@
 // app/ClientLayout.tsx
 "use client";
 
-import "yakuhanjp";
 import { ViewTransitions } from "next-view-transitions";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer1";
@@ -75,7 +74,7 @@ export default function ClientLayout({
       `}</style>
 
       <html lang="zh-Hant">
-        <body className="min-h-screen bg-white   text-slate-900">
+        <body className="min-h-screen bg-white font-sans antialiased text-slate-900">
           <ScrollToTopOnNav />
 
           <div

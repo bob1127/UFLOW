@@ -90,6 +90,38 @@ const FLAVOR_COLORS = [
   "bg-orange-200",
 ];
 
+function removeDeadImage(img: HTMLImageElement) {
+  img.removeAttribute("src");
+  img.removeAttribute("srcset");
+  img.alt = "";
+  const figure = img.closest("figure");
+  if (figure) {
+    figure.remove();
+    return;
+  }
+  const parent = img.parentElement;
+  img.remove();
+  if (parent && parent.tagName === "P" && parent.children.length === 0) {
+    parent.remove();
+  }
+}
+
+function guardImagesInContainer(container: HTMLElement) {
+  container.querySelectorAll("img").forEach((img) => {
+    if (img.complete && img.naturalWidth === 0) {
+      removeDeadImage(img);
+      return;
+    }
+    img.addEventListener(
+      "error",
+      () => {
+        removeDeadImage(img);
+      },
+      { once: true },
+    );
+  });
+}
+
 export default function ProductClient({ product, faqs = [] }: ProductProps) {
   const router = useRouter();
 
@@ -119,6 +151,19 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
   // 🌟 綁定 WordPress 文章區塊的 Ref
   const contentRef = useRef<HTMLElement>(null);
+  const shortDescRef = useRef<HTMLDivElement>(null);
+
+  const [validImages, setValidImages] = useState<string[]>(
+    safeProduct.images || [],
+  );
+
+  useEffect(() => {
+    setValidImages(safeProduct.images || []);
+  }, [safeProduct.images]);
+
+  const handleDeadGalleryImage = (src: string) => {
+    setValidImages((prev) => prev.filter((url) => url !== src));
+  };
 
   const flavorOptions = useMemo(() => {
     if (!safeProduct.attributes) return [];
@@ -167,42 +212,48 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
   // ===================== 🌟 終極攔截：處理 WordPress 圖片 =====================
   useEffect(() => {
-    // 給予 150ms 延遲，確保 React dangerouslySetInnerHTML 完全將 DOM 掛載完畢
     const timer = setTimeout(() => {
       if (tab === "desc" && contentRef.current) {
-        const images = contentRef.current.querySelectorAll("img");
+        guardImagesInContainer(contentRef.current);
 
+        const images = contentRef.current.querySelectorAll("img");
         images.forEach((img, index) => {
-          // 取得原本的 alt，有時候 WordPress 給的是純粹的 alt="" (沒有內容)
           const currentAlt = img.getAttribute("alt");
 
-          // 只要 alt 是空的或 null，我們就強制複寫！
           if (!currentAlt || currentAlt.trim() === "") {
             const autoAlt = getAltTextFromUrl(
               img.src,
               `${safeProduct.name || "商品"} - 功效與詳細說明圖 ${index + 1}`,
             );
 
-            // 雙管齊下：同時設定 Attribute 與 DOM Property，確保爬蟲絕對抓得到
             img.setAttribute("alt", autoAlt);
             img.alt = autoAlt;
           }
 
-          // 效能優化：強制加上原生 Lazy Loading
           if (!img.getAttribute("loading")) {
             img.setAttribute("loading", "lazy");
             img.loading = "lazy";
           }
 
-          // 防破版機制
           img.style.maxWidth = "100%";
           img.style.height = "auto";
         });
       }
+
+      if (shortDescRef.current) {
+        guardImagesInContainer(shortDescRef.current);
+      }
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [tab, safeProduct.name, safeProduct.description, safeProduct.acf]);
+  }, [
+    tab,
+    safeProduct.name,
+    safeProduct.description,
+    safeProduct.shortDescription,
+    safeProduct.acf,
+    openAccordion,
+  ]);
   // ===========================================================================
 
   function handleBuyNow() {
@@ -212,7 +263,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
       wcProductId: safeProduct.id,
       name: `${safeProduct.name}｜${safeProduct.subname || ""}`,
       price: displayPrice,
-      image: safeProduct.images?.[0],
+      image: validImages[0],
       options: { 口味: flavor, 規格: pkg },
       qty: qty,
       variant: optionVariant,
@@ -227,7 +278,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     setLightboxOpen(true);
   };
 
-  const images: string[] = safeProduct.images || [];
+  const images: string[] = validImages;
 
   if (!safeProduct.name) {
     return (
@@ -243,6 +294,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
         <div className="flex flex-col lg:flex-row gap-12 xl:gap-20">
           {/* 左側：商品大圖與小圖輪播 */}
           <div className="w-full lg:w-[40%] select-none sm:p-6 p-3 lg:p-10 lg:sticky lg:top-24 lg:self-start h-fit">
+            {images.length === 0 ? (
+              <div className="relative w-full aspect-[3/4] bg-gray-50 flex items-center justify-center text-sm text-gray-400">
+                暫無商品圖片
+              </div>
+            ) : (
+              <>
             <Swiper
               spaceBetween={10}
               navigation={true}
@@ -271,6 +328,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                       priority={i === 0}
                       loading={i === 0 ? "eager" : "lazy"}
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      onError={() => handleDeadGalleryImage(src)}
                     />
                     <div className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition backdrop-blur-sm z-10 pointer-events-none">
                       <svg
@@ -322,11 +380,14 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                       quality={60}
                       loading="lazy"
                       className="object-cover object-center"
+                      onError={() => handleDeadGalleryImage(src)}
                     />
                   </div>
                 </SwiperSlide>
               ))}
             </Swiper>
+              </>
+            )}
           </div>
 
           {/* 右側：商品資訊 & 購買區 */}
@@ -510,6 +571,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                 }
               >
                 <div
+                  ref={shortDescRef}
                   dangerouslySetInnerHTML={{
                     __html: safeProduct.shortDescription,
                   }}
@@ -658,6 +720,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                       quality={90}
                       loading="lazy"
                       className="max-h-full max-w-full object-contain"
+                      onError={() => handleDeadGalleryImage(src)}
                     />
                   </div>
                 </SwiperSlide>

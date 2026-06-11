@@ -1,5 +1,9 @@
 // app/products/[slug]/page.jsx
 import { fetchAllProductSlugs, fetchProductBySlug } from "@/lib/woo";
+import {
+  filterValidImageUrls,
+  sanitizeHtmlImages,
+} from "@/lib/imageValidation";
 import ProductClient from "./Client"; // 確保檔名大小寫與你的 Client 檔案一致
 
 export const revalidate = 60;
@@ -135,9 +139,10 @@ export async function generateMetadata({ params }) {
   const productPath = `/products/${params.slug}`; // 相對路徑配合 metadataBase
 
   const safeImages = p?.images;
-  const images = Array.isArray(safeImages)
+  const rawImages = Array.isArray(safeImages)
     ? safeImages.map((i) => i?.src).filter(Boolean)
     : [];
+  const images = await filterValidImageUrls(rawImages);
 
   return {
     metadataBase: new URL(SITE_URL), // 核心：設定 base URL，解決 localhost 與正式機圖片路徑問題
@@ -200,10 +205,20 @@ export default async function ProductPage({ params }) {
   };
 
   const productFAQs = woo ? getProductFAQs(woo.name) : [];
-  const schemaImages =
+  const rawSchemaImages =
     woo && Array.isArray(woo.images)
       ? woo.images.map((i) => i?.src).filter(Boolean)
       : [];
+  const schemaImages = await filterValidImageUrls(rawSchemaImages);
+
+  let sanitizedShortDescription = "";
+  let sanitizedDescription = "";
+  if (woo) {
+    [sanitizedShortDescription, sanitizedDescription] = await Promise.all([
+      sanitizeHtmlImages(woo.short_description || ""),
+      sanitizeHtmlImages(woo.description || ""),
+    ]);
+  }
 
   const pureDescription = woo
     ? (woo.short_description || woo.description || "")
@@ -389,8 +404,8 @@ export default async function ProductPage({ params }) {
                 price: Number(woo.price || 0),
                 regularPrice: Number(woo.regular_price || woo.price || 0),
                 salePrice: woo.sale_price ? Number(woo.sale_price) : null,
-                shortDescription: woo.short_description || "",
-                description: woo.description || "",
+                shortDescription: sanitizedShortDescription,
+                description: sanitizedDescription,
                 images: schemaImages,
                 attributes: woo.attributes || [],
                 acf: woo.acf || null,
