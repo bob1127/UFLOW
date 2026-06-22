@@ -113,7 +113,7 @@ const InfiniteScroll = () => {
         {/* Section 2 */}
         {/* ✨ 改為 CSS Background Image 設定，確保填滿整個 section */}
         <section
-          className={`${styles.section} relative w-[250vw] bg-[url('/images/植物01.png')] bg-cover bg-center bg-repeat`}
+          className={`${styles.section} relative w-[250vw] bg-[url('/images/FB介紹.png')] bg-cover bg-center bg-repeat`}
         >
           {/* ✨ 加上 float-element 類別，讓 GSAP 抓取並執行動畫 */}
           <div className="float-element man-01 absolute left-[10%] z-10 bottom-0">

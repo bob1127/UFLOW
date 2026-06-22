@@ -1,0 +1,17 @@
+---
+description: 當使用者輸入 /change 時，切換本專案 Git 為 HTTPS + PAT 驗證
+alwaysApply: false
+---
+
+# /change — Git HTTPS + PAT 切換
+
+當使用者訊息為 `/change` 或要求「切換 git https 驗證碼」時：
+
+1. 執行專案根目錄指令：`npm run change`（或 `bash scripts/change-git-https.sh`）
+2. 向使用者說明下一步需到 GitHub 建立 Personal Access Token，並在 `git push` 時輸入
+3. **不要**執行 `git config --global` 或 `gh auth logout`，僅影響本專案 local 設定
+
+此指令會：
+- 將 `origin` 設為 `https://github.com/bob1127/UFLOW.git`
+- 本專案改用 `osxkeychain` 儲存 PAT（不再使用錯誤的 gh 帳號 `kejiweibai17-source`）
+- 清除 Keychain 中舊的 github.com 憑證

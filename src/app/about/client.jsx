@@ -153,9 +153,10 @@ export default function AboutClient({ faqs = [] }) {
   return (
     <main ref={containerRef} className="w-full bg-white text-[#2b3742] pt-20">
       <section>
-        <div>
+        {/* <div>
           <ScrollAnimate />
-        </div>
+        </div> */}
+        <img src="/images/FB介紹.png" className="w-full mb-5" alt="" />
       </section>
 
       {/* 輪播區 */}

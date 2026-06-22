@@ -115,7 +115,7 @@ export default function SwiperCardAbout({
          * 2. 加入 md:aspect-[1920/700] (桌機版依照 1920x700 比例)
          * 3. 手機版維持 aspect-[4/3] 或是 aspect-square，以免手機上看圖片變太細長
          */
-        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/849] overflow-hidden"
+        className="border relative aspect-[500/500]  sm:aspect-[1024/576] lg:aspect-[1920/849] mt-10 md:mt-[90px] overflow-hidden"
         style={swiperVars}
       >
         <SwiperSlide className="overflow-hidden group relative duration-1000">
@@ -128,7 +128,7 @@ export default function SwiperCardAbout({
             className="w-full xl:block  hidden"
           ></Image>
           <Image
-            src="/images/index/slider/1024x576/重建17歲的元氣-01.png"
+            src="/images/index/slider/1024x576/重建17歲的元氣.png"
             width={1024}
             height={576}
             placeholder="empty"
@@ -136,7 +136,7 @@ export default function SwiperCardAbout({
             className="w-full xl:hidden md:block  hidden"
           ></Image>
           <Image
-            src="/images/index/slider/600x600/重建17歲的元氣-02.png"
+            src="/images/index/slider/600x600/重建17歲的元氣01.png"
             width={600}
             height={600}
             placeholder="empty"

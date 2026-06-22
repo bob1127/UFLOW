@@ -23,11 +23,6 @@ const Icons = {
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
     </svg>
   ),
-  X: (props) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  ),
   Facebook: (props) => (
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -181,19 +176,14 @@ const Section2 = () => {
                 label="LINE"
               />
               <SocialIcon
-                href="https://www.instagram.com/uflow"
+                href="https://www.instagram.com/uflowspace/"
                 icon={Icons.Instagram}
                 label="Instagram"
               />
               <SocialIcon
-                href="https://www.facebook.com/uflow"
+                href="https://www.facebook.com/profile.php?id=61590765875405&locale=zh_TW"
                 icon={Icons.Facebook}
                 label="Facebook"
-              />
-              <SocialIcon
-                href="https://www.youtube.com/@uflow"
-                icon={Icons.YouTube}
-                label="YouTube"
               />
             </div>
           </div>
@@ -278,8 +268,35 @@ function SocialIcon({ icon: Icon, label, href }) {
 }
 
 // ============================================================================
-// Share Widget (真實分享邏輯)
+// Share Widget（社群直連）
 // ============================================================================
+const SHARE_LINKS = [
+  {
+    bg: "bg-[#00B900]",
+    icon: Icons.Line,
+    href: "https://lin.ee/uKRvV64",
+    label: "前往 UFLOW LINE 官方帳號",
+  },
+  {
+    bg: "bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
+    icon: Icons.Instagram,
+    href: "https://www.instagram.com/uflowspace/",
+    label: "前往 UFLOW Instagram",
+  },
+  {
+    bg: "bg-[#1877F2]",
+    icon: Icons.Facebook,
+    href: "https://www.facebook.com/profile.php?id=61590765875405&locale=zh_TW",
+    label: "前往 UFLOW Facebook",
+  },
+  {
+    bg: "bg-[#E04F3F]",
+    icon: Icons.Mail,
+    href: "mailto:uflowspace@gmail.com",
+    label: "寄信至 uflowspace@gmail.com",
+  },
+];
+
 function ShareWidget() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -292,32 +309,6 @@ function ShareWidget() {
     window.addEventListener("click", handleClick);
     return () => window.removeEventListener("click", handleClick);
   }, [isOpen]);
-
-  // 實作真實分享邏輯
-  const handleShare = (platform) => {
-    const currentUrl = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent("來看看 UFLOW 專業保健食品！");
-
-    if (platform === "facebook")
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`,
-        "_blank",
-      );
-    if (platform === "line")
-      window.open(
-        `https://line.me/R/msg/text/?${text}%0D%0A${currentUrl}`,
-        "_blank",
-      );
-    if (platform === "x")
-      window.open(
-        `https://twitter.com/intent/tweet?url=${currentUrl}&text=${text}`,
-        "_blank",
-      );
-    if (platform === "mail")
-      window.location.href = `mailto:?subject=${text}&body=${currentUrl}`;
-
-    setIsOpen(false);
-  };
 
   return (
     <div
@@ -363,36 +354,20 @@ function ShareWidget() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <ShareBlock
-              bg="bg-[#2C9BE5]"
-              icon={<Icons.X width={28} height={28} className="text-white" />}
-              ariaLabel="分享至 X (Twitter)"
-              onClick={() => handleShare("x")}
-            />
-            <ShareBlock
-              bg="bg-[#00B900]"
-              icon={
-                <Icons.Line width={28} height={28} className="text-white" />
-              }
-              ariaLabel="分享至 LINE"
-              onClick={() => handleShare("line")}
-            />
-            <ShareBlock
-              bg="bg-[#3B5998]"
-              icon={
-                <Icons.Facebook width={28} height={28} className="text-white" />
-              }
-              ariaLabel="分享至 Facebook"
-              onClick={() => handleShare("facebook")}
-            />
-            <ShareBlock
-              bg="bg-[#E04F3F]"
-              icon={
-                <Icons.Mail width={28} height={28} className="text-white" />
-              }
-              ariaLabel="透過 Email 分享"
-              onClick={() => handleShare("mail")}
-            />
+            {SHARE_LINKS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <ShareBlock
+                  key={item.href}
+                  bg={item.bg}
+                  href={item.href}
+                  icon={
+                    <Icon width={28} height={28} className="text-white" />
+                  }
+                  ariaLabel={item.label}
+                />
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
@@ -400,15 +375,18 @@ function ShareWidget() {
   );
 }
 
-/** 🌟 改為 button 標籤並加上 aria-label */
-function ShareBlock({ bg, icon, onClick, ariaLabel }) {
+/** 底部分享列連結 */
+function ShareBlock({ bg, icon, href, ariaLabel }) {
+  const isMail = href.startsWith("mailto:");
   return (
-    <button
+    <a
+      href={href}
+      target={isMail ? undefined : "_blank"}
+      rel={isMail ? undefined : "noopener noreferrer"}
       aria-label={ariaLabel}
-      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95 w-full h-full border-none`}
-      onClick={onClick}
+      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95 w-full h-full`}
     >
       {icon}
-    </button>
+    </a>
   );
 }

@@ -440,30 +440,7 @@ export default function HomeClient({ items = [] }) {
             />
           </CardWrapper>
 
-          <CardWrapper index={2} totalCards={TOTAL_CARDS}>
-            <ProductScrollCard
-              heading={
-                <>
-                  重建 17 歲素顏元氣
-                  <br />
-                  醫美族的透亮保養
-                </>
-              }
-              subLabel={peptides.name}
-              sectionLabel="UFLOW 03"
-              description={
-                <>
-                  不用打光，也能自帶澎潤感！UFLOW
-                  肽晶芙蓉專為對美極度要求的妳設計。嚴選四大國際專利原料：美國微脂體穀胱甘肽提升
-                  200% 吸收率，高效抗氧化；日本冰晶番茄抵禦傷害，搭配維生素 C
-                  與比利時美適矽（正矽酸復合物），由內而外撐起神級美。
-                </>
-              }
-              price={peptides.price}
-              slug={peptides.slug}
-              bgImage={peptides.cardImage}
-            />
-          </CardWrapper>
+          <CardWrapper index={2} totalCards={TOTAL_CARDS}></CardWrapper>
         </section>
       </div>
     </ReactLenis>
