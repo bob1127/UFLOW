@@ -4,9 +4,7 @@ import Client from "./Client";
 import Script from "next/script";
 import type { Metadata } from "next";
 
-// 🔄 設定您的正式網址 (請修改這裡)
-// 建議設定在 .env 檔案中，例如 process.env.NEXT_PUBLIC_SITE_URL
-const SITE_URL = "https://www.your-actual-domain.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
 
 export const revalidate = 60;
 

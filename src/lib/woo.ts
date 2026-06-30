@@ -35,6 +35,20 @@ const withAuth = (url: string) => {
   return u.toString();
 };
 
+/** WooCommerce REST 有時會被 WordPress PHP 警告污染，需從第一個 JSON 字元開始解析 */
+const parseWooJson = async <T>(res: Response): Promise<T> => {
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const start = text.search(/[\[{]/);
+    if (start < 0) {
+      throw new Error("WooCommerce API 回傳非 JSON 內容");
+    }
+    return JSON.parse(text.slice(start)) as T;
+  }
+};
+
 const mapWoo = (p: any): WooProduct => {
   const images: WooImage[] = Array.isArray(p?.images)
     ? p.images.map((im: any) => ({
@@ -72,7 +86,7 @@ export async function fetchProducts({
   const res = await fetch(url, { next: { revalidate: 60 } });
   
   if (!res.ok) throw new Error("取得商品列表失敗");
-  const data = await res.json();
+  const data = await parseWooJson<any[]>(res);
   return (data as any[]).map(mapWoo) as WooProduct[];
 }
 
@@ -92,7 +106,7 @@ export async function fetchProductBySlug(slug: string) {
   );
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) return null;
-  const arr = (await res.json()) as any[];
+  const arr = await parseWooJson<any[]>(res);
   if (!Array.isArray(arr) || arr.length === 0) return null;
   return mapWoo(arr[0]) as WooProduct;
 }
@@ -107,6 +121,6 @@ export async function fetchAllProductSlugs({
   );
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) return [] as string[];
-  const data = (await res.json()) as any[];
+  const data = await parseWooJson<any[]>(res);
   return (data || []).map((p: any) => p.slug as string).filter(Boolean);
 }
