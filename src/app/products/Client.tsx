@@ -42,7 +42,7 @@ export default function Client({ items }: { items: Product[] }) {
       <main className="mx-auto max-w-[1400px] px-4 md:px-12 py-16 md:py-24">
         {/* 標題 */}
         <h1 className="text-lg md:text-2xl font-normal tracking-widest text-[#111] mb-12 mt-20 uppercase">
-          熱銷產品
+          熱門產品
         </h1>
 
         {/* 🚀 關鍵修改：grid-cols-2 讓手機版強制兩排，並微調 gap 間距 */}

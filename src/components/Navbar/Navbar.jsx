@@ -466,7 +466,7 @@ export default function App() {
   const navLinks = [
     { label: "關於我們", href: "/about" },
     { label: "品牌資訊", href: "/brand" },
-    { label: "熱銷產品", href: "/products" },
+    { label: "熱門產品", href: "/products" },
     { label: "保健知識", href: "/blog" },
     { label: "聯絡我們", href: "/contact" },
   ];
@@ -474,9 +474,9 @@ export default function App() {
   return (
     <>
       <header
-        className={`sticky top-0 z-[1000] w-full bg-white border-b border-gray-100 transition-all duration-300 ease-in-out ${
+        className={`sticky top-0 z-[1000] w-full bg-white border-b border-gray-200 transition-all duration-300 ease-in-out ${
           hidden ? "max-md:translate-y-0 md:-translate-y-full" : "translate-y-0"
-        } ${isScrolled ? "shadow-md" : "shadow-none"}`}
+        } ${isScrolled ? "" : "shadow-none"}`}
       >
         <TopAnnouncementBar isVisible={showPinkBar} />
 
@@ -522,7 +522,7 @@ export default function App() {
                     ONLINE SHOP
                   </span>
                   <span className="text-[9px] font-medium tracking-wide">
-                    熱銷產品情報
+                    熱門產品情報
                   </span>
                 </div>
                 <div className="bg-white rounded-full w-5 h-5 flex items-center justify-center group-hover:translate-x-1 transition-transform shadow-sm">

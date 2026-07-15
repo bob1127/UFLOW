@@ -10,6 +10,7 @@ import GsapText from "../../components/RevealText/index";
 import MotionImage from "../../components/MotionImage.jsx";
 import Swiper from "../../components/SwiperCarousel/SwiperCardFood.jsx";
 import FeatureScroll from "../../components/FeatureScrollSection.jsx";
+import FeatureShowcase from "../../components/FeatureShowcase";
 import { CustomEase } from "gsap/CustomEase";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -312,8 +313,13 @@ export default function AboutClient({ faqs = [] }) {
       </section>
 
       {/* UFLOW 新概念 */}
-
       <FeatureScroll />
+
+      {/* 從首頁移轉：Feature + 左側欄 + Products 區塊 */}
+      <section className="w-full">
+        <FeatureShowcase />
+      </section>
+
       {/* 🌟 新增：品牌常見問題 FAQ 區塊 (符合 Google SEO 可見性規範) */}
       {faqs && faqs.length > 0 && (
         <section className="py-20 bg-white">

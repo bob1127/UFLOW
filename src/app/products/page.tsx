@@ -3,8 +3,9 @@ import { fetchAllProducts } from "@/lib/woo";
 import Client from "./Client";
 import Script from "next/script";
 import type { Metadata } from "next";
+import { getSiteUrl, buildBreadcrumbSchema } from "@/lib/seo/business";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
+const SITE_URL = getSiteUrl();
 
 export const revalidate = 60;
 
@@ -60,6 +61,7 @@ export default async function ProductsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    "@id": `${SITE_URL}/products/#itemlist`,
     itemListElement: items.map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -74,6 +76,16 @@ export default async function ProductsPage() {
     })),
   };
 
+  // 3. 麵包屑導覽，與全站商家實體共用同一套建立器
+  const breadcrumbJsonLd = buildBreadcrumbSchema(
+    [
+      { name: "首頁", url: SITE_URL },
+      { name: "所有商品", url: `${SITE_URL}/products` },
+    ],
+    SITE_URL,
+    "/products/#breadcrumb",
+  );
+
   return (
     <>
       {/* 注入結構化資料 */}
@@ -81,6 +93,11 @@ export default async function ProductsPage() {
         id="json-ld-products"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Script
+        id="json-ld-products-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       {/* 渲染 Client Component */}

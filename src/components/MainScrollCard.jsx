@@ -1,21 +1,17 @@
 "use client";
 import { useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/all";
 import dynamic from "next/dynamic";
 import { ReactLenis } from "lenis/react";
 import { Link } from "next-view-transitions";
 import { ArrowRight } from "lucide-react";
-import ShowCase from "../components/FeatureShowcase";
 import Image from "next/image";
+import TextParallaxContentExample03 from "../components/TextParallaxContent03/page";
+import HomeBrandSections from "../components/HomeBrandSections";
 
 const Slider = dynamic(
   () => import("../components/SwiperCarousel/SwiperCardAbout"),
   { ssr: false },
 );
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const SLANT_HEIGHT = 120;
 
@@ -199,196 +195,92 @@ export default function HomeClient({ items = [] }) {
     cardImage: "/images/2894d77a-1a15-4b49-b982-8cc7a09e8029.png",
   };
 
-  useGSAP(
-    () => {
-      ScrollTrigger.create({
-        trigger: ".hero",
-        start: "top top",
-        endTrigger: ".outro",
-        end: "top top",
-        pin: true,
-        pinSpacing: false,
-      });
-    },
-    { scope: container },
-  );
-
   return (
     <ReactLenis root>
-      <div className="app relative w-full font-sans" ref={container}>
-        <section className="hero relative aspect-[500/500] sm:aspect-[1024/576] lg:aspect-[1920/850] w-full p-0 z-0">
-          <Slider ratio="16/9" autoplayDelay={4500} speed={1400} />
+      <div className="app relative w-full bg-white font-sans" ref={container}>
+        <section className="hero relative z-0 w-full overflow-x-clip bg-white p-0">
+          <Slider autoplayDelay={4500} speed={900} />
         </section>
-        <ShowCase />
 
-        {/* Main Products Section */}
-        <section className="section-main-products overflow-hidden w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-20">
-          <div className="flex flex-col lg:flex-row">
-            {/* 左側文字區 */}
-            <div className="text w-full lg:w-[30%] p-2 sm:p-6 lg:p-10 flex flex-col justify-center">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold">
-                UFLOW
-              </h1>
-              <h2 className="text-xl text-stone-700 font-bold sm:text-2xl mt-4">
-                UFLOW是一家以提供高品質健康產品為核心的品牌
+        {/* Main Products Section — Nature Remo 風格產品網格 */}
+        <section className="section-main-products relative z-10 w-full bg-white px-4 pt-16 pb-20 sm:px-6 sm:pt-10 lg:px-12 lg:pt-14 lg:pb-28">
+          <div className="mx-auto w-full max-w-[1280px]">
+            <div className="mb-12 text-center sm:mb-14 lg:mb-16">
+              <h2 className="font-display text-[clamp(1.75rem,4.5vw,3rem)] font-light tracking-[0.18em] text-ink">
+                Ranking
               </h2>
-              <div className="mt-4">
-                <p className="tracking-wider leading-relaxed">
-                  研發的精神在以科學方法應用於天然原料科技養護身心。。
-                </p>
-                <p className="tracking-wider leading-relaxed mt-2">
-                  我們相信，健康是一種生活方式，也是一種簡單、自然且富有活力的人生。
-                </p>
-                <Link href="/products">
-                  <button className="group mt-5 relative inline-flex h-[calc(48px+8px)] items-center justify-center rounded-full bg-[#f58a9c] py-1 pl-6 pr-14 font-medium text-neutral-50">
-                    <span className="z-10 pr-2">更多產品</span>
-                    <div className="absolute right-1 inline-flex h-12 w-12 items-center justify-end rounded-full bg-[#e6657b] transition-[width] group-hover:w-[calc(100%-8px)]">
-                      <div className="mr-3.5 flex items-center justify-center">
-                        <svg
-                          width="15"
-                          height="15"
-                          viewBox="0 0 15 15"
-                          fill="none"
-                          className="h-5 w-5 text-neutral-50"
-                        >
-                          <path
-                            d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z"
-                            fill="currentColor"
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
-                </Link>
-              </div>
+              <p className="mt-2 text-[13px] font-light tracking-[0.18em] text-ink-muted sm:text-[14px]">
+                熱銷排行
+              </p>
             </div>
 
-            {/* 右側產品區 */}
-            <div className="product w-full lg:w-[70%] mt-10 lg:mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full gap-4">
-                {/* 🚀 Card 1: GABA */}
-                <div className="group p-4 lg:p-8">
-                  <Link href={`/products/${gaba.slug}`}>
-                    <div className="relative aspect-[4/4] w-full overflow-hidden">
-                      <Image
-                        src={gaba.image}
-                        alt={gaba.name}
-                        className="object-cover group-hover:scale-90 duration-200"
-                        fill
-                        sizes="(min-width: 1024px) 800px, 100vw"
-                      />
-                    </div>
-                  </Link>
-                  <div className="info mt-3 p-2">
-                    <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-2">
-                      <span className="rounded-[20px] border border-gray-500 text-gray-500 px-4 text-[13px] py-1 whitespace-nowrap">
-                        熱銷產品
-                      </span>
-                      <div className="flex flex-col text-[14px]">
-                        <span className="line-through text-gray-400">
-                          原價 ${gaba.regular}/盒
-                        </span>
-                        <span className="text-red-500 font-bold">
-                          優惠價 NT${gaba.price}/盒
-                        </span>
-                      </div>
-                    </div>
-                    <b className="block mt-4 text-lg sm:text-xl tracking-widest">
-                      {gaba.name}
-                    </b>
-                    <div className="mt-2">
-                      <b>科學調配 </b>
-                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                        足量攝取 能量循環新配方
-                      </p>
-                    </div>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-14">
+              {[
+                {
+                  ...gaba,
+                  en: "GABA Magnesium Lemon Balm",
+                  tags: "#科學調配 #足量攝取 #能量循環新配方 #日間穩定 #夜間助眠",
+                },
+                {
+                  ...peptides,
+                  en: "Peptide Crystal Hibiscus",
+                  tags: "#科學調配 #足量攝取 #喚回芙蓉貴婦肌 #國際原廠 #專利足量",
+                },
+                {
+                  ...synbiotics,
+                  en: "Synbiotics",
+                  tags: "#專利菌種 #合生元 #幫助消化 #細菌叢健康 #益生菌×益生元",
+                },
+              ].map((product) => (
+                <Link
+                  key={product.slug}
+                  href={`/products/${product.slug}`}
+                  className="group flex flex-col text-left"
+                >
+                  {/* 淺灰圓角圖框 — 圖二 Nature Remo 風格 */}
+                  <div className="relative aspect-square w-full overflow-hidden rounded-[16px] bg-[#f5f5f5] sm:rounded-[18px]">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
+                      className="object-contain p-7 transition-transform duration-500 group-hover:scale-[1.03] sm:p-9"
+                    />
                   </div>
-                </div>
 
-                {/* 🚀 Card 2: 肽晶芙蓉 */}
-                <div className="group p-4 lg:p-8">
-                  <Link href={`/products/${peptides.slug}`}>
-                    <div className="relative aspect-[4/4] w-full overflow-hidden">
-                      <Image
-                        src={peptides.image}
-                        alt={peptides.name}
-                        className="object-cover group-hover:scale-90 duration-200"
-                        fill
-                        sizes="(min-width: 1024px) 800px, 100vw"
-                      />
-                    </div>
-                  </Link>
-                  <div className="info mt-3 p-2">
-                    <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-2">
-                      <span className="rounded-[20px] border border-gray-500 text-gray-500 px-4 text-[13px] py-1 whitespace-nowrap">
-                        熱銷產品
-                      </span>
-                      <div className="flex flex-col text-[14px]">
-                        <span className="line-through text-gray-400">
-                          原價 ${peptides.regular}/盒
-                        </span>
-                        <span className="text-red-500 font-bold">
-                          優惠價 NT${peptides.price}/盒
-                        </span>
-                      </div>
-                    </div>
-                    <b className="block mt-4 text-lg sm:text-xl tracking-widest">
-                      {peptides.name}
-                    </b>
-                    <div className="mt-2">
-                      <b>科學調配 </b>
-                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                        足量攝取 喚回芙蓉貴婦肌
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  {/* 產品名 — 粗體深色 */}
+                  <h3 className="mt-4 text-[16px] font-bold leading-[1.35] tracking-wide text-[#333] sm:mt-5 sm:text-[17px]">
+                    {product.name}
+                  </h3>
 
-                {/* 🚀 Card 3: 維他菌 */}
-                <div className="group p-4 lg:p-8">
-                  <Link href={`/products/${synbiotics.slug}`}>
-                    <div className="relative aspect-[4/4] w-full overflow-hidden">
-                      <Image
-                        src={synbiotics.image}
-                        alt={synbiotics.name}
-                        className="object-cover group-hover:scale-90 duration-200"
-                        fill
-                        sizes="(min-width: 1024px) 800px, 100vw"
-                      />
-                    </div>
-                  </Link>
-                  <div className="info mt-3 p-2">
-                    <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-2">
-                      <span className="rounded-[20px] border border-gray-500 text-gray-500 px-4 text-[13px] py-1 whitespace-nowrap">
-                        熱銷產品
-                      </span>
-                      <div className="flex flex-col text-[14px]">
-                        <span className="line-through text-gray-400">
-                          原價 ${synbiotics.regular}/盒
-                        </span>
-                        <span className="text-red-500 font-bold">
-                          優惠價 NT${synbiotics.price}/盒
-                        </span>
-                      </div>
-                    </div>
-                    <b className="block mt-4 text-lg sm:text-xl tracking-widest">
-                      {synbiotics.name}
-                    </b>
-                    <div className="mt-2">
-                      <b>台灣專利功能菌種配方保衛健康</b>
-                      <p className="text-[14px] tracking-wider mt-1 leading-relaxed">
-                        合生元 (Synbiotics) 將益生菌與益生元結合，提升益生菌存活
-                        添加專利益萃質®維護細菌叢健康幫助消化
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  {/* 英文副標 — 中灰、較小 */}
+                  <p className="mt-1 text-[12px] leading-snug tracking-wide text-[#888] sm:text-[13px]">
+                    {product.en}
+                  </p>
+
+                  {/* #標籤 — 最淺灰、最小字 */}
+                  <p className="mt-2.5 text-[11px] leading-[1.7] tracking-wide text-[#aaa] sm:mt-3 sm:text-[12px]">
+                    {product.tags}
+                  </p>
+
+                  {/* 價格 — 粗體 + (含稅) */}
+                  <p className="mt-3.5 text-[19px] font-bold tracking-tight text-[#333] sm:mt-4 sm:text-[21px]">
+                    NT${Number(product.price).toLocaleString("en-US")}
+                    <span className="ml-0.5 text-[11px] font-normal text-[#999]">
+                      (含稅)
+                    </span>
+                  </p>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
+
+        {/* Brand Story + Movie 兩個新增區塊 */}
+        <HomeBrandSections />
+
+        {/* TextParallax 區塊 — 放在三個產品圖下方 */}
+        <TextParallaxContentExample03 />
 
         {/* Cards Section — Sansei-style diagonal scroll cards */}
         <section className="cards relative z-10 w-full">

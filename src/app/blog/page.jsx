@@ -1,7 +1,8 @@
 // app/blog/page.jsx
 import HomeClient from "./ProjectListClient";
+import { getSiteUrl, buildOrganizationSchema } from "@/lib/seo/business";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
+const SITE_URL = getSiteUrl();
 
 // 🏆 核心設定：開啟 ISR 模式，每 60 秒自動在背景重新生成頁面 (抓取新文章)
 export const revalidate = 60;
@@ -91,20 +92,15 @@ export default async function BlogPage() {
     name: "UFLOW 保健知識與健康生活 Blog",
     description: "由專業營養師撰寫的保健知識、日常營養補充指南。",
     url: `${SITE_URL}/blog`,
-    publisher: {
-      "@type": "Organization",
-      name: "UFLOW 慶安有福",
-      logo: {
-        "@type": "ImageObject",
-        url: `${SITE_URL}/images/logo/uflow.png`,
-      },
-    },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#organization` },
   };
 
   // 3. 文章列表索引 (ItemList) - 告訴 Google 這裡有哪些文章
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    "@id": `${SITE_URL}/blog/#itemlist`,
     itemListElement: posts.map((post, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -112,23 +108,8 @@ export default async function BlogPage() {
     })),
   };
 
-  // 4. 商家資訊 (HealthAndBeautyBusiness)
-  const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "HealthAndBeautyBusiness",
-    name: "UFLOW 慶安有福",
-    image: `${SITE_URL}/images/logo/uflow.png`,
-    "@id": SITE_URL,
-    url: SITE_URL,
-    telephone: "+886-2-0000-0000", // 👈 請替換為真實客服或公司電話
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "XX路XX號X樓", // 👈 請替換為真實街道地址
-      addressLocality: "台北市", // 👈 請替換為真實縣市
-      postalCode: "100", // 👈 請替換為真實郵遞區號
-      addressCountry: "TW",
-    },
-  };
+  // 4. 商家資訊：與全站共用同一份 Organization/LocalBusiness 定義（真實地址、統編、電話）
+  const localBusinessSchema = buildOrganizationSchema(SITE_URL);
 
   return (
     <main>

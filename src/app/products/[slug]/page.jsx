@@ -5,16 +5,9 @@ import {
   sanitizeHtmlImages,
 } from "@/lib/imageValidation";
 import ProductClient from "./Client"; // 確保檔名大小寫與你的 Client 檔案一致
+import { getSiteUrl, buildOrganizationSchema } from "@/lib/seo/business";
 
 export const revalidate = 60;
-
-// 🌟 動態獲取網址：本地端會顯示 localhost，正式上線設定變數後自動轉為正式網址
-const getSiteUrl = () => {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  if (process.env.NEXT_PUBLIC_VERCEL_URL)
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-  return "http://localhost:3000";
-};
 
 const SITE_URL = getSiteUrl();
 
@@ -232,22 +225,8 @@ export default async function ProductPage({ params }) {
       : "https://schema.org/OutOfStock";
 
   // ===================== 👑 結構化資料 1：商家與品牌實體 =====================
-  const schemaBusiness = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": `${SITE_URL}/#organization`,
-    name: "UFLOW",
-    url: SITE_URL,
-    logo: {
-      "@type": "ImageObject",
-      url: `${SITE_URL}/images/logo/uflow.png`,
-    },
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer service",
-      availableLanguage: ["Traditional Chinese", "English"],
-    },
-  };
+  // 與全站共用同一份 Organization/LocalBusiness 定義，確保地址、統編、聯絡方式一致
+  const schemaBusiness = buildOrganizationSchema(SITE_URL);
 
   // ===================== 👑 結構化資料 2：商品與報價 =====================
   const schemaProduct = woo

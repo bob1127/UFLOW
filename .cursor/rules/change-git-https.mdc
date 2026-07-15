@@ -1,17 +1,20 @@
 ---
-description: 當使用者輸入 /change 時，切換本專案 Git 為 HTTPS + PAT 驗證
+description: 當使用者輸入 /change 時，切換本專案 Git 為 HTTPS + 瀏覽器驗證碼登入
 alwaysApply: false
 ---
 
-# /change — Git HTTPS + PAT 切換
+# /change — Git HTTPS + 瀏覽器驗證碼
 
-當使用者訊息為 `/change` 或要求「切換 git https 驗證碼」時：
+當使用者訊息為 `/change` 或要求「切換 git https 驗證碼」「瀏覽器登入 github」時：
 
-1. 執行專案根目錄指令：`npm run change`（或 `bash scripts/change-git-https.sh`）
-2. 向使用者說明下一步需到 GitHub 建立 Personal Access Token，並在 `git push` 時輸入
-3. **不要**執行 `git config --global` 或 `gh auth logout`，僅影響本專案 local 設定
+1. 請使用者在 **macOS「終端機」App**（非 Cursor 內建終端機）執行：`npm run change`
+2. 腳本會啟動 `gh auth login -w`：顯示驗證碼 → 開啟 https://github.com/login/device → 用 bob1127 授權
+3. 完成後執行 `npm run push` 推送
+4. **不要**執行 `git config --global`，僅影響本專案 local 設定
+5. 僅登出錯誤帳號 `kejiweibai17-source`，不影響其他專案
 
 此指令會：
 - 將 `origin` 設為 `https://github.com/bob1127/UFLOW.git`
-- 本專案改用 `osxkeychain` 儲存 PAT（不再使用錯誤的 gh 帳號 `kejiweibai17-source`）
-- 清除 Keychain 中舊的 github.com 憑證
+- 清除 Keychain 舊憑證
+- 透過 gh 瀏覽器裝置驗證碼登入
+- 本專案 credential helper → `gh auth git-credential`

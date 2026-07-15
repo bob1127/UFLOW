@@ -1,31 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { getSiteUrl } from "@/lib/seo/business";
 
 // ===================== 👑 SEO 與結構化資料設定 =====================
 // 備註：在 App Router 中，如果要在 'use client' 頁面使用 Metadata，
 // 建議將 Metadata 放在同目錄下的 layout.js 或者單獨的伺服器組件中。
 // 為了示範方便，我直接在下方說明結構。
 
-const SITE_URL = "https://www.uflow.space";
+const SITE_URL = getSiteUrl();
 
 export default function PrivacyPage() {
   // 結構化資料 (JSON-LD)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": `${SITE_URL}/privacy/#webpage`,
     name: "隱私權政策 | UFLOW 健康生活",
     description:
       "UFLOW 官方網站隱私權保護政策，說明我們如何蒐集、處理及利用您的個人資料，並致力於保護您的資訊安全。",
     url: `${SITE_URL}/privacy`,
-    publisher: {
-      "@type": "Organization",
-      name: "慶安有福有限公司",
-      logo: {
-        "@type": "ImageObject",
-        url: `${SITE_URL}/images/logo/uflow.png`,
-      },
-    },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#organization` },
     datePublished: "2025-12-15",
     dateModified: "2025-12-15",
     inLanguage: "zh-TW",

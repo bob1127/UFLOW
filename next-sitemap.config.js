@@ -35,8 +35,19 @@ module.exports = {
         headers: { Authorization: `Basic ${authString}` },
       });
 
+      const parseWooJson = async (response) => {
+        const text = await response.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          const start = text.search(/[\[{]/);
+          if (start < 0) throw new Error("WooCommerce API 回傳非 JSON 內容");
+          return JSON.parse(text.slice(start));
+        }
+      };
+
       if (res.ok) {
-        const products = await res.json();
+        const products = await parseWooJson(res);
         
         // 將每個產品轉換為 sitemap 格式
         for (const product of products) {

@@ -15,8 +15,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-apple)"],
-        serif: ["var(--font-apple)"],
+        sans: ["var(--font-sans)"],
+        serif: ["var(--font-serif)"],
+        display: ["var(--font-serif)"],
       },
       transitionDuration: {
         2000: "2000ms",

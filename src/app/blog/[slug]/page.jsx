@@ -235,7 +235,7 @@ export default async function BlogPostPage({ params }) {
           href="/blog"
           className="text-[12px] md:text-[13px] tracking-widest text-[#111] hover:text-gray-500 transition-colors uppercase border-b border-[#111] hover:border-gray-500 pb-1"
         >
-          ← Back to Blog
+          ← 回上一頁
         </Link>
       </div>
     </article>

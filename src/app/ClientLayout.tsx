@@ -9,6 +9,21 @@ import { usePathname } from "next/navigation";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
+
+const notoSans = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-noto-sans",
+  display: "swap",
+});
+
+const notoSerif = Noto_Serif_TC({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-serif",
+  display: "swap",
+});
 
 function ScrollToTopOnNav() {
   const pathname = usePathname();
@@ -73,8 +88,11 @@ export default function ClientLayout({
         }
       `}</style>
 
-      <html lang="zh-Hant">
-        <body className="min-h-screen bg-white font-sans antialiased text-slate-900">
+      <html
+        lang="zh-Hant"
+        className={`${notoSans.variable} ${notoSerif.variable}`}
+      >
+        <body className="min-h-screen bg-white font-sans antialiased text-[#2F2B28]">
           <ScrollToTopOnNav />
 
           <div

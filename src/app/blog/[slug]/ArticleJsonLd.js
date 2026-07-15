@@ -1,5 +1,6 @@
 // components/ArticleJsonLd.js
 import React from "react";
+import { buildOrganizationSchema } from "@/lib/seo/business";
 
 export default function ArticleJsonLd({ post, siteUrl, imageUrl }) {
   const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
@@ -38,42 +39,13 @@ export default function ArticleJsonLd({ post, siteUrl, imageUrl }) {
       name: "UFLOW 專業營養團隊",
       url: siteUrl,
     },
-    publisher: {
-      "@type": "Organization",
-      name: "UFLOW 慶安有福",
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteUrl}/images/logo/uflow.png`,
-      },
-    },
+    publisher: { "@id": `${siteUrl}/#organization` },
     inLanguage: "zh-TW",
   };
 
-  // 3. 商家資訊結構化資料 (HealthAndBeautyBusiness 適合保健食品)
-  const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "HealthAndBeautyBusiness",
-    name: "UFLOW 慶安有福",
-    image: `${siteUrl}/images/logo/uflow.png`,
-    "@id": siteUrl,
-    url: siteUrl,
-    telephone: "+886-2-0000-0000", // 👈 請替換為真實客服或公司電話 (建議加上國碼 +886)
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "XX路XX號X樓", // 👈 請替換為真實街道地址
-      addressLocality: "台北市",    // 👈 請替換為真實縣市
-      postalCode: "100",           // 👈 請替換為真實郵遞區號
-      addressCountry: "TW",
-    },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], // 👈 營業日
-        opens: "09:00",  // 👈 營業開始時間
-        closes: "18:00", // 👈 營業結束時間
-      },
-    ],
-  };
+  // 3. 商家資訊結構化資料：與全站共用同一份 Organization/LocalBusiness 定義
+  // （真實地址、統編、電話），避免不同頁面出現互相矛盾的商家資料
+  const localBusinessSchema = buildOrganizationSchema(siteUrl);
 
   // 4. 常見問題結構化資料 (FAQPage)
   const faqSchema = {

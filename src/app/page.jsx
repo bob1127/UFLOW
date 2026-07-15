@@ -1,14 +1,15 @@
 // app/page.jsx
 import Client from "./home";
 import { fetchAllProducts } from "@/lib/woo"; // 🚀 引入抓取商品的 API
-
-// 🌟 1. 動態獲取網址，解決本地端與正式機網址判定問題
-const getSiteUrl = () => {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  if (process.env.NEXT_PUBLIC_VERCEL_URL)
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-  return "http://localhost:3000";
-};
+import {
+  getSiteUrl,
+  buildOrganizationSchema,
+  buildWebSiteSchema,
+  buildWebPageSchema,
+  buildFaqSchema,
+  buildBreadcrumbSchema,
+  buildPlaceSchema,
+} from "@/lib/seo/business";
 
 const SITE_URL = getSiteUrl();
 
@@ -50,6 +51,9 @@ export const metadata = {
     "專利益生菌",
     "益萃質",
     "第三方檢驗",
+    "桃園保健食品",
+    "桃園市桃園區",
+    "統一編號 60781383",
   ],
   icons: { icon: "/images/logo/uflow.ico" },
   openGraph: {
@@ -74,84 +78,97 @@ export const metadata = {
 
 export const revalidate = 60;
 
+function getCleanPostImage(post) {
+  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
+  let rawUrl =
+    post.jetpack_featured_media_url ||
+    featuredMedia?.media_details?.sizes?.large?.source_url ||
+    featuredMedia?.media_details?.sizes?.full?.source_url ||
+    featuredMedia?.source_url;
+
+  if (!rawUrl && post.content?.rendered) {
+    const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
+    if (imgMatch?.[1]) rawUrl = imgMatch[1];
+  }
+
+  return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
+}
+
+async function getHomePosts() {
+  const rawBase =
+    process.env.WORDPRESS_API_URL ||
+    "https://inf.fjg.mybluehost.me/website_4ad5d5f2";
+  const cleanBase = rawBase.split("/wp-json")[0].replace(/\/$/, "");
+  const fetchUrl = `${cleanBase}/wp-json/wp/v2/posts?_embed&per_page=9`;
+
+  try {
+    const res = await fetch(fetchUrl, {
+      next: { revalidate: 60 },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+      },
+    });
+
+    if (!res.ok) return [];
+
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) return [];
+
+    const posts = await res.json();
+    if (!Array.isArray(posts)) return [];
+
+    return posts.map((post) => {
+      let slug = post.slug || "";
+      try {
+        slug = decodeURIComponent(slug);
+      } catch {
+        /* keep encoded slug */
+      }
+
+      return {
+        id: post.id,
+        slug,
+        title: (post.title?.rendered || "").replace(/<[^>]+>/g, ""),
+        date: post.date,
+        imageUrl: getCleanPostImage(post),
+      };
+    });
+  } catch (error) {
+    console.error("❌ 首頁 Blog API 抓取失敗:", error);
+    return [];
+  }
+}
+
 // 🚀 改為 async 函式，支援伺服器端抓取資料
 export default async function Page() {
-  const schemaWebSite = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${SITE_URL}/#website`,
-    url: SITE_URL,
-    name: "UFLOW",
-    alternateName: "UFLOW 慶安有福保健食品",
-    description: "功能性保健食品與營養補給｜專為亞洲體質研發・安心第三方檢驗",
-    publisher: { "@id": `${SITE_URL}/#organization` },
-    inLanguage: "zh-TW",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  const schemaOrganization = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": `${SITE_URL}/#organization`,
-    name: "慶安有福有限公司",
-    alternateName: "UFLOW",
-    url: SITE_URL,
-    logo: {
-      "@type": "ImageObject",
-      url: `${SITE_URL}/images/logo/uflow.png`,
-    },
-    image: `${SITE_URL}/images/logo/uflow.png`,
-    description:
-      "UFLOW 專注於功能性保健食品與日常營養補給。主打科學調配、足量攝取，嚴選國際大廠專利原料，全系列通過第三方檢驗。",
-    email: "uflowspace@gmail.com",
-    telephone: "+886-978-138-979",
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+886-978-138-979",
-      contactType: "customer service",
-      email: "uflowspace@gmail.com",
-      areaServed: "TW",
-      availableLanguage: ["Traditional Chinese", "English"],
-    },
-    sameAs: [
-      "https://www.facebook.com/uflow",
-      "https://www.instagram.com/uflow",
-      "https://line.me/R/ti/p/@uflow",
-    ],
-  };
+  // ===================== GEO / Google 商家結構化資料 =====================
+  const schemaOrganization = buildOrganizationSchema(SITE_URL);
+  const schemaWebSite = buildWebSiteSchema(SITE_URL);
+  const schemaPlace = buildPlaceSchema(SITE_URL);
 
   const schemaWebPage = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "@id": `${SITE_URL}/#webpage`,
-    url: SITE_URL,
-    name: "UFLOW｜科學足量保健食品",
-    isPartOf: { "@id": `${SITE_URL}/#website` },
-    about: { "@id": `${SITE_URL}/#organization` },
-    description:
-      "UFLOW 專注於功能性保健食品。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，讓你補得安心、每日有感。",
+    ...buildWebPageSchema({
+      siteUrl: SITE_URL,
+      type: "WebPage",
+      idPath: "/#webpage",
+      url: SITE_URL,
+      name: "UFLOW｜科學足量保健食品｜肽晶芙蓉・GABA鎂鎂・維他菌合生元",
+      description:
+        "UFLOW 專注於功能性保健食品。主打微脂體肽晶芙蓉、日夜節奏管理 GABA鎂鎂香蜂草、專利維他菌合生元。拒絕無效添加，讓你補得安心、每日有感。",
+    }),
+    breadcrumb: { "@id": `${SITE_URL}/#breadcrumb` },
+    mainEntity: { "@id": `${SITE_URL}/#organization` },
   };
 
-  const schemaFAQ = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "@id": `${SITE_URL}/#faq`,
-    mainEntity: homeFAQs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
+  const schemaBreadcrumb = buildBreadcrumbSchema(
+    [{ name: "首頁", url: SITE_URL }],
+    SITE_URL,
+    "/#breadcrumb",
+  );
+
+  const schemaFAQ = buildFaqSchema(homeFAQs, SITE_URL, "/#faq");
 
   const schemaItemList = {
     "@context": "https://schema.org",
@@ -191,13 +208,17 @@ export default async function Page() {
     console.error("❌ 首頁抓取產品失敗:", error);
   }
 
+  // 🚀 首頁 Official Blog：抓取最新文章
+  let posts = [];
+  try {
+    posts = await getHomePosts();
+    console.log("🌐 [首頁] 成功抓取 Blog 文章數量:", posts?.length);
+  } catch (error) {
+    console.error("❌ 首頁抓取文章失敗:", error);
+  }
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        id="schema-website"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaWebSite) }}
-      />
       <script
         type="application/ld+json"
         id="schema-organization"
@@ -205,8 +226,23 @@ export default async function Page() {
       />
       <script
         type="application/ld+json"
+        id="schema-place"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaPlace) }}
+      />
+      <script
+        type="application/ld+json"
+        id="schema-website"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaWebSite) }}
+      />
+      <script
+        type="application/ld+json"
         id="schema-webpage"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaWebPage) }}
+      />
+      <script
+        type="application/ld+json"
+        id="schema-breadcrumb"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumb) }}
       />
       <script
         type="application/ld+json"
@@ -219,8 +255,8 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaItemList) }}
       />
 
-      {/* 🚀 把 faqs 和 items 一起傳遞給前端畫面 */}
-      <Client faqs={homeFAQs} items={items} />
+      {/* 🚀 把 faqs、items、posts 一起傳遞給前端畫面 */}
+      <Client faqs={homeFAQs} items={items} posts={posts} />
     </>
   );
 }

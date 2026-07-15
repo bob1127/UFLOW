@@ -2,21 +2,35 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* Apple 中文官網字體堆疊（系統字體，零載入延遲） */
+/*
+  全站字體（對齊品牌圖二）：
+  - 中文標題：宋體系襯線（Songti / Noto Serif TC）
+  - 內文／英文／UI：清爽無襯線
+*/
 @layer base {
   :root {
-    --font-apple:
+    --font-sans:
+      var(--font-noto-sans),
       -apple-system, BlinkMacSystemFont,
-      "SF Pro TC", "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+      "SF Pro TC", "SF Pro Text",
       "PingFang TC", "PingFang SC",
       "Helvetica Neue", Helvetica, Arial,
-      "Microsoft JhengHei", "Microsoft YaHei",
-      "Noto Sans TC", "Noto Sans SC",
+      "Microsoft JhengHei", "Noto Sans TC",
       sans-serif;
+
+    --font-serif:
+      var(--font-noto-serif),
+      "Songti TC", "Songti SC",
+      "Noto Serif TC", "Noto Serif SC",
+      "Hiragino Mincho ProN", "Yu Mincho",
+      "Source Han Serif TC", Georgia, serif;
+
+    /* 向後相容舊變數名 */
+    --font-apple: var(--font-sans);
   }
 
   html {
-    font-family: var(--font-apple);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -25,6 +39,24 @@
   body {
     font-family: inherit;
     font-synthesis: none;
+    color: #2f2b28;
+  }
+
+  /* 中文標題採圖二襯線風格 */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.45;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    font-weight: 500;
   }
 }
 
