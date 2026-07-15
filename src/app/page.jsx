@@ -10,6 +10,7 @@ import {
   buildBreadcrumbSchema,
   buildPlaceSchema,
 } from "@/lib/seo/business";
+import { getPostImageUrl } from "@/lib/blogImages";
 
 const SITE_URL = getSiteUrl();
 
@@ -79,19 +80,7 @@ export const metadata = {
 export const revalidate = 60;
 
 function getCleanPostImage(post) {
-  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-  let rawUrl =
-    post.jetpack_featured_media_url ||
-    featuredMedia?.media_details?.sizes?.large?.source_url ||
-    featuredMedia?.media_details?.sizes?.full?.source_url ||
-    featuredMedia?.source_url;
-
-  if (!rawUrl && post.content?.rendered) {
-    const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
-    if (imgMatch?.[1]) rawUrl = imgMatch[1];
-  }
-
-  return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
+  return getPostImageUrl(post, "/images/logo/uflow.png");
 }
 
 async function getHomePosts() {

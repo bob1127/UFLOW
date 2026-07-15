@@ -3,27 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { getAllPostSlugs } from "@/lib/wordpress";
 import { notFound } from "next/navigation";
+import { getPostImageUrl, rewritePostContentImages } from "@/lib/blogImages";
 
 // 引入結構化資料元件
 import ArticleJsonLd from "./ArticleJsonLd";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.uflow.space";
-
-// ===================== 🌟 共用圖片萃取工具 =====================
-function getPostImage(post) {
-  const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
-  let rawUrl =
-    post.jetpack_featured_media_url ||
-    featuredMedia?.media_details?.sizes?.large?.source_url ||
-    featuredMedia?.media_details?.sizes?.full?.source_url ||
-    featuredMedia?.source_url;
-
-  if (!rawUrl && post.content?.rendered) {
-    const imgMatch = post.content.rendered.match(/<img[^>]+src="([^">]+)"/);
-    if (imgMatch && imgMatch[1]) rawUrl = imgMatch[1];
-  }
-  return rawUrl ? rawUrl.split("?")[0] : "/images/logo/uflow.png";
-}
 
 // ===================== 🌟 API 抓取單篇文章 =====================
 async function getPostBySlugWithDebug(slug) {
@@ -104,7 +89,7 @@ export async function generateMetadata({ params }) {
   const post = await getPostBySlugWithDebug(params.slug);
   if (!post) return {};
 
-  const imageUrl = getPostImage(post);
+  const imageUrl = getPostImageUrl(post);
   const cleanDescription =
     post.excerpt?.rendered.replace(/<[^>]+>/g, "").substring(0, 160) ||
     "UFLOW 保健知識專欄";
@@ -144,7 +129,7 @@ export default async function BlogPostPage({ params }) {
 
   // 🚀 改為呼叫隨機文章函式
   const randomPosts = await getRandomPosts(params.slug);
-  const mainImageUrl = getPostImage(post);
+  const mainImageUrl = getPostImageUrl(post);
 
   const dateObj = new Date(post.date);
   const formattedDate = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
@@ -179,7 +164,9 @@ export default async function BlogPostPage({ params }) {
             prose-li:text-[#333] prose-li:text-[14px] md:prose-li:text-[15px] prose-li:leading-[2.2]
             prose-strong:text-[#111] prose-strong:font-bold
           "
-          dangerouslySetInnerHTML={{ __html: post.content.rendered }}
+          dangerouslySetInnerHTML={{
+            __html: rewritePostContentImages(post.content.rendered),
+          }}
         />
       </div>
 
@@ -192,7 +179,7 @@ export default async function BlogPostPage({ params }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
             {randomPosts.map((randomPost) => {
-              const rImageUrl = getPostImage(randomPost);
+              const rImageUrl = getPostImageUrl(randomPost);
               const rDateObj = new Date(randomPost.date);
               const rFormattedDate = `${rDateObj.getFullYear()}/${String(rDateObj.getMonth() + 1).padStart(2, "0")}/${String(rDateObj.getDate()).padStart(2, "0")}`;
 
