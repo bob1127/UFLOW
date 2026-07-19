@@ -2,6 +2,7 @@
 "use client";
 
 import { ViewTransitions } from "next-view-transitions";
+import Script from "next/script";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer1";
 import { useEffect } from "react";
@@ -10,6 +11,8 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
+
+const GTM_ID = "GTM-N58NPVF2";
 
 const notoSans = Noto_Sans_TC({
   subsets: ["latin"],
@@ -93,6 +96,25 @@ export default function ClientLayout({
         className={`${notoSans.variable} ${notoSerif.variable}`}
       >
         <body className="min-h-screen bg-white font-sans antialiased text-[#2F2B28]">
+          {/* GTM noscript 備援：無 JS 環境（少數爬蟲/使用者）仍可記錄 */}
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+
+          {/* GTM 主程式：afterInteractive = hydration 後載入，不阻塞首屏 LCP */}
+          <Script id="gtm-init" strategy="afterInteractive">
+            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`}
+          </Script>
+
           <ScrollToTopOnNav />
 
           <div
