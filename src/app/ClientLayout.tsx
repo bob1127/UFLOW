@@ -2,7 +2,6 @@
 "use client";
 
 import { ViewTransitions } from "next-view-transitions";
-import Script from "next/script";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer1";
 import { useEffect } from "react";
@@ -13,6 +12,12 @@ import "aos/dist/aos.css";
 import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
 
 const GTM_ID = "GTM-N58NPVF2";
+
+declare global {
+  interface Window {
+    dataLayer?: Record<string, unknown>[];
+  }
+}
 
 const notoSans = Noto_Sans_TC({
   subsets: ["latin"],
@@ -49,6 +54,24 @@ export default function ClientLayout({
       duration: 800,
       once: false,
     });
+  }, []);
+
+  // GTM：在 client 端注入（next/script 在 ViewTransitions 包住 html 時可能不會輸出）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.getElementById("gtm-js")) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      "gtm.start": new Date().getTime(),
+      event: "gtm.js",
+    });
+
+    const script = document.createElement("script");
+    script.id = "gtm-js";
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
+    document.head.appendChild(script);
   }, []);
 
   return (
@@ -105,15 +128,6 @@ export default function ClientLayout({
               style={{ display: "none", visibility: "hidden" }}
             />
           </noscript>
-
-          {/* GTM 主程式：afterInteractive = hydration 後載入，不阻塞首屏 LCP */}
-          <Script id="gtm-init" strategy="afterInteractive">
-            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');`}
-          </Script>
 
           <ScrollToTopOnNav />
 
