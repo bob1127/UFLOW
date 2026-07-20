@@ -13,6 +13,18 @@ export type WooProduct = {
   short_description?: string;
   description?: string;
   attributes?: Array<{ name: string; options: string[] }>;
+  acf?: { detailed_content?: string } | null;
+};
+
+const getDetailedContent = (p: any): string => {
+  if (typeof p?.acf?.detailed_content === "string") {
+    return p.acf.detailed_content;
+  }
+  const fromMeta = Array.isArray(p?.meta_data)
+    ? p.meta_data.find((m: { key?: string }) => m.key === "detailed_content")
+        ?.value
+    : undefined;
+  return typeof fromMeta === "string" ? fromMeta : "";
 };
 
 const getEnv = () => {
@@ -69,6 +81,10 @@ const mapWoo = (p: any): WooProduct => {
     short_description: p.short_description,
     description: p.description,
     attributes: p.attributes || [],
+    acf: (() => {
+      const detailed_content = getDetailedContent(p);
+      return detailed_content ? { detailed_content } : null;
+    })(),
   } as WooProduct;
 };
 

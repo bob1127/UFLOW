@@ -3,6 +3,7 @@ import { fetchAllProductSlugs, fetchProductBySlug } from "@/lib/woo";
 import {
   filterValidImageUrls,
   sanitizeHtmlImages,
+  toFullSizeImageUrl,
 } from "@/lib/imageValidation";
 import ProductClient from "./Client"; // 確保檔名大小寫與你的 Client 檔案一致
 import { getSiteUrl, buildOrganizationSchema } from "@/lib/seo/business";
@@ -133,7 +134,7 @@ export async function generateMetadata({ params }) {
 
   const safeImages = p?.images;
   const rawImages = Array.isArray(safeImages)
-    ? safeImages.map((i) => i?.src).filter(Boolean)
+    ? safeImages.map((i) => toFullSizeImageUrl(i?.src)).filter(Boolean)
     : [];
   const images = await filterValidImageUrls(rawImages);
 
@@ -192,6 +193,7 @@ export default async function ProductPage({ params }) {
     price: 0,
     shortDescription: "",
     description: "",
+    detailedContent: "",
     images: [],
     attributes: [],
     acf: null,
@@ -200,17 +202,27 @@ export default async function ProductPage({ params }) {
   const productFAQs = woo ? getProductFAQs(woo.name) : [];
   const rawSchemaImages =
     woo && Array.isArray(woo.images)
-      ? woo.images.map((i) => i?.src).filter(Boolean)
+      ? woo.images.map((i) => toFullSizeImageUrl(i?.src)).filter(Boolean)
       : [];
   const schemaImages = await filterValidImageUrls(rawSchemaImages);
 
   let sanitizedShortDescription = "";
   let sanitizedDescription = "";
+  let sanitizedDetailedContent = "";
+  let sanitizedAcf = woo?.acf || null;
   if (woo) {
-    [sanitizedShortDescription, sanitizedDescription] = await Promise.all([
+    const acfDetailed = woo.acf?.detailed_content || "";
+    const [shortHtml, descHtml, acfHtml] = await Promise.all([
       sanitizeHtmlImages(woo.short_description || ""),
       sanitizeHtmlImages(woo.description || ""),
+      sanitizeHtmlImages(acfDetailed),
     ]);
+    sanitizedShortDescription = shortHtml;
+    sanitizedDescription = descHtml;
+    sanitizedDetailedContent = acfHtml;
+    if (acfDetailed) {
+      sanitizedAcf = { detailed_content: acfHtml };
+    }
   }
 
   const pureDescription = woo
@@ -385,9 +397,10 @@ export default async function ProductPage({ params }) {
                 salePrice: woo.sale_price ? Number(woo.sale_price) : null,
                 shortDescription: sanitizedShortDescription,
                 description: sanitizedDescription,
+                detailedContent: sanitizedDetailedContent,
                 images: schemaImages,
                 attributes: woo.attributes || [],
-                acf: woo.acf || null,
+                acf: sanitizedAcf,
               }
             : fallback
         }

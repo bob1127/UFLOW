@@ -1,6 +1,9 @@
 import "server-only";
 
-const IMG_SRC_RE = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+const IMG_TAG_RE = /<img\b[^>]*>/gi;
+const SRC_ATTR_RE = /\bsrc=["']([^"']+)["']/i;
+/** WordPress 尺寸後綴：file-225x300.png → file.png（保留 -e1234567890 編輯裁切後綴） */
+const WP_SIZE_SUFFIX_RE = /-\d+x\d+(?=\.(?:webp|jpe?g|png|gif|avif)$)/i;
 
 async function isImageUrlValid(url: string): Promise<boolean> {
   if (!url?.trim()) return false;
@@ -17,6 +20,22 @@ async function isImageUrlValid(url: string): Promise<boolean> {
   }
 }
 
+/** 去掉 WP 縮圖後綴與壓縮 query，改回原圖 URL */
+export function toFullSizeImageUrl(url: string): string {
+  if (!url?.trim()) return url;
+  try {
+    const parsed = new URL(url);
+    // Jetpack / Photon 常見壓縮參數
+    ["w", "h", "quality", "q", "resize", "fit", "strip", "zoom"].forEach((k) =>
+      parsed.searchParams.delete(k),
+    );
+    parsed.pathname = parsed.pathname.replace(WP_SIZE_SUFFIX_RE, "");
+    return parsed.toString();
+  } catch {
+    return url.replace(WP_SIZE_SUFFIX_RE, "").split("?")[0];
+  }
+}
+
 export async function filterValidImageUrls(urls: string[]): Promise<string[]> {
   const unique = Array.from(new Set(urls.filter(Boolean)));
   if (unique.length === 0) return [];
@@ -29,15 +48,67 @@ export async function filterValidImageUrls(urls: string[]): Promise<string[]> {
   return urls.filter((url) => valid.has(url));
 }
 
+/**
+ * 清理商品／文章 HTML 內圖片：
+ * 1. 無效圖移除
+ * 2. WP medium/thumbnail URL 升級為原圖
+ * 3. 去掉固定 width/height/srcset，避免前端被鎖成小圖
+ */
 export async function sanitizeHtmlImages(html: string): Promise<string> {
   if (!html?.trim()) return html;
 
-  const srcs = Array.from(html.matchAll(IMG_SRC_RE)).map((m) => m[1]);
-  if (srcs.length === 0) return html;
+  const tags = Array.from(html.matchAll(IMG_TAG_RE)).map((m) => m[0]);
+  if (tags.length === 0) return html;
 
-  const valid = new Set(await filterValidImageUrls(Array.from(new Set(srcs))));
+  const srcPairs = tags.map((tag) => {
+    const src = tag.match(SRC_ATTR_RE)?.[1] || "";
+    const full = src ? toFullSizeImageUrl(src) : "";
+    return { tag, src, full };
+  });
 
-  return html.replace(IMG_SRC_RE, (tag, src: string) =>
-    valid.has(src) ? tag : "",
+  const candidates = Array.from(
+    new Set(
+      srcPairs.flatMap(({ src, full }) => [full, src].filter(Boolean)),
+    ),
   );
+  const valid = new Set(await filterValidImageUrls(candidates));
+
+  let result = html;
+  for (const { tag, src, full } of srcPairs) {
+    // 優先原圖；驗證失敗也保留 URL，避免誤刪後台已上傳的圖
+    const best =
+      (full && valid.has(full) && full) ||
+      (src && valid.has(src) && src) ||
+      full ||
+      src;
+    if (!best) {
+      result = result.replace(tag, "");
+      continue;
+    }
+
+    let next = tag
+      .replace(/\s(?:width|height|srcset|sizes)=["'][^"']*["']/gi, "")
+      .replace(/\s(?:width|height|srcset|sizes)=[^\s>]+/gi, "")
+      .replace(SRC_ATTR_RE, `src="${best}"`)
+      .replace(
+        /\bclass=(["'])([^"']*)\1/i,
+        (_m, q: string, cls: string) =>
+          `class=${q}${cls
+            .replace(/\bsize-(?:thumbnail|medium|medium_large|large|full)\b/gi, "")
+            .replace(/\s+/g, " ")
+            .trim()}${q}`,
+      );
+
+    // 確保瀏覽器用原圖、滿寬顯示，不沿用 WP 縮圖屬性
+    if (!/\bstyle=/i.test(next)) {
+      next = next.replace(
+        /<img\b/i,
+        '<img style="max-width:100%;width:100%;height:auto"',
+      );
+    }
+
+    result = result.replace(tag, next);
+  }
+
+  return result;
 }

@@ -130,6 +130,20 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
   const safeProduct = product || {};
 
+  // 後台「詳細內容」在 Woo meta_data.detailed_content，優先於 description
+  const productDetailHtml = useMemo(
+    () =>
+      safeProduct.detailedContent ||
+      safeProduct.acf?.detailed_content ||
+      safeProduct.description ||
+      "",
+    [
+      safeProduct.detailedContent,
+      safeProduct.acf?.detailed_content,
+      safeProduct.description,
+    ],
+  );
+
   const [flavor, setFlavor] = useState<string>("");
   const [pkg, setPkg] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
@@ -235,7 +249,29 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
             img.loading = "lazy";
           }
 
+          // 前端不鎖小圖：去掉 WP width/height/srcset，改用原圖 URL
+          img.removeAttribute("width");
+          img.removeAttribute("height");
+          img.removeAttribute("srcset");
+          img.removeAttribute("sizes");
+          const rawSrc = img.getAttribute("src") || img.src;
+          if (rawSrc) {
+            try {
+              const u = new URL(rawSrc, window.location.origin);
+              ["w", "h", "quality", "q", "resize", "fit", "strip", "zoom"].forEach(
+                (k) => u.searchParams.delete(k),
+              );
+              u.pathname = u.pathname.replace(
+                /-\d+x\d+(?=\.(?:webp|jpe?g|png|gif|avif)$)/i,
+                "",
+              );
+              if (u.href !== img.src) img.src = u.href;
+            } catch {
+              /* ignore bad urls */
+            }
+          }
           img.style.maxWidth = "100%";
+          img.style.width = "100%";
           img.style.height = "auto";
         });
       }
@@ -249,7 +285,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
   }, [
     tab,
     safeProduct.name,
-    safeProduct.description,
+    productDetailHtml,
     safeProduct.shortDescription,
     safeProduct.acf,
     openAccordion,
@@ -323,8 +359,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                         `${safeProduct.name} - 官方正品商品圖 ${i + 1}`,
                       )}
                       fill
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      quality={85}
+                      unoptimized
                       priority={i === 0}
                       loading={i === 0 ? "eager" : "lazy"}
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
@@ -376,8 +411,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                       src={src}
                       alt={`${getAltTextFromUrl(src, safeProduct.name)} 預覽縮圖`}
                       fill
-                      sizes="(max-width: 1024px) 20vw, 10vw"
-                      quality={60}
+                      unoptimized
                       loading="lazy"
                       className="object-cover object-center"
                       onError={() => handleDeadGalleryImage(src)}
@@ -647,15 +681,14 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
             </button>
           </div>
 
-          <div className="max-w-4xl w-full mx-auto">
+          <div className="max-w-5xl w-full mx-auto">
             {tab === "desc" && (
               <article
                 ref={contentRef} // 🌟 3. 將 Ref 綁定到這裡，確保 useEffect 能抓到內部的 HTML！
-                className="prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
+                className="prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:w-full prose-img:max-w-none prose-img:h-auto prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
                 dangerouslySetInnerHTML={{
                   __html:
-                    safeProduct.acf?.detailed_content ||
-                    safeProduct.description ||
+                    productDetailHtml ||
                     "<p class='text-center text-gray-400'>目前尚無詳細商品說明。</p>",
                 }}
               />
@@ -717,7 +750,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                       alt={`放大檢視 - ${getAltTextFromUrl(src, safeProduct.name)}`}
                       width={1200}
                       height={1200}
-                      quality={90}
+                      unoptimized
                       loading="lazy"
                       className="max-h-full max-w-full object-contain"
                       onError={() => handleDeadGalleryImage(src)}
