@@ -196,6 +196,7 @@ export default async function ProductPage({ params }) {
     detailedContent: "",
     images: [],
     attributes: [],
+    variations: [],
     acf: null,
   };
 
@@ -400,6 +401,16 @@ export default async function ProductPage({ params }) {
                 detailedContent: sanitizedDetailedContent,
                 images: schemaImages,
                 attributes: woo.attributes || [],
+                variations: (woo.variations || []).map((v) => ({
+                  id: v.id,
+                  sku: v.sku || "",
+                  label: v.label,
+                  price: Number(v.price || 0),
+                  regularPrice: Number(v.regular_price || v.price || 0),
+                  salePrice: v.sale_price ? Number(v.sale_price) : null,
+                  description: v.description || "",
+                  stockStatus: v.stock_status || "instock",
+                })),
                 acf: sanitizedAcf,
               }
             : fallback

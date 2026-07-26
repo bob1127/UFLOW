@@ -1,11 +1,27 @@
 import "server-only";
 
 export type WooImage = { id: number; src: string; alt?: string };
+
+export type WooVariation = {
+  id: number;
+  sku?: string;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  description?: string;
+  stock_status?: string;
+  menu_order?: number;
+  /** 顯示用名稱：屬性選項組合，例如「買三贈二」 */
+  label: string;
+  attributes: Array<{ name: string; option: string }>;
+};
+
 export type WooProduct = {
   id: number;
   name: string;
   slug: string;
   permalink: string;
+  type?: string;
   price: string;
   regular_price?: string;
   sale_price?: string;
@@ -13,6 +29,8 @@ export type WooProduct = {
   short_description?: string;
   description?: string;
   attributes?: Array<{ name: string; options: string[] }>;
+  categories?: Array<{ id: number; name: string; slug: string }>;
+  variations?: WooVariation[];
   acf?: { detailed_content?: string } | null;
 };
 
@@ -61,7 +79,56 @@ const parseWooJson = async <T>(res: Response): Promise<T> => {
   }
 };
 
-const mapWoo = (p: any): WooProduct => {
+const mapVariation = (v: any): WooVariation => {
+  const attrs = Array.isArray(v?.attributes)
+    ? v.attributes.map((a: any) => ({
+        name: a.name || "",
+        option: a.option || "",
+      }))
+    : [];
+  const label =
+    attrs
+      .map((a: { option: string }) => a.option)
+      .filter(Boolean)
+      .join(" / ") ||
+    v?.sku ||
+    `方案 #${v?.id}`;
+
+  return {
+    id: v.id,
+    sku: v.sku || "",
+    price: String(v.price || v.sale_price || v.regular_price || "0"),
+    regular_price: String(v.regular_price || v.price || "0"),
+    sale_price: String(v.sale_price || ""),
+    description: typeof v.description === "string" ? v.description : "",
+    stock_status: v.stock_status || "instock",
+    menu_order: Number(v.menu_order ?? 0),
+    label,
+    attributes: attrs,
+  };
+};
+
+/** 抓取可變商品的所有變體（含各自原價／特價），依後台拖曳順序排列 */
+export async function fetchProductVariations(
+  productId: number | string,
+): Promise<WooVariation[]> {
+  const { base } = getEnv();
+  const url = withAuth(
+    `${base}/wp-json/wc/v3/products/${productId}/variations?per_page=100&orderby=menu_order&order=asc`,
+  );
+  const res = await fetch(url, { next: { revalidate: 60 } });
+  if (!res.ok) return [];
+  const data = await parseWooJson<any[]>(res);
+  if (!Array.isArray(data)) return [];
+  return data
+    .map(mapVariation)
+    .sort(
+      (a, b) =>
+        (a.menu_order ?? 0) - (b.menu_order ?? 0) || a.id - b.id,
+    );
+}
+
+const mapWoo = (p: any, variations: WooVariation[] = []): WooProduct => {
   const images: WooImage[] = Array.isArray(p?.images)
     ? p.images.map((im: any) => ({
         id: im.id,
@@ -74,6 +141,7 @@ const mapWoo = (p: any): WooProduct => {
     name: p.name,
     slug: p.slug,
     permalink: p.permalink,
+    type: p.type || "simple",
     price: p.price || p.regular_price || "0",
     regular_price: p.regular_price,
     sale_price: p.sale_price,
@@ -81,6 +149,14 @@ const mapWoo = (p: any): WooProduct => {
     short_description: p.short_description,
     description: p.description,
     attributes: p.attributes || [],
+    categories: Array.isArray(p?.categories)
+      ? p.categories.map((c: any) => ({
+          id: c.id,
+          name: c.name || "",
+          slug: c.slug || "",
+        }))
+      : [],
+    variations,
     acf: (() => {
       const detailed_content = getDetailedContent(p);
       return detailed_content ? { detailed_content } : null;
@@ -103,7 +179,7 @@ export async function fetchProducts({
   
   if (!res.ok) throw new Error("取得商品列表失敗");
   const data = await parseWooJson<any[]>(res);
-  return (data as any[]).map(mapWoo) as WooProduct[];
+  return (data as any[]).map((p) => mapWoo(p)) as WooProduct[];
 }
 
 // 2. [新增] 抓取所有產品 (用於列表頁)
@@ -112,19 +188,26 @@ export async function fetchAllProducts() {
   return fetchProducts({ page: 1, perPage: 100 });
 }
 
-// 3. 單一產品抓取 (透過 Slug)
+// 3. 單一產品抓取 (透過 Slug) — 可變商品一併抓變體
 export async function fetchProductBySlug(slug: string) {
   const { base } = getEnv();
   const url = withAuth(
     `${base}/wp-json/wc/v3/products?slug=${encodeURIComponent(
-      slug
-    )}&status=publish`
+      slug,
+    )}&status=publish`,
   );
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) return null;
   const arr = await parseWooJson<any[]>(res);
   if (!Array.isArray(arr) || arr.length === 0) return null;
-  return mapWoo(arr[0]) as WooProduct;
+  const raw = arr[0];
+  const shouldFetchVariations =
+    raw?.type === "variable" ||
+    (Array.isArray(raw?.variations) && raw.variations.length > 0);
+  const variations = shouldFetchVariations
+    ? await fetchProductVariations(raw.id)
+    : [];
+  return mapWoo(raw, variations) as WooProduct;
 }
 
 // 4. 抓取所有 Slugs (用於 generateStaticParams)
@@ -139,4 +222,28 @@ export async function fetchAllProductSlugs({
   if (!res.ok) return [] as string[];
   const data = await parseWooJson<any[]>(res);
   return (data || []).map((p: any) => p.slug as string).filter(Boolean);
+}
+
+/** 是否屬於「促銷」分類（名稱含促銷，或 slug 含 discount） */
+export function isPromoProduct(product: {
+  categories?: Array<{ name?: string; slug?: string }>;
+}): boolean {
+  const cats = product?.categories || [];
+  return cats.some((c) => {
+    const name = String(c.name || "");
+    const slug = String(c.slug || "").toLowerCase();
+    return name.includes("促銷") || slug.includes("discount");
+  });
+}
+
+export function filterHotProducts<T extends { categories?: Array<{ name?: string; slug?: string }> }>(
+  products: T[],
+): T[] {
+  return products.filter((p) => !isPromoProduct(p));
+}
+
+export function filterPromoProducts<T extends { categories?: Array<{ name?: string; slug?: string }> }>(
+  products: T[],
+): T[] {
+  return products.filter((p) => isPromoProduct(p));
 }

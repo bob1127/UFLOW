@@ -202,3 +202,27 @@ canvas {
       rgb(0, 0, 0) 2.880511px -0.838247px 0px;
   }
 }
+
+/* 商品詳細說明：WordPress 內容圖原尺寸滿版，不沿用縮圖鎖定 */
+.product-detail-content img {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.product-detail-content figure,
+.product-detail-content .wp-block-image,
+.product-detail-content .wp-caption {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 1.5rem auto;
+}
+
+.product-detail-content figure img,
+.product-detail-content .wp-block-image img {
+  width: 100% !important;
+  max-width: 100% !important;
+}

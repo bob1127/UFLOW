@@ -165,7 +165,7 @@ export default function HomeClient({ items = [] }) {
     slug: gabaData?.slug || "gaba鎂鎂香蜂草",
     price: gabaData?.price || "---",
     regular: gabaData?.regular_price || "---",
-    image: gabaData?.images?.[0]?.src || "/images/GABA鎂鎂香蜂草.png",
+    image: "/images/UFLOW GABA鎂鎂香蜂草/001.png",
     cardImage: "/images/70e8daf1-c621-49f1-a08f-54c933c6b82c.png",
     // 滿版情境圖維持不變
   };
@@ -179,7 +179,7 @@ export default function HomeClient({ items = [] }) {
     slug: synbioticsData?.slug || "synbiotics",
     price: synbioticsData?.price || "---",
     regular: synbioticsData?.regular_price || "---",
-    image: synbioticsData?.images?.[0]?.src || "/images/維他菌-合生元.png",
+    image: "/images/UFLOW維他菌合生元/001.png",
     cardImage: "/images/6b538aec-f3e9-45c8-aeb4-3b85c814d251.png",
   };
 
@@ -191,7 +191,7 @@ export default function HomeClient({ items = [] }) {
     slug: peptidesData?.slug || "肽晶芙蓉",
     price: peptidesData?.price || "---",
     regular: peptidesData?.regular_price || "---",
-    image: peptidesData?.images?.[0]?.src || "/images/00912.png",
+    image: "/images/UFLOW肽晶芙蓉/001.png",
     cardImage: "/images/2894d77a-1a15-4b49-b982-8cc7a09e8029.png",
   };
 
@@ -237,14 +237,15 @@ export default function HomeClient({ items = [] }) {
                   href={`/products/${product.slug}`}
                   className="group flex flex-col text-left"
                 >
-                  {/* 淺灰圓角圖框 — 圖二 Nature Remo 風格 */}
-                  <div className="relative aspect-square w-full overflow-hidden rounded-[16px] bg-[#f5f5f5] sm:rounded-[18px]">
+                  {/* 產品圖 — 無背景色塊，略縮小 */}
+                  <div className="relative mx-auto aspect-square w-[78%] overflow-hidden sm:w-[75%]">
                     <Image
                       src={product.image}
                       alt={product.name}
                       fill
-                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
-                      className="object-contain p-7 transition-transform duration-500 group-hover:scale-[1.03] sm:p-9"
+                      unoptimized
+                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 35vw, 78vw"
+                      className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                     />
                   </div>
 
@@ -263,13 +264,32 @@ export default function HomeClient({ items = [] }) {
                     {product.tags}
                   </p>
 
-                  {/* 價格 — 粗體 + (含稅) */}
-                  <p className="mt-3.5 text-[19px] font-bold tracking-tight text-[#333] sm:mt-4 sm:text-[21px]">
-                    NT${Number(product.price).toLocaleString("en-US")}
-                    <span className="ml-0.5 text-[11px] font-normal text-[#999]">
-                      (含稅)
-                    </span>
-                  </p>
+                  {/* 價格 — 促銷價 + 原價刪除線 */}
+                  {(() => {
+                    const sale = Number(product.price);
+                    const regular = Number(product.regular);
+                    const hasSale =
+                      Number.isFinite(sale) &&
+                      Number.isFinite(regular) &&
+                      regular > sale;
+
+                    return (
+                      <div className="mt-3.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sm:mt-4">
+                        {hasSale && (
+                          <span className="text-[14px] font-medium tracking-tight text-[#aaa] line-through sm:text-[15px]">
+                            NT${regular.toLocaleString("en-US")}
+                          </span>
+                        )}
+                        <p className="text-[19px] font-bold tracking-tight text-[#333] sm:text-[21px]">
+                          NT$
+                          {(Number.isFinite(sale)
+                            ? sale
+                            : 0
+                          ).toLocaleString("en-US")}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </Link>
               ))}
             </div>

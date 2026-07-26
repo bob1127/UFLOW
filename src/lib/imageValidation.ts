@@ -87,7 +87,8 @@ export async function sanitizeHtmlImages(html: string): Promise<string> {
     }
 
     let next = tag
-      .replace(/\s(?:width|height|srcset|sizes)=["'][^"']*["']/gi, "")
+      .replace(/\sstyle=["'][^"']*["']/gi, "")
+      .replace(/\s(?:width|height|srcset|sizes|data-src|data-lazy-src)=["'][^"']*["']/gi, "")
       .replace(/\s(?:width|height|srcset|sizes)=[^\s>]+/gi, "")
       .replace(SRC_ATTR_RE, `src="${best}"`)
       .replace(
@@ -95,20 +96,24 @@ export async function sanitizeHtmlImages(html: string): Promise<string> {
         (_m, q: string, cls: string) =>
           `class=${q}${cls
             .replace(/\bsize-(?:thumbnail|medium|medium_large|large|full)\b/gi, "")
+            .replace(/\balign(?:left|right|center)\b/gi, "")
             .replace(/\s+/g, " ")
             .trim()}${q}`,
       );
 
-    // 確保瀏覽器用原圖、滿寬顯示，不沿用 WP 縮圖屬性
-    if (!/\bstyle=/i.test(next)) {
-      next = next.replace(
-        /<img\b/i,
-        '<img style="max-width:100%;width:100%;height:auto"',
-      );
-    }
+    // 一律覆寫 style，避免 WP 內嵌 width:150px 等小圖鎖定
+    next = next.replace(
+      /<img\b/i,
+      '<img style="max-width:100%;width:100%;height:auto;display:block;margin:0 auto"',
+    );
 
     result = result.replace(tag, next);
   }
+
+  // figure / 外層容器也解除寬度鎖定
+  result = result.replace(/<figure\b[^>]*>/gi, () =>
+    '<figure style="max-width:100%;width:100%;margin:1.5rem auto">',
+  );
 
   return result;
 }

@@ -15,6 +15,7 @@ import "swiper/css/free-mode";
 import "swiper/css/thumbs";
 
 import { useCartStore } from "@/lib/cartStore";
+import { upgradeProductContentImages } from "@/lib/productContentImages";
 
 // ===================== 🌟 圖片 SEO 自動萃取工具 (強化版) =====================
 const getAltTextFromUrl = (url: string, fallbackName: string) => {
@@ -42,6 +43,15 @@ interface FAQ {
   question: string;
   answer: string;
 }
+
+type PackageChoice = {
+  id: number;
+  label: string;
+  price: number;
+  regularPrice: number;
+  description: string;
+  stockStatus: string;
+};
 
 interface ProductProps {
   product: any; // WooCommerce 商品物件
@@ -146,6 +156,9 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
 
   const [flavor, setFlavor] = useState<string>("");
   const [pkg, setPkg] = useState<string>("");
+  const [selectedVariationId, setSelectedVariationId] = useState<number | null>(
+    null,
+  );
   const [qty, setQty] = useState<number>(1);
   const [showAdded, setShowAdded] = useState<boolean>(false);
   const [tab, setTab] = useState<string>("desc");
@@ -179,6 +192,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     setValidImages((prev) => prev.filter((url) => url !== src));
   };
 
+  const variations = useMemo(
+    () => (Array.isArray(safeProduct.variations) ? safeProduct.variations : []),
+    [safeProduct.variations],
+  );
+
   const flavorOptions = useMemo(() => {
     if (!safeProduct.attributes) return [];
     const attr = safeProduct.attributes.find((a: any) =>
@@ -195,28 +213,104 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     return attr?.options || [];
   }, [safeProduct]);
 
+  // 無真變體時，用屬性選項；再沒有則用商品名稱當唯一方案
+  const packageChoices = useMemo((): PackageChoice[] => {
+    if (variations.length > 0) {
+      return variations.map((v: any): PackageChoice => ({
+        id: Number(v.id),
+        label: String(v.label || ""),
+        price: Number(v.price || 0),
+        regularPrice: Number(v.regularPrice || v.price || 0),
+        description: String(v.description || "").replace(/<[^>]+>/g, "").trim(),
+        stockStatus: String(v.stockStatus || "instock"),
+      }));
+    }
+    if (pkgOptions.length > 0) {
+      return pkgOptions.map(
+        (opt: string, i: number): PackageChoice => ({
+          id: i + 1,
+          label: opt,
+          price: Number(safeProduct.price || 0),
+          regularPrice: Number(
+            safeProduct.regularPrice || safeProduct.price || 0,
+          ),
+          description: "",
+          stockStatus: "instock",
+        }),
+      );
+    }
+    // 簡單商品：規格列顯示商品名稱（促銷標題）
+    return [
+      {
+        id: Number(safeProduct.id) || 1,
+        label: String(safeProduct.name || "商品方案"),
+        price: Number(safeProduct.price || 0),
+        regularPrice: Number(safeProduct.regularPrice || safeProduct.price || 0),
+        description: "",
+        stockStatus: "instock",
+      },
+    ];
+  }, [
+    variations,
+    pkgOptions,
+    safeProduct.id,
+    safeProduct.name,
+    safeProduct.price,
+    safeProduct.regularPrice,
+  ]);
+
   useEffect(() => {
     if (flavorOptions.length > 0 && !flavor) {
       setFlavor(flavorOptions[0]);
     }
-    if (!pkg) {
-      setPkg(pkgOptions.length > 0 ? pkgOptions[0] : "1盒 (單件組)");
-    }
-  }, [flavorOptions, pkgOptions, flavor, pkg]);
+  }, [flavorOptions, flavor]);
 
+  // 預設選第一個變體／方案，並同步價格
   useEffect(() => {
-    setDisplayPrice(Number(safeProduct.price || 0));
+    if (packageChoices.length === 0) return;
+
+    const current =
+      packageChoices.find(
+        (c: PackageChoice) => c.id === selectedVariationId,
+      ) || packageChoices[0];
+
+    if (
+      selectedVariationId == null ||
+      !packageChoices.some((c: PackageChoice) => c.id === selectedVariationId)
+    ) {
+      setSelectedVariationId(current.id);
+    }
+    setPkg(current.label);
+    setDisplayPrice(current.price);
     setDisplayRegularPrice(
-      Number(safeProduct.regularPrice || safeProduct.price || 0),
+      current.regularPrice > current.price
+        ? current.regularPrice
+        : current.price,
     );
-  }, [safeProduct]);
+  }, [
+    packageChoices,
+    selectedVariationId,
+    safeProduct.price,
+    safeProduct.regularPrice,
+  ]);
+
+  const selectPackage = (choice: PackageChoice) => {
+    setSelectedVariationId(choice.id);
+    setPkg(choice.label);
+    setDisplayPrice(choice.price);
+    setDisplayRegularPrice(
+      choice.regularPrice > choice.price ? choice.regularPrice : choice.price,
+    );
+  };
 
   const currentDiscount =
     displayRegularPrice > displayPrice
       ? Math.round((1 - displayPrice / displayRegularPrice) * 100)
       : 0;
 
-  const canBuy = (flavorOptions.length === 0 || flavor) && pkg !== "";
+  const canBuy =
+    (flavorOptions.length === 0 || Boolean(flavor)) &&
+    (packageChoices.length === 0 || selectedVariationId != null);
 
   useEffect(() => {
     if (!showAdded) return;
@@ -224,60 +318,17 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     return () => clearTimeout(t);
   }, [showAdded]);
 
-  // ===================== 🌟 終極攔截：處理 WordPress 圖片 =====================
+  // ===================== 🌟 WordPress 商品說明圖：原圖滿版、不壓縮鎖小 =====================
   useEffect(() => {
     const timer = setTimeout(() => {
+      const name = safeProduct.name || "商品";
+
       if (tab === "desc" && contentRef.current) {
-        guardImagesInContainer(contentRef.current);
-
-        const images = contentRef.current.querySelectorAll("img");
-        images.forEach((img, index) => {
-          const currentAlt = img.getAttribute("alt");
-
-          if (!currentAlt || currentAlt.trim() === "") {
-            const autoAlt = getAltTextFromUrl(
-              img.src,
-              `${safeProduct.name || "商品"} - 功效與詳細說明圖 ${index + 1}`,
-            );
-
-            img.setAttribute("alt", autoAlt);
-            img.alt = autoAlt;
-          }
-
-          if (!img.getAttribute("loading")) {
-            img.setAttribute("loading", "lazy");
-            img.loading = "lazy";
-          }
-
-          // 前端不鎖小圖：去掉 WP width/height/srcset，改用原圖 URL
-          img.removeAttribute("width");
-          img.removeAttribute("height");
-          img.removeAttribute("srcset");
-          img.removeAttribute("sizes");
-          const rawSrc = img.getAttribute("src") || img.src;
-          if (rawSrc) {
-            try {
-              const u = new URL(rawSrc, window.location.origin);
-              ["w", "h", "quality", "q", "resize", "fit", "strip", "zoom"].forEach(
-                (k) => u.searchParams.delete(k),
-              );
-              u.pathname = u.pathname.replace(
-                /-\d+x\d+(?=\.(?:webp|jpe?g|png|gif|avif)$)/i,
-                "",
-              );
-              if (u.href !== img.src) img.src = u.href;
-            } catch {
-              /* ignore bad urls */
-            }
-          }
-          img.style.maxWidth = "100%";
-          img.style.width = "100%";
-          img.style.height = "auto";
-        });
+        upgradeProductContentImages(contentRef.current, name);
       }
 
       if (shortDescRef.current) {
-        guardImagesInContainer(shortDescRef.current);
+        upgradeProductContentImages(shortDescRef.current, `${name} 簡介`);
       }
     }, 150);
 
@@ -290,13 +341,17 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
     safeProduct.acf,
     openAccordion,
   ]);
-  // ===========================================================================
 
   function handleBuyNow() {
+    const selected =
+      packageChoices.find((c: PackageChoice) => c.id === selectedVariationId) ||
+      null;
     const optionVariant = [flavor, pkg].filter(Boolean).join(" / ");
     const cartItem = {
-      id: safeProduct.id,
+      id: variations.length > 0 && selected ? selected.id : safeProduct.id,
       wcProductId: safeProduct.id,
+      variationId:
+        variations.length > 0 && selected ? selected.id : undefined,
       name: `${safeProduct.name}｜${safeProduct.subname || ""}`,
       price: displayPrice,
       image: validImages[0],
@@ -473,7 +528,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               全館滿 NT$ 2,000 免運費
             </div>
 
-            {/* 規格選擇 */}
+            {/* 規格選擇 — 列出所有變體／方案 */}
             <div className="mb-8 rounded-xl border border-rose-100 bg-rose-500 p-4">
               <div className="mb-3 flex items-center justify-between border-b border-rose-100 pb-2">
                 <span className="text-sm font-bold text-slate-50">
@@ -484,33 +539,92 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                 </span>
               </div>
               <div className="flex flex-col gap-2">
-                <div className="relative flex items-center justify-between p-3 rounded-lg border bg-white border-rose-500 shadow-md ring-1 ring-rose-500 z-10 text-left">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border border-rose-500 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-rose-500" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      {pkg}
-                    </span>
-                  </div>
-                  <div className="text-right flex flex-col items-end">
+                {packageChoices.length > 0 ? (
+                  packageChoices.map((choice) => {
+                    const isSelected = selectedVariationId === choice.id;
+                    const discount =
+                      choice.regularPrice > choice.price
+                        ? Math.round(
+                            (1 - choice.price / choice.regularPrice) * 100,
+                          )
+                        : 0;
+
+                    return (
+                      <button
+                        key={choice.id}
+                        type="button"
+                        onClick={() => selectPackage(choice)}
+                        className={`relative flex w-full items-center justify-between rounded-lg border bg-white p-3 text-left transition ${
+                          isSelected
+                            ? "border-rose-500 shadow-md ring-1 ring-rose-500 z-10"
+                            : "border-gray-200 hover:border-rose-300"
+                        }`}
+                      >
+                        <div className="flex min-w-0 flex-1 items-start gap-2 pr-3">
+                          <div
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                              isSelected
+                                ? "border-rose-500"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="h-2 w-2 rounded-full bg-rose-500" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="block text-sm font-bold text-gray-900 leading-snug">
+                              {choice.label}
+                            </span>
+                            {choice.description ? (
+                              <span className="mt-0.5 block text-[11px] text-gray-500 leading-snug">
+                                {choice.description}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right flex flex-col items-end">
+                          <div className="flex items-center gap-2">
+                            {discount > 0 && (
+                              <span className="bg-rose-50 text-rose-600 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                {discount}% OFF
+                              </span>
+                            )}
+                            <span className="text-sm font-bold text-gray-900">
+                              NT$ {choice.price.toLocaleString()}
+                            </span>
+                          </div>
+                          {discount > 0 && (
+                            <span className="mt-0.5 text-[11px] text-gray-400 line-through">
+                              NT$ {choice.regularPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="relative flex items-center justify-between rounded-lg border border-rose-500 bg-white p-3 text-left shadow-md ring-1 ring-rose-500">
                     <div className="flex items-center gap-2">
-                      {currentDiscount > 0 && (
-                        <span className="bg-rose-50 text-rose-600 text-[10px] px-1.5 py-0.5 rounded font-bold">
-                          {currentDiscount}% OFF
-                        </span>
-                      )}
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full border border-rose-500">
+                        <div className="h-2 w-2 rounded-full bg-rose-500" />
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">
+                        {pkg || safeProduct.name}
+                      </span>
+                    </div>
+                    <div className="text-right flex flex-col items-end">
                       <span className="text-sm font-bold text-gray-900">
                         NT$ {displayPrice.toLocaleString()}
                       </span>
+                      {currentDiscount > 0 && (
+                        <span className="mt-0.5 text-[11px] text-gray-400 line-through">
+                          NT$ {displayRegularPrice.toLocaleString()}
+                        </span>
+                      )}
                     </div>
-                    {currentDiscount > 0 && (
-                      <span className="text-[11px] line-through text-gray-400 mt-0.5">
-                        NT$ {displayRegularPrice.toLocaleString()}
-                      </span>
-                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -606,6 +720,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
               >
                 <div
                   ref={shortDescRef}
+                  className="product-detail-content"
                   dangerouslySetInnerHTML={{
                     __html: safeProduct.shortDescription,
                   }}
@@ -681,11 +796,11 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
             </button>
           </div>
 
-          <div className="max-w-5xl w-full mx-auto">
+          <div className="max-w-6xl w-full mx-auto">
             {tab === "desc" && (
               <article
-                ref={contentRef} // 🌟 3. 將 Ref 綁定到這裡，確保 useEffect 能抓到內部的 HTML！
-                className="prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:w-full prose-img:max-w-none prose-img:h-auto prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
+                ref={contentRef}
+                className="product-detail-content prose prose-lg prose-stone max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mt-12 prose-headings:mb-6 prose-p:leading-relaxed prose-p:text-slate-600 prose-p:mb-6 prose-img:w-full prose-img:max-w-none prose-img:h-auto prose-img:shadow-md prose-img:mx-auto prose-img:my-10 prose-video:aspect-video prose-video:w-full prose-video:my-10 prose-a:text-rose-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-rose-500 prose-li:text-slate-600"
                 dangerouslySetInnerHTML={{
                   __html:
                     productDetailHtml ||

@@ -467,6 +467,7 @@ export default function App() {
     { label: "關於我們", href: "/about" },
     { label: "品牌資訊", href: "/brand" },
     { label: "熱門產品", href: "/products" },
+    { label: "優惠活動", href: "/products/promotions" },
     { label: "保健知識", href: "/blog" },
     { label: "聯絡我們", href: "/contact" },
   ];
@@ -480,7 +481,7 @@ export default function App() {
       >
         <TopAnnouncementBar isVisible={showPinkBar} />
 
-        <div className="mx-auto flex w-full justify-between px-4 lg:px-8">
+        <div className="mx-auto flex w-full max-w-[1280px] justify-between px-6 sm:px-8 lg:px-10">
           <div className="flex items-center py-1">
             <Link href="/" className="flex items-center gap-3 group">
               <img
