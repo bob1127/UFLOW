@@ -59,11 +59,7 @@ const MenuBar = ({ isOpen, toggleMenu, closeMenu }) => {
       {/* Menu 按鈕 */}
       <div className="flex">
         <div className="flex mr-4">
-          <Link
-            className="hidden sm:block"
-            href="https://www.instagram.com/kk0927886699"
-            target="_blank"
-          >
+          <Link className="hidden sm:block" href="" aria-label="Instagram">
             <svg
               className="mx-2 w-[35px] h-[35px]  2xl:w-[45px] 2xl:h-[45px]"
               xmlns="http://www.w3.org/2000/svg"
@@ -82,9 +78,9 @@ const MenuBar = ({ isOpen, toggleMenu, closeMenu }) => {
             </svg>
           </Link>
           <Link
-            href="https://www.facebook.com/profile.php?id=61550958051323"
-            target="_blank"
+            href=""
             className="hidden sm:block"
+            aria-label="Facebook"
           >
             <svg
               className="mx-2 w-[35px] h-[35px]  2xl:w-[45px] 2xl:h-[45px]"

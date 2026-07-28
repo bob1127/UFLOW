@@ -273,14 +273,20 @@ const Menu = ({ isDarkBg }) => {
                 {socials.map((social, index) => (
                   <div className="line" key={index}>
                     <p className="text-[clamp(1rem,1.8vw,1.2rem)] text-[var(--text-secondary)] translate-y-[80px] will-change-transform">
-                      <a
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 text-[.9rem] hover:text-white duration-400"
-                      >
-                        {social.label}
-                      </a>
+                      {social.url ? (
+                        <a
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 text-[.9rem] hover:text-white duration-400"
+                        >
+                          {social.label}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-[.9rem]">
+                          {social.label}
+                        </span>
+                      )}
                     </p>
                   </div>
                 ))}

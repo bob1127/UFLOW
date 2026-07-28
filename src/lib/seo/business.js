@@ -41,8 +41,6 @@ export const BUSINESS = {
     },
   ],
   sameAs: [
-    "https://www.facebook.com/uflow",
-    "https://www.instagram.com/uflow",
     "https://line.me/R/ti/p/@uflow",
   ],
   freeShippingThreshold: 2000,

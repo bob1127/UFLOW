@@ -9,8 +9,7 @@ export const links = [
 
 export const socials = [
   { label: "100設計", url: "https://www.100.com.tw/11283" },
- 
-  { label: "FACEBOOK", url: "https://www.facebook.com/people/%E5%AF%AC%E8%B6%8A%E5%AE%A4%E5%85%A7%E8%A8%AD%E8%A8%88/61550958051323/" },
+  { label: "FACEBOOK", url: "" },
 ];
 
 export const address = [

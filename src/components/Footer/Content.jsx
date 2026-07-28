@@ -175,16 +175,8 @@ const Section2 = () => {
                 icon={Icons.Line}
                 label="LINE"
               />
-              <SocialIcon
-                href="https://www.instagram.com/uflowspace/"
-                icon={Icons.Instagram}
-                label="Instagram"
-              />
-              <SocialIcon
-                href="https://www.facebook.com/profile.php?id=61590765875405&locale=zh_TW"
-                icon={Icons.Facebook}
-                label="Facebook"
-              />
+              <SocialIcon href="" icon={Icons.Instagram} label="Instagram" />
+              <SocialIcon href="" icon={Icons.Facebook} label="Facebook" />
             </div>
           </div>
 
@@ -247,22 +239,38 @@ function FooterSection({ title, links }) {
   );
 }
 
-/** 🌟 a11y 優化：改用 <a> 標籤並加上 aria-label */
+/** 🌟 a11y 優化：改用 <a> 標籤並加上 aria-label；無連結時僅顯示圖示 */
 function SocialIcon({ icon: Icon, label, href }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`前往 UFLOW 的 ${label}`}
-      className="flex flex-col items-center gap-2 group cursor-pointer"
-    >
+  const className =
+    "flex flex-col items-center gap-2 group cursor-pointer";
+  const inner = (
+    <>
       <div className="text-slate-800 group-hover:text-slate-500 transition-colors">
         <Icon width={24} height={24} />
       </div>
       <span className="text-[10px] font-medium text-slate-800 tracking-wide group-hover:text-slate-500 transition-colors">
         {label}
       </span>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span className={className} aria-label={label}>
+        {inner}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`前往 UFLOW 的 ${label}`}
+      className={className}
+    >
+      {inner}
     </a>
   );
 }
@@ -280,14 +288,14 @@ const SHARE_LINKS = [
   {
     bg: "bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
     icon: Icons.Instagram,
-    href: "https://www.instagram.com/uflowspace/",
-    label: "前往 UFLOW Instagram",
+    href: "",
+    label: "Instagram（連結待補）",
   },
   {
     bg: "bg-[#1877F2]",
     icon: Icons.Facebook,
-    href: "https://www.facebook.com/profile.php?id=61590765875405&locale=zh_TW",
-    label: "前往 UFLOW Facebook",
+    href: "",
+    label: "Facebook（連結待補）",
   },
   {
     bg: "bg-[#E04F3F]",
@@ -354,11 +362,11 @@ function ShareWidget() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {SHARE_LINKS.map((item) => {
+            {SHARE_LINKS.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <ShareBlock
-                  key={item.href}
+                  key={`${item.label}-${idx}`}
                   bg={item.bg}
                   href={item.href}
                   icon={
@@ -375,8 +383,16 @@ function ShareWidget() {
   );
 }
 
-/** 底部分享列連結 */
+/** 底部分享列連結；無 href 時僅顯示圖示 */
 function ShareBlock({ bg, icon, href, ariaLabel }) {
+  const className = `${bg} flex items-center justify-center h-full w-full hover:brightness-110 active:scale-95 transition-all`;
+  if (!href) {
+    return (
+      <div className={className} aria-label={ariaLabel} role="img">
+        {icon}
+      </div>
+    );
+  }
   const isMail = href.startsWith("mailto:");
   return (
     <a
@@ -384,7 +400,7 @@ function ShareBlock({ bg, icon, href, ariaLabel }) {
       target={isMail ? undefined : "_blank"}
       rel={isMail ? undefined : "noopener noreferrer"}
       aria-label={ariaLabel}
-      className={`${bg} flex items-center justify-center cursor-pointer hover:brightness-110 transition-all active:brightness-95 w-full h-full`}
+      className={className}
     >
       {icon}
     </a>
