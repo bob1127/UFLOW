@@ -1,5 +1,8 @@
 import "server-only";
 
+import { toSiteMediaPath } from "@/lib/mediaUrl";
+import { buildImageAlt } from "@/lib/imageAlt";
+
 export type WooImage = { id: number; src: string; alt?: string };
 
 export type WooVariation = {
@@ -22,9 +25,11 @@ export type WooProduct = {
   slug: string;
   permalink: string;
   type?: string;
+  sku?: string;
   price: string;
   regular_price?: string;
   sale_price?: string;
+  stock_status?: string;
   images: WooImage[];
   short_description?: string;
   description?: string;
@@ -129,12 +134,22 @@ export async function fetchProductVariations(
 }
 
 const mapWoo = (p: any, variations: WooVariation[] = []): WooProduct => {
+  const productName = String(p?.name || "");
   const images: WooImage[] = Array.isArray(p?.images)
-    ? p.images.map((im: any) => ({
-        id: im.id,
-        src: im.src,
-        alt: im.alt || p?.name || "",
-      }))
+    ? p.images.map((im: any, index: number) => {
+        const src = im.src ? toSiteMediaPath(String(im.src)) : "";
+        return {
+          id: im.id,
+          src,
+          alt: buildImageAlt({
+            name: productName,
+            src,
+            index: index + 1,
+            role: index === 0 ? "gallery" : "gallery",
+            existingAlt: im.alt || "",
+          }),
+        };
+      })
     : [];
   return {
     id: p.id,
@@ -142,9 +157,11 @@ const mapWoo = (p: any, variations: WooVariation[] = []): WooProduct => {
     slug: p.slug,
     permalink: p.permalink,
     type: p.type || "simple",
+    sku: p.sku || "",
     price: p.price || p.regular_price || "0",
     regular_price: p.regular_price,
     sale_price: p.sale_price,
+    stock_status: p.stock_status || "instock",
     images,
     short_description: p.short_description,
     description: p.description,

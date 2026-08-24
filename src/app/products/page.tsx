@@ -4,6 +4,7 @@ import Client from "./Client";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { getSiteUrl, buildBreadcrumbSchema } from "@/lib/seo/business";
+import { toSiteMediaUrl } from "@/lib/mediaUrl";
 
 const SITE_URL = getSiteUrl();
 
@@ -65,7 +66,9 @@ export default async function ProductsPage() {
       position: index + 1,
       url: `${SITE_URL}/products/${product.slug}`,
       name: product.name,
-      image: product.images?.[0]?.src || "",
+      image: product.images?.[0]?.src
+        ? toSiteMediaUrl(product.images[0].src, SITE_URL)
+        : "",
       offers: {
         "@type": "Offer",
         priceCurrency: "TWD",

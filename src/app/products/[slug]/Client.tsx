@@ -16,20 +16,7 @@ import "swiper/css/thumbs";
 
 import { useCartStore } from "@/lib/cartStore";
 import { upgradeProductContentImages } from "@/lib/productContentImages";
-
-// ===================== 🌟 圖片 SEO 自動萃取工具 (強化版) =====================
-const getAltTextFromUrl = (url: string, fallbackName: string) => {
-  if (!url) return fallbackName;
-  try {
-    const filename = url.split("/").pop()?.split(".")[0] || "";
-    const decoded = decodeURIComponent(filename).replace(/[-_]/g, " ");
-    // 將檔名與備用商品名稱結合，創造更豐富的長尾關鍵字
-    return decoded ? `${fallbackName} | ${decoded}` : fallbackName;
-  } catch (e) {
-    return fallbackName;
-  }
-};
-// ====================================================================
+import { buildImageAlt } from "@/lib/imageAlt";
 
 // ===================== 型別宣告區 =====================
 interface AccordionItemProps {
@@ -328,7 +315,7 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
       }
 
       if (shortDescRef.current) {
-        upgradeProductContentImages(shortDescRef.current, `${name} 簡介`);
+        upgradeProductContentImages(shortDescRef.current, name);
       }
     }, 150);
 
@@ -409,10 +396,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   >
                     <Image
                       src={src}
-                      alt={getAltTextFromUrl(
+                      alt={buildImageAlt({
+                        name: safeProduct.name,
                         src,
-                        `${safeProduct.name} - 官方正品商品圖 ${i + 1}`,
-                      )}
+                        index: i + 1,
+                        role: "gallery",
+                      })}
                       fill
                       unoptimized
                       priority={i === 0}
@@ -464,7 +453,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   <div className="relative w-full aspect-square bg-gray-50">
                     <Image
                       src={src}
-                      alt={`${getAltTextFromUrl(src, safeProduct.name)} 預覽縮圖`}
+                      alt={buildImageAlt({
+                        name: safeProduct.name,
+                        src,
+                        index: i + 1,
+                        role: "thumb",
+                      })}
                       fill
                       unoptimized
                       loading="lazy"
@@ -862,7 +856,12 @@ export default function ProductClient({ product, faqs = [] }: ProductProps) {
                   <div className="relative w-full h-full flex items-center justify-center">
                     <Image
                       src={src}
-                      alt={`放大檢視 - ${getAltTextFromUrl(src, safeProduct.name)}`}
+                      alt={buildImageAlt({
+                        name: safeProduct.name,
+                        src,
+                        index: i + 1,
+                        role: "zoom",
+                      })}
                       width={1200}
                       height={1200}
                       unoptimized

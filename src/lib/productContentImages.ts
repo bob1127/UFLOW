@@ -1,4 +1,7 @@
-/** 商品詳細說明 HTML 內圖片：升級為原圖 URL、滿版顯示（client 端可用） */
+/** 商品詳細說明 HTML 內圖片：升級為原圖 URL、滿版顯示、自動 alt（client 端可用） */
+
+import { toSiteMediaPath } from "@/lib/mediaUrl";
+import { buildImageAlt } from "@/lib/imageAlt";
 
 const WP_SIZE_SUFFIX_RE = /-\d+x\d+(?=\.(?:webp|jpe?g|png|gif|avif)$)/i;
 
@@ -54,11 +57,11 @@ function unlockImageWrappers(container: HTMLElement) {
 }
 
 /**
- * 將 WordPress 商品說明內的 <img> 改為原圖、滿寬顯示
+ * 將 WordPress 商品說明內的 <img> 改為原圖、滿寬顯示，並自動補齊 / 強化 alt
  */
 export function upgradeProductContentImages(
   container: HTMLElement,
-  altPrefix: string,
+  productName: string,
 ) {
   unlockImageWrappers(container);
 
@@ -69,12 +72,26 @@ export function upgradeProductContentImages(
     }
     img.addEventListener("error", () => removeDeadImage(img), { once: true });
 
-    const currentAlt = img.getAttribute("alt");
-    if (!currentAlt?.trim()) {
-      const autoAlt = `${altPrefix} - 說明圖 ${index + 1}`;
-      img.setAttribute("alt", autoAlt);
-      img.alt = autoAlt;
+    const rawSrc =
+      img.getAttribute("data-src") ||
+      img.getAttribute("data-lazy-src") ||
+      img.getAttribute("src") ||
+      img.src;
+
+    if (rawSrc) {
+      const full = toSiteMediaPath(toFullSizeImageUrlClient(rawSrc));
+      if (full && full !== img.getAttribute("src")) img.src = full;
     }
+
+    const autoAlt = buildImageAlt({
+      name: productName,
+      src: img.getAttribute("src") || rawSrc || "",
+      index: index + 1,
+      role: "content",
+      existingAlt: img.getAttribute("alt"),
+    });
+    img.setAttribute("alt", autoAlt);
+    img.alt = autoAlt;
 
     if (!img.getAttribute("loading")) {
       img.setAttribute("loading", "lazy");
@@ -87,16 +104,6 @@ export function upgradeProductContentImages(
     img.removeAttribute("sizes");
     img.removeAttribute("data-src");
     img.removeAttribute("data-lazy-src");
-
-    const rawSrc =
-      img.getAttribute("data-src") ||
-      img.getAttribute("data-lazy-src") ||
-      img.getAttribute("src") ||
-      img.src;
-    if (rawSrc) {
-      const full = toFullSizeImageUrlClient(rawSrc);
-      if (full && full !== img.src) img.src = full;
-    }
 
     img.style.cssText =
       "max-width:100%;width:100%;height:auto;display:block;margin:0 auto";

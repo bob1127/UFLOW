@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
+import { buildImageAlt } from "@/lib/imageAlt";
 
 export type Product = {
   id: number;
@@ -102,7 +103,13 @@ export default function Client({
                     <div className="relative w-[70%] h-[70%]">
                       <Image
                         src={firstImg(p)}
-                        alt={p.images?.[0]?.alt || p.name}
+                        alt={buildImageAlt({
+                          name: p.name,
+                          src: firstImg(p),
+                          role: "list",
+                          index: 1,
+                          existingAlt: p.images?.[0]?.alt,
+                        })}
                         fill
                         sizes="(max-width: 768px) 50vw, 33vw"
                         className="object-contain transition-transform duration-700 group-hover:scale-105"

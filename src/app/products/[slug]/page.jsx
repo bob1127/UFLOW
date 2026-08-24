@@ -5,8 +5,14 @@ import {
   sanitizeHtmlImages,
   toFullSizeImageUrl,
 } from "@/lib/imageValidation";
+import { toSiteMediaUrls, toSiteMediaPath } from "@/lib/mediaUrl";
+import { buildImageAlt } from "@/lib/imageAlt";
 import ProductClient from "./Client"; // 確保檔名大小寫與你的 Client 檔案一致
-import { getSiteUrl, buildOrganizationSchema } from "@/lib/seo/business";
+import {
+  getSiteUrl,
+  buildOrganizationSchema,
+  BUSINESS,
+} from "@/lib/seo/business";
 
 export const revalidate = 60;
 
@@ -136,7 +142,9 @@ export async function generateMetadata({ params }) {
   const rawImages = Array.isArray(safeImages)
     ? safeImages.map((i) => toFullSizeImageUrl(i?.src)).filter(Boolean)
     : [];
-  const images = await filterValidImageUrls(rawImages);
+  const validImages = await filterValidImageUrls(rawImages);
+  // og:image 使用正式網域絕對 URL（經 Next rewrite 代理）
+  const images = toSiteMediaUrls(validImages, SITE_URL);
 
   return {
     metadataBase: new URL(SITE_URL), // 核心：設定 base URL，解決 localhost 與正式機圖片路徑問題
@@ -160,11 +168,16 @@ export async function generateMetadata({ params }) {
       description: descText,
       url: productPath,
       siteName,
-      images: images.map((src) => ({
+      images: images.map((src, i) => ({
         url: src,
         width: 800,
         height: 800,
-        alt: `UFLOW ${p.name} 商品圖`,
+        alt: buildImageAlt({
+          name: p.name,
+          src,
+          index: i + 1,
+          role: i === 0 ? "og" : "gallery",
+        }),
       })),
       type: "website",
       locale: "zh_TW",
@@ -205,7 +218,11 @@ export default async function ProductPage({ params }) {
     woo && Array.isArray(woo.images)
       ? woo.images.map((i) => toFullSizeImageUrl(i?.src)).filter(Boolean)
       : [];
-  const schemaImages = await filterValidImageUrls(rawSchemaImages);
+  const validSchemaImages = await filterValidImageUrls(rawSchemaImages);
+  // 畫廊用站內相對路徑；Schema / og 用正式網域絕對 URL
+  const galleryImages = validSchemaImages.map((u) => toSiteMediaPath(u));
+  const schemaImages = toSiteMediaUrls(validSchemaImages, SITE_URL);
+  const productUrl = woo ? `${SITE_URL}/products/${woo.slug}` : "";
 
   let sanitizedShortDescription = "";
   let sanitizedDescription = "";
@@ -214,9 +231,9 @@ export default async function ProductPage({ params }) {
   if (woo) {
     const acfDetailed = woo.acf?.detailed_content || "";
     const [shortHtml, descHtml, acfHtml] = await Promise.all([
-      sanitizeHtmlImages(woo.short_description || ""),
-      sanitizeHtmlImages(woo.description || ""),
-      sanitizeHtmlImages(acfDetailed),
+      sanitizeHtmlImages(woo.short_description || "", woo.name),
+      sanitizeHtmlImages(woo.description || "", woo.name),
+      sanitizeHtmlImages(acfDetailed, woo.name),
     ]);
     sanitizedShortDescription = shortHtml;
     sanitizedDescription = descHtml;
@@ -242,28 +259,28 @@ export default async function ProductPage({ params }) {
   const schemaBusiness = buildOrganizationSchema(SITE_URL);
 
   // ===================== 👑 結構化資料 2：商品與報價 =====================
+  // 必填：name / brand / image / description / offers(price, priceCurrency, availability) / url
   const schemaProduct = woo
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
+        "@id": `${productUrl}/#product`,
         name: woo.name,
+        url: productUrl,
         image: schemaImages,
         description: pureDescription || `探索 UFLOW 嚴選 ${woo.name}。`,
         sku: woo.sku || String(woo.id),
-        brand: { "@id": `${SITE_URL}/#organization` }, // 👈 完美關聯上方品牌
-        // 預設給予一個優良的綜合評價
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: "5.0",
-          reviewCount: "114",
-          bestRating: "5",
-          worstRating: "1",
+        brand: {
+          "@type": "Brand",
+          name: BUSINESS.brandName, // UFLOW
+          url: SITE_URL,
+          logo: `${SITE_URL}/images/logo/uflow.png`,
         },
         offers: {
           "@type": "Offer",
-          url: `${SITE_URL}/products/${woo.slug}`,
+          url: productUrl,
           priceCurrency: "TWD",
-          price: finalPrice,
+          price: String(finalPrice),
           priceValidUntil: new Date(
             new Date().setFullYear(new Date().getFullYear() + 1),
           )
@@ -271,9 +288,8 @@ export default async function ProductPage({ params }) {
             .split("T")[0],
           itemCondition: "https://schema.org/NewCondition",
           availability: availability,
-          seller: { "@id": `${SITE_URL}/#organization` }, // 👈 完美關聯販售者
+          seller: { "@id": `${SITE_URL}/#organization` },
 
-          // 退貨政策
           hasMerchantReturnPolicy: {
             "@type": "MerchantReturnPolicy",
             applicableCountry: "TW",
@@ -283,7 +299,6 @@ export default async function ProductPage({ params }) {
             returnMethod: "https://schema.org/ReturnByMail",
           },
 
-          // 運費政策 (綁定在 Offer 內)
           shippingDetails: {
             "@type": "OfferShippingDetails",
             shippingDestination: {
@@ -292,7 +307,7 @@ export default async function ProductPage({ params }) {
             },
             shippingRate: {
               "@type": "MonetaryAmount",
-              value: "80", // 預設運費
+              value: String(BUSINESS.defaultShippingFee ?? 80),
               currency: "TWD",
             },
             deliveryTime: {
@@ -399,7 +414,7 @@ export default async function ProductPage({ params }) {
                 shortDescription: sanitizedShortDescription,
                 description: sanitizedDescription,
                 detailedContent: sanitizedDetailedContent,
-                images: schemaImages,
+                images: galleryImages,
                 attributes: woo.attributes || [],
                 variations: (woo.variations || []).map((v) => ({
                   id: v.id,
